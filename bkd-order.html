@@ -1,0 +1,809 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BKD国际件 | 下单</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+:root{
+  --navy:#0f1f3d;--blue:#1a56db;--teal:#0d9488;
+  --bg:#f0f6ff;--text:#1e293b;--muted:#64748b;
+  --border:#bfdbfe;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;display:flex;flex-direction:column;}
+.stripe{height:4px;background:linear-gradient(90deg,var(--blue),var(--teal));}
+header{background:var(--navy);padding:18px 24px;display:flex;align-items:center;gap:14px;}
+.logo{width:40px;height:40px;background:linear-gradient(135deg,var(--blue),var(--teal));border-radius:9px;display:flex;align-items:center;justify-content:center;font-family:'DM Serif Display',serif;font-size:18px;color:white;flex-shrink:0;}
+.logo-text h1{font-family:'DM Serif Display',serif;font-size:17px;color:white;font-weight:400;}
+.logo-text p{font-size:10px;color:#93c5fd;letter-spacing:.07em;text-transform:uppercase;margin-top:2px;}
+main{flex:1;display:flex;justify-content:center;padding:32px 14px 60px;}
+.card{background:white;border-radius:14px;box-shadow:0 4px 28px rgba(15,31,61,.09);width:100%;max-width:640px;}
+
+.ch{background:linear-gradient(135deg,var(--navy),#1a3a6e);padding:24px 24px 20px;border-radius:14px 14px 0 0;position:relative;overflow:hidden;}
+.ch::before{content:'BKD';position:absolute;right:16px;top:50%;transform:translateY(-50%);font-family:'DM Serif Display',serif;font-size:72px;color:rgba(255,255,255,.04);pointer-events:none;}
+.ch h2{font-family:'DM Serif Display',serif;font-size:22px;color:white;font-weight:400;margin-bottom:3px;}
+.ch p{font-size:12px;color:#93c5fd;}
+.date-tag{display:inline-block;margin-top:10px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.18);border-radius:6px;padding:3px 11px;font-size:11px;color:#bfdbfe;}
+.oid-bar{margin-top:10px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.14);border-radius:7px;padding:8px 13px;display:flex;align-items:center;gap:9px;}
+.oid-bar .lb{font-size:9px;text-transform:uppercase;letter-spacing:.1em;color:#93c5fd;white-space:nowrap;}
+.oid-bar .oid{font-size:13px;color:white;font-weight:600;}
+
+.cb{padding:22px 22px 30px;}
+.sec{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.11em;color:var(--teal);margin-bottom:13px;display:flex;align-items:center;gap:8px;}
+.sec::after{content:'';flex:1;height:1px;background:var(--border);}
+.f{margin-bottom:15px;}
+.f>label{display:block;font-size:11px;font-weight:500;color:var(--muted);margin-bottom:5px;text-transform:uppercase;letter-spacing:.05em;}
+input,select,textarea{width:100%;padding:11px 13px;border:1.5px solid var(--border);border-radius:8px;font-family:'DM Sans',sans-serif;font-size:16px;color:var(--text);background:var(--bg);outline:none;-webkit-appearance:none;transition:border-color .2s,background .2s;}
+input:focus,select:focus,textarea:focus{border-color:var(--blue);background:white;box-shadow:0 0 0 3px rgba(26,86,219,.09);}
+textarea{resize:vertical;min-height:74px;}
+.r2{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.hint{font-size:11px;color:var(--muted);margin-top:4px;}
+.slink{color:var(--teal);font-weight:600;cursor:pointer;font-size:11px;}
+.slink:hover{text-decoration:underline;}
+.divider{height:1px;background:var(--border);margin:18px 0;}
+
+/* 智能粘贴 */
+.sp-wrap{position:relative;}
+.sp-wrap textarea{border-color:#c4b5fd;background:#faf5ff;min-height:88px;padding-bottom:46px;}
+.sp-wrap textarea:focus{border-color:#7c3aed;}
+.sp-btn{position:absolute;bottom:9px;left:9px;right:9px;padding:8px;background:#7c3aed;color:white;border:none;border-radius:7px;font-size:12px;font-weight:600;cursor:pointer;text-align:center;}
+.sp-btn:active{background:#6d28d9;}
+.msg-ok{margin-top:6px;padding:8px 11px;background:#f0fdf4;border:1px solid #86efac;border-radius:7px;font-size:11px;color:#15803d;display:none;}
+.msg-warn{margin-top:6px;padding:8px 11px;background:#fefce8;border:1px solid #fde68a;border-radius:7px;font-size:11px;color:#92400e;display:none;}
+
+/* 城市 */
+.city-ok{background:#f0fdf4!important;border-color:#86efac!important;color:#065f46!important;font-weight:500;}
+
+/* HS下拉 */
+.hs-wrap{position:relative;}
+.hs-drop{display:none;position:absolute;top:100%;left:0;right:0;background:white;border:1.5px solid var(--border);border-radius:8px;box-shadow:0 4px 16px rgba(0,0,0,.1);z-index:99;max-height:180px;overflow-y:auto;}
+.hs-item{padding:9px 13px;cursor:pointer;font-size:13px;border-bottom:1px solid #f1f5f9;}
+.hs-item:hover{background:#f0f6ff;}
+
+/* 勾选 */
+.ckopts{display:flex;flex-wrap:wrap;gap:8px;margin-top:6px;}
+.ckitem input{display:none;}
+.ckitem label{display:flex;align-items:center;gap:7px;cursor:pointer;background:var(--bg);border:1.5px solid var(--border);border-radius:8px;padding:9px 13px;font-size:13px;font-weight:500;color:var(--text);user-select:none;transition:all .2s;}
+.ckitem label::before{content:'';width:15px;height:15px;flex-shrink:0;border:2px solid #cbd5e1;border-radius:4px;background:white;transition:all .2s;}
+.ckitem input:checked+label{border-color:var(--teal);background:#f0fdfa;color:#0f766e;}
+.ckitem input:checked+label::before{background:var(--teal);border-color:var(--teal);background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath d='M2 6l3 3 5-5' stroke='white' stroke-width='2' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:center;background-size:10px;}
+
+/* 提交按钮 */
+.btn-sub{width:100%;padding:15px;background:linear-gradient(135deg,var(--blue),#1d4ed8);color:white;border:none;border-radius:10px;font-family:'DM Sans',sans-serif;font-size:16px;font-weight:600;cursor:pointer;margin-top:6px;transition:opacity .2s;}
+.btn-sub:active{opacity:.85;}
+.btn-sub:disabled{opacity:.6;cursor:not-allowed;}
+.spinner{display:inline-block;width:14px;height:14px;border:2px solid rgba(255,255,255,.4);border-top-color:white;border-radius:50%;animation:spin .7s linear infinite;margin-right:7px;vertical-align:middle;}
+@keyframes spin{to{transform:rotate(360deg);}}
+
+/* 结果 */
+#res{margin-top:14px;padding:15px;border-radius:9px;font-size:13px;line-height:1.8;display:none;}
+#res.ok{background:#f0fdf4;border:1.5px solid #86efac;color:#15803d;display:block;}
+#res.err{background:#fef2f2;border:1.5px solid #fca5a5;color:#dc2626;display:block;}
+.id-pill{display:inline-block;background:#dcfce7;border:1px solid #86efac;border-radius:6px;padding:2px 9px;font-family:monospace;font-weight:700;color:#15803d;cursor:pointer;font-size:12px;}
+
+footer{text-align:center;padding:16px;font-size:11px;color:var(--muted);}
+footer a{color:var(--blue);text-decoration:none;}
+
+@media(max-width:480px){
+  .r2{grid-template-columns:1fr;}
+  .ch{padding:20px 18px 16px;}
+  .cb{padding:18px 16px 26px;}
+  header{padding:14px 16px;}
+}
+</style>
+</head>
+<body>
+<div class="stripe"></div>
+<header>
+  <div class="logo">B</div>
+  <div class="logo-text">
+    <h1>保凯达国际物流</h1>
+    <p>BKD Cross-Border Logistics</p>
+  </div>
+</header>
+<main>
+<div class="card">
+  <div class="ch">
+    <h2>Place Your Order / 提交下单</h2>
+    <p>Fill in your shipping details and we'll process your order promptly.</p>
+    <div class="date-tag" id="dateTag">—</div>
+    <div class="oid-bar">
+      <span class="lb">Order ID</span>
+      <span class="oid" id="previewId">BKD-——</span>
+    </div>
+  </div>
+
+  <div class="cb">
+
+    <!-- 发件方 -->
+    <div class="sec">Sender / 发件方信息</div>
+
+    <div class="f">
+      <label>发件人公司名 / Sender Company *
+        <span id="coBadge" style="display:none;margin-left:5px;font-size:9px;background:#dbeafe;color:#1a56db;padding:2px 6px;border-radius:9px;font-weight:600;">已保存</span>
+      </label>
+      <input type="text" id="senderCompany" placeholder="e.g. 保凯达（上海）国际物流有限公司">
+      <div class="hint"><span class="slink" id="saveCo">💾 保存公司名</span></div>
+    </div>
+
+    <div class="f">
+      <label>联系邮箱 / Email *
+        <span id="emBadge" style="display:none;margin-left:5px;font-size:9px;background:#dbeafe;color:#1a56db;padding:2px 6px;border-radius:9px;font-weight:600;">已保存</span>
+      </label>
+      <input type="email" id="email" placeholder="your@email.com">
+      <div class="hint"><span class="slink" id="saveEm">💾 保存邮箱</span></div>
+    </div>
+
+    <div class="f">
+      <label>运输渠道 / Shipping Channel *</label>
+      <select id="channel">
+        <option value="">— 请选择 —</option>
+        <option>大陆 DHL</option>
+        <option>HK DHL</option>
+        <option>韩国 DHL</option>
+        <option>北京 FedEx</option>
+        <option>郑州 FedEx</option>
+        <option>南通 FedEx</option>
+        <option>大陆 UPS</option>
+        <option>HK UPS</option>
+        <option>越南 UPS</option>
+        <option>韩国 UPS</option>
+        <option>黑龙江 CDEK</option>
+        <option>上海 CDEK</option>
+        <option>双清包税 美国/加拿大/墨西哥</option>
+        <option>Aramex 中东专线</option>
+      </select>
+    </div>
+
+    <div class="divider"></div>
+
+    <!-- 收货地址 -->
+    <div class="sec">Shipping Address / 收货地址</div>
+
+    <div class="f">
+      <label>智能识别 / Smart Paste
+        <span style="font-size:9px;background:#ede9fe;color:#6d28d9;padding:2px 7px;border-radius:9px;font-weight:600;text-transform:none;letter-spacing:0;margin-left:5px;">一键填入</span>
+      </label>
+      <div class="sp-wrap">
+        <textarea id="smartPaste" placeholder="将收件人信息整段粘贴至此，点击「识别填入」自动拆分各字段&#10;&#10;例：John Smith  +1 213 555 0198&#10;123 Main St, Los Angeles CA 90001&#10;United States"></textarea>
+        <button class="sp-btn" id="spBtn">识别填入 ✨</button>
+      </div>
+      <div id="parseOk" class="msg-ok"></div>
+      <div id="parseWarn" class="msg-warn"></div>
+    </div>
+
+    <div class="r2">
+      <div class="f">
+        <label>Country / 国家 *</label>
+        <select id="country">
+          <option value="">— Select —</option>
+          <optgroup label="Asia Pacific">
+            <option value="AU">Australia</option>
+            <option value="BD">Bangladesh</option>
+            <option value="IN">India</option>
+            <option value="ID">Indonesia</option>
+            <option value="JP">Japan</option>
+            <option value="KR">South Korea</option>
+            <option value="MY">Malaysia</option>
+            <option value="NZ">New Zealand</option>
+            <option value="PK">Pakistan</option>
+            <option value="PH">Philippines</option>
+            <option value="SG">Singapore</option>
+            <option value="TH">Thailand</option>
+            <option value="VN">Vietnam</option>
+          </optgroup>
+          <optgroup label="Middle East">
+            <option value="AE">UAE</option>
+            <option value="KW">Kuwait</option>
+            <option value="QA">Qatar</option>
+            <option value="SA">Saudi Arabia</option>
+            <option value="TR">Turkey</option>
+            <option value="KZ">Kazakhstan</option>
+          </optgroup>
+          <optgroup label="Africa">
+            <option value="DZ">Algeria</option>
+            <option value="AO">Angola</option>
+            <option value="CM">Cameroon</option>
+            <option value="CD">Congo (DRC)</option>
+            <option value="EG">Egypt</option>
+            <option value="ET">Ethiopia</option>
+            <option value="GH">Ghana</option>
+            <option value="CI">Ivory Coast</option>
+            <option value="KE">Kenya</option>
+            <option value="MG">Madagascar</option>
+            <option value="MA">Morocco</option>
+            <option value="MZ">Mozambique</option>
+            <option value="NG">Nigeria</option>
+            <option value="SN">Senegal</option>
+            <option value="ZA">South Africa</option>
+            <option value="TZ">Tanzania</option>
+            <option value="TN">Tunisia</option>
+            <option value="UG">Uganda</option>
+            <option value="ZM">Zambia</option>
+            <option value="ZW">Zimbabwe</option>
+          </optgroup>
+          <optgroup label="North America">
+            <option value="CA">Canada</option>
+            <option value="MX">Mexico</option>
+            <option value="US">United States</option>
+          </optgroup>
+          <optgroup label="South America">
+            <option value="AR">Argentina</option>
+            <option value="BO">Bolivia</option>
+            <option value="BR">Brazil</option>
+            <option value="CL">Chile</option>
+            <option value="CO">Colombia</option>
+            <option value="EC">Ecuador</option>
+            <option value="PY">Paraguay</option>
+            <option value="PE">Peru</option>
+            <option value="UY">Uruguay</option>
+            <option value="VE">Venezuela</option>
+          </optgroup>
+          <optgroup label="Europe">
+            <option value="AT">Austria</option>
+            <option value="BE">Belgium</option>
+            <option value="CZ">Czech Republic</option>
+            <option value="DK">Denmark</option>
+            <option value="FI">Finland</option>
+            <option value="FR">France</option>
+            <option value="DE">Germany</option>
+            <option value="GR">Greece</option>
+            <option value="HU">Hungary</option>
+            <option value="IE">Ireland</option>
+            <option value="IT">Italy</option>
+            <option value="NL">Netherlands</option>
+            <option value="NO">Norway</option>
+            <option value="PL">Poland</option>
+            <option value="PT">Portugal</option>
+            <option value="RO">Romania</option>
+            <option value="RU">Russia</option>
+            <option value="ES">Spain</option>
+            <option value="SE">Sweden</option>
+            <option value="CH">Switzerland</option>
+            <option value="GB">United Kingdom</option>
+            <option value="UA">Ukraine</option>
+          </optgroup>
+          <option value="OTHER">Other / 其他</option>
+        </select>
+      </div>
+      <div class="f">
+        <label>ZIP / 邮编 *</label>
+        <input type="text" id="zip" placeholder="e.g. 10001">
+        <div id="cityRow" style="display:none;margin-top:6px;">
+          <input type="text" id="cityVal" readonly class="city-ok">
+          <div class="hint">城市自动匹配</div>
+        </div>
+        <div id="zipWarn" style="display:none;margin-top:5px;font-size:11px;padding:5px 9px;background:#fefce8;border:1px solid #fde68a;border-radius:6px;color:#92400e;">
+          不支持自动匹配，请在地址栏填写城市。
+        </div>
+      </div>
+    </div>
+
+    <div class="f">
+      <label>Address / 地址 *</label>
+      <textarea id="address" placeholder="Complete street address / 完整街道地址"></textarea>
+    </div>
+
+    <div class="r2">
+      <div class="f">
+        <label>收件公司 / Recv Company</label>
+        <input type="text" id="recvCompany" placeholder="Company (if any)">
+      </div>
+      <div class="f">
+        <label>收件人 / Recipient *</label>
+        <input type="text" id="recvName" placeholder="Full name">
+      </div>
+    </div>
+
+    <div class="f">
+      <label>收件电话 / Phone *</label>
+      <input type="text" id="recvPhone" placeholder="+1 234 567 8900">
+    </div>
+
+    <div class="divider"></div>
+
+    <!-- 货品 -->
+    <div class="sec">Goods Info / 货品信息</div>
+
+    <div class="f">
+      <label>产品描述 / Description *</label>
+      <textarea id="goods" placeholder="e.g. Electronic accessories x 2 boxes, approx 5kg"></textarea>
+    </div>
+
+    <div class="r2">
+      <div class="f">
+        <label>申报金额 / Declared Value *</label>
+        <input type="number" id="declaredValue" placeholder="e.g. 150" min="0">
+      </div>
+      <div class="f">
+        <label>货币 / Currency</label>
+        <select id="currency">
+          <option value="USD">USD 美元</option>
+          <option value="EUR">EUR 欧元</option>
+          <option value="GBP">GBP 英镑</option>
+          <option value="CNY">CNY 人民币</option>
+          <option value="AUD">AUD 澳元</option>
+          <option value="CAD">CAD 加元</option>
+          <option value="JPY">JPY 日元</option>
+          <option value="SGD">SGD 新币</option>
+          <option value="AED">AED 迪拉姆</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="f">
+      <label>HS Code <span style="font-weight:400;text-transform:none;letter-spacing:0;font-size:10px;">（选填）</span></label>
+      <div class="hs-wrap">
+        <input type="text" id="hsCode" placeholder="输入品名搜索，或直接填写HS编码">
+        <div id="hsDrop" class="hs-drop"></div>
+      </div>
+      <div class="hint">非必填，填写有助于通关。</div>
+    </div>
+
+    <div class="f">
+      <label>特殊货物 / Special Cargo</label>
+      <div class="ckopts">
+        <div class="ckitem"><input type="checkbox" id="chk1"><label for="chk1">普货</label></div>
+        <div class="ckitem"><input type="checkbox" id="chk2"><label for="chk2">化工品</label></div>
+        <div class="ckitem"><input type="checkbox" id="chk3"><label for="chk3">含电池</label></div>
+        <div class="ckitem"><input type="checkbox" id="chk4"><label for="chk4">纯电</label></div>
+        <div class="ckitem"><input type="checkbox" id="chk5"><label for="chk5">俄罗斯线路</label></div>
+      </div>
+    </div>
+
+    <div class="f">
+      <label>备注 / Remarks</label>
+      <textarea id="remarks" placeholder="Special instructions..." style="min-height:56px;"></textarea>
+    </div>
+
+    <button class="btn-sub" id="subBtn">Submit Order / 提交订单</button>
+    <div id="res"></div>
+
+  </div>
+</div>
+</main>
+<footer>
+  <a href="http://www.baokaida.com">www.baokaida.com</a> &nbsp;·&nbsp; 保凯达（上海）国际物流有限公司 &nbsp;·&nbsp; <a href="mailto:bkd@baokaida.com">bkd@baokaida.com</a>
+</footer>
+
+<script>
+// ══════════════════════════════════════
+// 初始化 EmailJS
+// ══════════════════════════════════════
+emailjs.init('YHvUgG6O1FuMM5qiL');
+var SVC = 'service_78rh9xw';
+var TPL = 'template_epeisgh';
+
+// ══════════════════════════════════════
+// 工具
+// ══════════════════════════════════════
+function pad(n){ return String(n).padStart(2,'0'); }
+function dateStr(){
+  var d=new Date();
+  return d.getFullYear()+pad(d.getMonth()+1)+pad(d.getDate());
+}
+function todayFull(){
+  var d=new Date();
+  return d.getFullYear()+' / '+pad(d.getMonth()+1)+' / '+pad(d.getDate());
+}
+function clean(s){
+  return (s||'').replace(/[^\x20-\x7E\u4e00-\u9fff\u3000-\u303f]/g,'').trim();
+}
+function getDailyNum(){
+  var key='bkd_n_'+dateStr(), n=0;
+  try{ n=parseInt(localStorage.getItem(key)||'0'); }catch(e){}
+  n++;
+  try{ localStorage.setItem(key,n); }catch(e){}
+  return pad(n);
+}
+function g(id){ return document.getElementById(id); }
+function val(id){ return (g(id).value||'').trim(); }
+
+// ══════════════════════════════════════
+// 启动
+// ══════════════════════════════════════
+g('dateTag').textContent = todayFull();
+
+// 读取已保存公司名/邮箱
+try{
+  var sc=localStorage.getItem('bkd_co');
+  if(sc){ g('senderCompany').value=sc; g('coBadge').style.display='inline'; }
+  var se=localStorage.getItem('bkd_em');
+  if(se){ g('email').value=se; g('emBadge').style.display='inline'; }
+}catch(e){}
+
+// ══════════════════════════════════════
+// 保存按钮
+// ══════════════════════════════════════
+g('saveCo').addEventListener('click', function(){
+  var v=val('senderCompany'); if(!v) return;
+  try{ localStorage.setItem('bkd_co',v); }catch(e){}
+  g('coBadge').style.display='inline';
+  g('saveCo').textContent='✓ 已保存';
+  setTimeout(function(){ g('saveCo').textContent='💾 保存公司名'; },2000);
+});
+g('saveEm').addEventListener('click', function(){
+  var v=val('email'); if(!v) return;
+  try{ localStorage.setItem('bkd_em',v); }catch(e){}
+  g('emBadge').style.display='inline';
+  g('saveEm').textContent='✓ 已保存';
+  setTimeout(function(){ g('saveEm').textContent='💾 保存邮箱'; },2000);
+});
+
+// ══════════════════════════════════════
+// 订单号预览
+// ══════════════════════════════════════
+function updatePreview(){
+  var co=val('senderCompany').toUpperCase().replace(/[^A-Z0-9]/g,'').slice(0,6)||'——';
+  var cc=val('country')||'——';
+  g('previewId').textContent='BKD-'+co+'-'+dateStr()+'-??-'+cc;
+}
+g('senderCompany').addEventListener('input', updatePreview);
+g('country').addEventListener('change', function(){ updatePreview(); triggerZip(); });
+
+// ══════════════════════════════════════
+// 邮编→城市
+// ══════════════════════════════════════
+var ZIP_OK=['US','CA','GB','DE','FR','NL','AU','AT','BE','CH','CZ','DK','ES','FI','GR','HU','IE','IT','NO','PL','PT','SE','SG','BR','MX','IN','JP','ZA','TR','AR','CO','CL','NZ','PH','MY'];
+var zipTimer=null;
+function triggerZip(){
+  clearTimeout(zipTimer);
+  g('cityRow').style.display='none';
+  g('zipWarn').style.display='none';
+  var z=val('zip'), c=val('country');
+  if(!z||!c) return;
+  if(ZIP_OK.indexOf(c)===-1){ g('zipWarn').style.display='block'; return; }
+  zipTimer=setTimeout(function(){
+    fetch('https://api.zippopotam.us/'+c.toLowerCase()+'/'+encodeURIComponent(z))
+      .then(function(r){ if(!r.ok) throw 0; return r.json(); })
+      .then(function(d){
+        var p=d.places&&d.places[0];
+        if(p){
+          g('cityVal').value=p['place name']+(p['state']?', '+p['state']:'');
+          g('cityRow').style.display='block';
+        }
+      }).catch(function(){ g('zipWarn').style.display='block'; });
+  },700);
+}
+g('zip').addEventListener('input', triggerZip);
+
+// ══════════════════════════════════════
+// HS Code 搜索
+// ══════════════════════════════════════
+var HSDB=[
+  {k:'电子|electronic|电器',c:'8543.70',d:'Electronic equipment'},
+  {k:'手机|mobile|phone|smartphone',c:'8517.12',d:'Mobile phones'},
+  {k:'电脑|laptop|computer',c:'8471.30',d:'Laptops'},
+  {k:'耳机|headphone|earphone',c:'8518.30',d:'Headphones'},
+  {k:'电池|battery|充电宝|powerbank',c:'8507.60',d:'Lithium batteries'},
+  {k:'充电器|charger|adapter|适配器',c:'8504.40',d:'Chargers'},
+  {k:'摄像头|camera|相机',c:'8525.80',d:'Cameras'},
+  {k:'服装|clothing|garment|衣服',c:'6211.43',d:'Clothing'},
+  {k:'鞋|shoes|footwear|sneaker',c:'6404.11',d:'Footwear'},
+  {k:'玩具|toy',c:'9503.00',d:'Toys'},
+  {k:'化妆品|cosmetic|makeup|skincare|护肤',c:'3304.99',d:'Cosmetics'},
+  {k:'食品|food|snack|零食',c:'2106.90',d:'Food'},
+  {k:'书|book',c:'4901.99',d:'Books'},
+  {k:'手表|watch',c:'9102.11',d:'Watches'},
+  {k:'箱包|bag|luggage|handbag',c:'4202.22',d:'Bags'},
+  {k:'化工|chemical',c:'3824.99',d:'Chemical products'},
+  {k:'汽车配件|auto part|car part',c:'8708.99',d:'Auto parts'},
+  {k:'医疗|medical|药',c:'3004.90',d:'Medical'},
+  {k:'家具|furniture',c:'9403.20',d:'Furniture'},
+  {k:'灯|lamp|lighting',c:'9405.10',d:'Lighting'},
+];
+g('hsCode').addEventListener('input', function(){
+  var q=(this.value||'').toLowerCase();
+  var drop=g('hsDrop');
+  if(!q){ drop.style.display='none'; return; }
+  var hits=HSDB.filter(function(r){
+    return r.k.toLowerCase().split('|').some(function(k){ return k.indexOf(q)!==-1||q.indexOf(k)!==-1; });
+  });
+  if(!hits.length){ drop.style.display='none'; return; }
+  drop.innerHTML=hits.map(function(r){
+    return '<div class="hs-item" data-code="'+r.c+'" data-desc="'+r.d+'"><strong style="color:var(--blue)">'+r.c+'</strong> — '+r.d+'</div>';
+  }).join('');
+  drop.style.display='block';
+  drop.querySelectorAll('.hs-item').forEach(function(el){
+    el.addEventListener('click', function(){
+      g('hsCode').value=el.dataset.code+' ('+el.dataset.desc+')';
+      drop.style.display='none';
+    });
+  });
+});
+document.addEventListener('click', function(e){
+  if(!g('hsCode').contains(e.target)) g('hsDrop').style.display='none';
+});
+
+// ══════════════════════════════════════
+// 智能地址识别
+// ══════════════════════════════════════
+var CMAP={
+  'united states':'US','usa':'US','america':'US',
+  'united kingdom':'GB','uk':'GB','england':'GB','britain':'GB',
+  'australia':'AU','germany':'DE','france':'FR','netherlands':'NL',
+  'holland':'NL','singapore':'SG','japan':'JP','south korea':'KR',
+  'korea':'KR','uae':'AE','united arab emirates':'AE','malaysia':'MY',
+  'thailand':'TH','philippines':'PH','vietnam':'VN','indonesia':'ID',
+  'india':'IN','canada':'CA','mexico':'MX','brazil':'BR','argentina':'AR',
+  'chile':'CL','colombia':'CO','peru':'PE','south africa':'ZA',
+  'nigeria':'NG','kenya':'KE','egypt':'EG','russia':'RU','ukraine':'UA',
+  'poland':'PL','spain':'ES','italy':'IT','portugal':'PT','sweden':'SE',
+  'norway':'NO','denmark':'DK','finland':'FI','austria':'AT','belgium':'BE',
+  'switzerland':'CH','czech republic':'CZ','czechia':'CZ','hungary':'HU',
+  'greece':'GR','ireland':'IE','romania':'RO','turkey':'TR',
+  'saudi arabia':'SA','qatar':'QA','kuwait':'KW','pakistan':'PK',
+  'bangladesh':'BD','new zealand':'NZ',
+  '美国':'US','英国':'GB','澳大利亚':'AU','德国':'DE','法国':'FR',
+  '荷兰':'NL','新加坡':'SG','日本':'JP','韩国':'KR','阿联酋':'AE',
+  '马来西亚':'MY','泰国':'TH','菲律宾':'PH','越南':'VN','印尼':'ID',
+  '印度':'IN','加拿大':'CA','墨西哥':'MX','巴西':'BR','俄罗斯':'RU',
+  '意大利':'IT','西班牙':'ES','波兰':'PL','土耳其':'TR','南非':'ZA'
+};
+
+g('spBtn').addEventListener('click', function(){
+  var raw=(g('smartPaste').value||'').trim();
+  if(!raw){ g('parseWarn').textContent='请先粘贴收件信息。'; g('parseWarn').style.display='block'; g('parseOk').style.display='none'; return; }
+
+  var lines=raw.split(/[\n\r]+/).map(function(l){ return l.trim(); }).filter(Boolean);
+  var found={country:'',zip:'',address:[],phone:'',name:''};
+  var used=[];
+
+  // 国家
+  for(var i=0;i<lines.length;i++){
+    var low=lines[i].toLowerCase().trim();
+    if(CMAP[low]){ found.country=CMAP[low]; used.push(i); break; }
+    var keys=Object.keys(CMAP);
+    for(var k=0;k<keys.length;k++){
+      if(keys[k].length>3&&low.indexOf(keys[k])!==-1){ found.country=CMAP[keys[k]]; break; }
+    }
+    if(found.country){ used.push(i); break; }
+  }
+  // 邮编
+  for(var i=0;i<lines.length;i++){
+    if(used.indexOf(i)!==-1||found.zip) continue;
+    var m=lines[i].match(/\b([A-Z]{1,2}\d[A-Z\d]?\s?\d[A-Z]{2})\b/i)
+        ||lines[i].match(/\b(\d{5}(?:-\d{4})?)\b/)
+        ||lines[i].match(/\b(\d{4,6})\b/);
+    if(m) found.zip=m[1];
+  }
+  // 电话
+  for(var i=0;i<lines.length;i++){
+    if(used.indexOf(i)!==-1) continue;
+    if(/(?:\+|00)\d[\d\s\-().]{6,}/.test(lines[i])||/^\d[\d\s\-().]{7,}$/.test(lines[i])){
+      found.phone=lines[i]; used.push(i); break;
+    }
+  }
+  // 姓名
+  for(var i=0;i<lines.length;i++){
+    if(used.indexOf(i)!==-1) continue;
+    var wc=lines[i].split(/\s+/).length;
+    if(!/^\d/.test(lines[i])&&wc>=1&&wc<=5&&lines[i].length<=40&&!/@/.test(lines[i])){
+      found.name=lines[i]; used.push(i); break;
+    }
+  }
+  // 地址
+  for(var i=0;i<lines.length;i++){
+    if(used.indexOf(i)!==-1) continue;
+    if(found.zip&&lines[i].trim()===found.zip) continue;
+    found.address.push(lines[i]);
+  }
+
+  var filled=[];
+  if(found.country){
+    var sel=g('country');
+    for(var i=0;i<sel.options.length;i++){
+      if(sel.options[i].value===found.country){ sel.selectedIndex=i; break; }
+    }
+    updatePreview(); triggerZip(); filled.push('国家');
+  }
+  if(found.zip){ g('zip').value=found.zip; triggerZip(); filled.push('邮编'); }
+  if(found.address.length){ g('address').value=found.address.join(', '); filled.push('地址'); }
+  if(found.name){ g('recvName').value=found.name; filled.push('收件人'); }
+  if(found.phone){ g('recvPhone').value=found.phone; filled.push('电话'); }
+
+  if(filled.length){
+    g('parseOk').innerHTML='✅ 已识别：<strong>'+filled.join('、')+'</strong> — 请检查并修正。';
+    g('parseOk').style.display='block'; g('parseWarn').style.display='none';
+  }else{
+    g('parseWarn').textContent='未能自动识别，请手动填写。';
+    g('parseWarn').style.display='block'; g('parseOk').style.display='none';
+  }
+});
+
+// ══════════════════════════════════════
+// 生成发票 PDF
+// ══════════════════════════════════════
+function makePDF(d){
+  var jsPDF=window.jspdf.jsPDF;
+  var doc=new jsPDF({unit:'mm',format:'a4'});
+  var W=210,lm=18,rm=192;
+  var y=0;
+
+  doc.setFillColor(26,86,219); doc.rect(0,0,W,7,'F');
+  y=19;
+  doc.setFontSize(17); doc.setFont('helvetica','bold'); doc.setTextColor(15,31,61);
+  doc.text('COMMERCIAL INVOICE',lm,y);
+  doc.setFontSize(9); doc.setFont('helvetica','normal'); doc.setTextColor(100,116,139);
+  doc.text('通关形式发票 / For Customs Clearance Only',lm,y+6);
+  doc.setFontSize(9); doc.setTextColor(15,31,61); doc.setFont('helvetica','bold');
+  doc.text('Invoice No: '+d.orderId,rm,y,{align:'right'});
+  doc.setFont('helvetica','normal');
+  doc.text('Date: '+d.date,rm,y+6,{align:'right'});
+  doc.text('Channel: '+d.channel,rm,y+12,{align:'right'});
+
+  y+=22; doc.setDrawColor(191,219,254); doc.setLineWidth(0.4); doc.line(lm,y,rm,y);
+  y+=8;
+  var mid=108;
+
+  // Shipper
+  doc.setFontSize(8); doc.setFont('helvetica','bold'); doc.setTextColor(13,148,136);
+  doc.text('SHIPPER / 发件方',lm,y); y+=5;
+  doc.setFont('helvetica','normal'); doc.setTextColor(30,41,59);
+  var sy=y;
+  [d.senderCompany,'BKD (Shanghai) International Logistics Co., Ltd.',
+   '80 Huashen Road, Waigaoqiao FTZ, Shanghai','China',d.email].forEach(function(l){
+    if(l){ doc.setFontSize(8.5); doc.text(l,lm,sy); sy+=4.8; }
+  });
+
+  // Consignee
+  var cy=y-5; doc.setFontSize(8); doc.setFont('helvetica','bold'); doc.setTextColor(13,148,136);
+  doc.text('CONSIGNEE / 收件方',mid,cy); cy+=5;
+  doc.setFont('helvetica','normal'); doc.setTextColor(30,41,59);
+  [d.recvCompany,d.recvName,d.recvPhone,d.address,(d.city?d.city+', ':'')+d.zip,d.countryName].forEach(function(l){
+    if(l){ doc.setFontSize(8.5); doc.text(l,mid,cy); cy+=4.8; }
+  });
+
+  y=Math.max(sy,cy)+6;
+  doc.setDrawColor(191,219,254); doc.line(lm,y,rm,y); y+=8;
+
+  // 表头
+  doc.setFillColor(219,234,254); doc.rect(lm,y-4,rm-lm,7,'F');
+  doc.setFontSize(8.5); doc.setFont('helvetica','bold'); doc.setTextColor(37,99,235);
+  doc.text('DESCRIPTION',lm+2,y+0.5);
+  doc.text('HS CODE',120,y+0.5);
+  doc.text('DECLARED VALUE',rm,y+0.5,{align:'right'});
+  y+=9;
+
+  doc.setFont('helvetica','normal'); doc.setTextColor(30,41,59); doc.setFontSize(8.5);
+  doc.text((d.goods||'').slice(0,70),lm+2,y);
+  doc.text(d.hsCode||'—',120,y);
+  doc.text(d.currency+' '+d.declaredValue,rm,y,{align:'right'});
+  y+=5;
+
+  if(d.special&&d.special!=='无'){
+    doc.setFontSize(7.5); doc.setTextColor(100,116,139);
+    doc.text('Special: '+d.special,lm+2,y); y+=4.5;
+  }
+
+  y+=2; doc.setDrawColor(191,219,254); doc.line(lm,y,rm,y); y+=7;
+  doc.setFont('helvetica','bold'); doc.setFontSize(9); doc.setTextColor(15,31,61);
+  doc.text('TOTAL DECLARED VALUE:',128,y);
+  doc.text(d.currency+' '+d.declaredValue,rm,y,{align:'right'}); y+=10;
+
+  if(d.remarks&&d.remarks!=='-'){
+    doc.setFont('helvetica','normal'); doc.setFontSize(8); doc.setTextColor(100,116,139);
+    doc.text('Remarks: '+d.remarks,lm,y); y+=8;
+  }
+
+  doc.setDrawColor(191,219,254); doc.line(lm,y,rm,y); y+=6;
+  doc.setFont('helvetica','italic'); doc.setFontSize(7.5); doc.setTextColor(100,116,139);
+  doc.text('This invoice is for customs clearance purposes only. Goods of Chinese origin.',lm,y,{maxWidth:rm-lm}); y+=5;
+  doc.text('本发票仅供通关申报参考，货物原产地为中国。',lm,y);
+
+  doc.setFillColor(219,234,254); doc.rect(0,283,W,14,'F');
+  doc.setFontSize(8); doc.setFont('helvetica','normal'); doc.setTextColor(37,99,235);
+  doc.text('BKD (Shanghai) International Logistics  |  bkd@baokaida.com  |  www.baokaida.com',W/2,291,{align:'center'});
+
+  return doc;
+}
+
+// ══════════════════════════════════════
+// 提交
+// ══════════════════════════════════════
+g('subBtn').addEventListener('click', function(){
+  var btn=g('subBtn'), res=g('res');
+  res.className=''; res.style.display='none';
+
+  var company=val('senderCompany'), email=val('email'), channel=val('channel'),
+      country=val('country'), zip=val('zip'), address=val('address'),
+      recvName=val('recvName'), recvPhone=val('recvPhone'),
+      goods=val('goods'), declared=val('declaredValue');
+
+  var checks=[
+    [!company,'请填写发件公司名','senderCompany'],
+    [!email,'请填写联系邮箱','email'],
+    [!channel,'请选择运输渠道','channel'],
+    [!country,'请选择国家','country'],
+    [!zip,'请填写邮编','zip'],
+    [!address,'请填写地址','address'],
+    [!recvName,'请填写收件人','recvName'],
+    [!recvPhone,'请填写收件电话','recvPhone'],
+    [!goods,'请填写产品描述','goods'],
+    [!declared,'请填写申报金额','declaredValue'],
+  ];
+  for(var i=0;i<checks.length;i++){
+    if(checks[i][0]){ alert(checks[i][1]); g(checks[i][2]).focus(); return; }
+  }
+
+  var sp=[];
+  if(g('chk1').checked)sp.push('普货');
+  if(g('chk2').checked)sp.push('化工品');
+  if(g('chk3').checked)sp.push('含电池');
+  if(g('chk4').checked)sp.push('纯电');
+  if(g('chk5').checked)sp.push('俄罗斯线路');
+
+  var csel=g('country'), cname=csel.options[csel.selectedIndex].text;
+  var city=(g('cityRow').style.display!=='none')?val('cityVal'):'';
+  var currency=val('currency')||'USD';
+  var hsCode=val('hsCode'), remarks=val('remarks'), recvCo=val('recvCompany');
+
+  var num=getDailyNum();
+  var coCode=company.toUpperCase().replace(/[^A-Z0-9]/g,'').slice(0,6)||'CLIENT';
+  var orderId='BKD-'+coCode+'-'+dateStr()+'-'+num+'-'+country.slice(0,5);
+  var ticketN=parseInt(num);
+
+  var pdfData={
+    orderId:orderId, date:todayFull(), channel:channel,
+    senderCompany:clean(company), email:email,
+    recvCompany:clean(recvCo), recvName:clean(recvName), recvPhone:recvPhone,
+    address:clean(address), city:city, zip:zip, countryName:cname,
+    goods:clean(goods), hsCode:hsCode, declaredValue:declared,
+    currency:currency, special:sp.length?sp.join(' / '):'无', remarks:clean(remarks)||'-'
+  };
+
+  var params={
+    order_id:orderId, sender_company:clean(company), email:email, channel:channel,
+    country:cname, zip:zip, city:city||'-', address:clean(address),
+    recv_company:clean(recvCo)||'-', recv_name:clean(recvName), recv_phone:recvPhone,
+    goods:clean(goods), hs_code:hsCode||'-', declared_value:declared+' '+currency,
+    special:sp.length?sp.join(' / '):'无', remarks:clean(remarks)||'-',
+    submit_time:new Date().toLocaleString('en-GB'),
+    to_email:'bkd@baokaida.com'
+  };
+
+  btn.disabled=true;
+  btn.innerHTML='<span class="spinner"></span>Submitting...';
+
+  emailjs.send(SVC,TPL,params).then(
+    function(){
+      try{ makePDF(pdfData).save(orderId+'.pdf'); }catch(e){ console.warn('PDF err',e); }
+
+      res.innerHTML=
+        '✅ <strong>提交成功！</strong><br><br>'+
+        '感谢您今日的第 <strong>'+ticketN+'</strong> 次提交。<br>'+
+        '订单编码：<span class="id-pill" id="copyPill">'+orderId+' 📋</span><br><br>'+
+        '📄 通关发票已下载（'+orderId+'.pdf）<br>'+
+        '我们将尽快与您联系。';
+      res.className='ok'; res.style.display='block';
+      res.scrollIntoView({behavior:'smooth',block:'nearest'});
+      g('copyPill').addEventListener('click',function(){
+        navigator.clipboard.writeText(orderId).then(function(){ g('copyPill').textContent=orderId+' ✓'; });
+      });
+
+      ['zip','address','recvCompany','recvName','recvPhone','goods',
+       'declaredValue','hsCode','remarks','smartPaste'].forEach(function(id){ g(id).value=''; });
+      g('country').selectedIndex=0; g('channel').selectedIndex=0;
+      ['chk1','chk2','chk3','chk4','chk5'].forEach(function(id){ g(id).checked=false; });
+      g('cityRow').style.display='none'; g('zipWarn').style.display='none';
+      g('parseOk').style.display='none'; g('parseWarn').style.display='none';
+      g('previewId').textContent='BKD-——';
+      btn.disabled=false; btn.innerHTML='Submit Order / 提交订单';
+    },
+    function(err){
+      res.innerHTML='❌ <strong>提交失败</strong>，请直接发邮件至 '+
+        '<a href="mailto:bkd@baokaida.com" style="color:#dc2626">bkd@baokaida.com</a><br>'+
+        '<span style="font-size:11px;color:#9ca3af;">'+JSON.stringify(err)+'</span>';
+      res.className='err'; res.style.display='block';
+      res.scrollIntoView({behavior:'smooth',block:'nearest'});
+      btn.disabled=false; btn.innerHTML='Submit Order / 提交订单';
+    }
+  );
+});
+</script>
+</body>
+</html>
