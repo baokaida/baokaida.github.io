@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="translate" content="no">
+<title>BKD 保凯达 | 运单追踪</title>
+<style>
+:root{--navy:#0f1f3d;--blue:#1a56db;--teal:#0d9488;--bg:#f0f6ff;--text:#1e293b;--muted:#64748b;--bdr:#bfdbfe;}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:system-ui,-apple-system,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;}
+.stripe{height:4px;background:linear-gradient(90deg,var(--blue),var(--teal));}
+header{background:var(--navy);padding:14px 20px;display:flex;align-items:center;gap:12px;}
+.logo{width:36px;height:36px;background:linear-gradient(135deg,var(--blue),var(--teal));border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:900;color:#fff;flex-shrink:0;}
+.lt h1{font-size:15px;color:#fff;font-weight:600;}.lt p{font-size:9px;color:#93c5fd;letter-spacing:.06em;}
+.nav-link{margin-left:auto;font-size:12px;color:#93c5fd;text-decoration:none;border:1px solid rgba(255,255,255,.2);border-radius:6px;padding:6px 12px;transition:all .2s;white-space:nowrap;}
+.nav-link:hover{background:rgba(255,255,255,.1);color:#fff;}
+main{display:flex;justify-content:center;padding:28px 12px 60px;}
+.wrap{width:100%;max-width:680px;}
+
+/* 搜索卡片 */
+.search-card{background:#fff;border-radius:14px;box-shadow:0 4px 30px rgba(15,31,61,.08);overflow:hidden;margin-bottom:18px;}
+.sch{background:linear-gradient(135deg,var(--navy),#1e3c72);padding:20px 22px 16px;}
+.sch h2{font-size:19px;color:#fff;font-weight:700;}
+.sch p{font-size:11px;color:#93c5fd;margin-top:3px;}
+.sb{padding:18px 22px 20px;}
+.input-row{display:flex;gap:10px;}
+.input-wrap{flex:1;position:relative;}
+.input-wrap input{width:100%;padding:11px 36px 11px 14px;border:1.5px solid var(--bdr);border-radius:9px;font-family:inherit;font-size:14px;color:var(--text);background:var(--bg);outline:none;transition:border-color .15s;}
+.input-wrap input:focus{border-color:var(--blue);background:#fff;box-shadow:0 0 0 3px rgba(26,86,219,.08);}
+.input-wrap input::placeholder{color:#94a3b8;font-size:13px;}
+.clear-btn{position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;color:#94a3b8;cursor:pointer;font-size:15px;padding:2px 4px;display:none;line-height:1;}
+.btn-track{padding:11px 24px;background:linear-gradient(135deg,var(--blue),#1d4ed8);color:#fff;border:none;border-radius:9px;font-family:inherit;font-size:14px;font-weight:700;cursor:pointer;white-space:nowrap;transition:opacity .2s;}
+.btn-track:hover{opacity:.88;}
+.btn-track:disabled{opacity:.55;cursor:not-allowed;}
+.hint-text{margin-top:9px;font-size:10px;color:var(--muted);}
+.hlabel{font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin-top:14px;margin-bottom:7px;}
+.history-bar{display:flex;flex-wrap:wrap;gap:6px;}
+.htag{background:var(--bg);border:1px solid var(--bdr);border-radius:6px;padding:4px 10px;font-size:11px;color:var(--blue);cursor:pointer;font-family:monospace;transition:all .15s;display:inline-flex;align-items:center;gap:5px;}
+.htag:hover{background:#dbeafe;border-color:var(--blue);}
+.hdel{color:#94a3b8;font-size:10px;}
+.hdel:hover{color:#ef4444;}
+
+/* 结果卡片 */
+.result-card{background:#fff;border-radius:14px;box-shadow:0 4px 30px rgba(15,31,61,.08);overflow:hidden;display:none;}
+.status-header{padding:16px 20px;border-bottom:1px solid var(--bdr);display:flex;align-items:center;gap:12px;flex-wrap:wrap;}
+.carrier-icon{width:44px;height:44px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:20px;color:#fff;flex-shrink:0;background:var(--navy);}
+.status-info{flex:1;min-width:0;}
+.status-name{font-size:14px;font-weight:700;color:var(--navy);}
+.status-num{font-family:monospace;font-size:11px;color:var(--muted);margin-top:2px;word-break:break-all;}
+.status-badge{font-size:11px;font-weight:700;padding:4px 12px;border-radius:20px;white-space:nowrap;}
+.s-transit{background:#fef9c3;color:#854d0e;}
+.s-pickup{background:#dbeafe;color:#1e40af;}
+.s-done{background:#dcfce7;color:#166534;}
+.s-problem{background:#fee2e2;color:#991b1b;}
+.s-delivery{background:#f3e8ff;color:#6b21a8;}
+.copy-btn{font-size:11px;color:var(--teal);cursor:pointer;border:1px solid var(--teal);border-radius:5px;padding:5px 11px;background:#fff;font-family:inherit;font-weight:700;transition:all .15s;flex-shrink:0;}
+.copy-btn:hover{background:#f0fdfa;}
+
+/* 加载 */
+.loading-wrap{padding:44px;text-align:center;}
+.loader{display:inline-block;width:30px;height:30px;border:3px solid var(--bdr);border-top-color:var(--blue);border-radius:50%;animation:spin .7s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg);}}
+.loading-wrap p{font-size:12px;color:var(--muted);margin-top:12px;}
+
+/* 时间轴 */
+.timeline-wrap{padding:18px 20px 22px;}
+.tl-item{display:flex;gap:14px;position:relative;padding-bottom:20px;}
+.tl-item:last-child{padding-bottom:0;}
+.tl-item:not(:last-child)::before{content:'';position:absolute;left:11px;top:26px;bottom:0;width:1.5px;background:var(--bdr);}
+.tl-dot{width:24px;height:24px;border-radius:50%;flex-shrink:0;margin-top:2px;display:flex;align-items:center;justify-content:center;font-size:11px;}
+.tl-dot.first{background:linear-gradient(135deg,var(--blue),var(--teal));box-shadow:0 2px 8px rgba(26,86,219,.3);}
+.tl-dot.normal{background:#f1f5f9;border:1.5px solid var(--bdr);color:var(--muted);}
+.tl-content{flex:1;}
+.tl-time{font-size:10px;color:var(--muted);margin-bottom:3px;}
+.tl-text{font-size:13px;color:var(--text);line-height:1.55;}
+.tl-text.bold{font-weight:700;color:var(--navy);}
+
+/* 底部 */
+.result-foot{padding:10px 20px 14px;border-top:1px solid var(--bdr);display:flex;align-items:center;justify-content:space-between;}
+.rf-time{font-size:10px;color:var(--muted);}
+.rf-refresh{font-size:11px;color:var(--blue);cursor:pointer;border:none;background:none;font-family:inherit;font-weight:700;}
+.rf-refresh:hover{text-decoration:underline;}
+
+/* 错误 */
+.err-wrap{padding:36px;text-align:center;}
+.err-wrap .eico{font-size:36px;margin-bottom:10px;}
+.err-wrap p{font-size:13px;color:var(--muted);line-height:2;}
+.err-wrap a{color:var(--blue);font-weight:700;}
+
+footer{text-align:center;padding:12px;font-size:10px;color:var(--muted);}
+footer a{color:var(--blue);text-decoration:none;}
+@media(max-width:500px){.input-row{flex-direction:column;}.btn-track{width:100%;}}
+</style>
+</head>
+<body>
+<div class="stripe"></div>
+<header>
+  <div class="logo">B</div>
+  <div class="lt">
+    <h1>保凯达（上海）国际物流</h1>
+    <p>BKD Cross-Border Logistics · www.baokaida.com</p>
+  </div>
+  <a class="nav-link" href="bkd-order.html">📦 在线下单</a>
+</header>
+
+<main><div class="wrap">
+
+  <div class="search-card">
+    <div class="sch">
+      <h2>🔍 运单追踪</h2>
+      <p>Shipment Tracking · 支持 FedEx / DHL / UPS / CDEK / Aramex 等国际快递</p>
+    </div>
+    <div class="sb">
+      <div class="input-row">
+        <div class="input-wrap">
+          <input type="text" id="trackInput" placeholder="输入快递单号，例如 773123456789" autocomplete="off" spellcheck="false">
+          <button class="clear-btn" id="clearBtn" onclick="clearInput()">✕</button>
+        </div>
+        <button class="btn-track" id="trackBtn" onclick="doTrack()">查询</button>
+      </div>
+      <div class="hint-text">💡 下单成功后，BKD 会将快递单号发送至您的邮箱</div>
+      <div id="histSection" style="display:none;">
+        <div class="hlabel">最近查询</div>
+        <div class="history-bar" id="histBar"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="result-card" id="resultCard">
+    <div id="loadWrap" class="loading-wrap">
+      <div class="loader"></div>
+      <p>正在查询物流信息…</p>
+    </div>
+    <div id="okWrap" style="display:none;">
+      <div class="status-header">
+        <div class="carrier-icon" id="cIcon">📦</div>
+        <div class="status-info">
+          <div class="status-name" id="cName"></div>
+          <div class="status-num" id="cNum"></div>
+        </div>
+        <div class="status-badge" id="sBadge"></div>
+        <button class="copy-btn" id="copyBtn">📋 复制单号</button>
+      </div>
+      <div class="timeline-wrap" id="tlWrap"></div>
+      <div class="result-foot">
+        <span class="rf-time" id="rfTime"></span>
+        <button class="rf-refresh" onclick="doTrack()">🔄 刷新</button>
+      </div>
+    </div>
+    <div id="errWrap" class="err-wrap" style="display:none;">
+      <div class="eico">📭</div>
+      <p id="errMsg">暂未查到物流信息，请确认单号正确后重试</p>
+    </div>
+  </div>
+
+</div></main>
+<footer><a href="http://www.baokaida.com">www.baokaida.com</a> &nbsp;·&nbsp; 保凯达（上海）国际物流有限公司 &nbsp;·&nbsp; bkd@baokaida.com</footer>
+
+<script>
+var WORKER = 'https://bkd-track.bkd-666.workers.dev';
+
+var STATE = {
+  '0':{text:'运输中', cls:'s-transit'},
+  '1':{text:'已揽收', cls:'s-pickup'},
+  '2':{text:'疑难件', cls:'s-problem'},
+  '3':{text:'已签收', cls:'s-done'},
+  '4':{text:'已退签', cls:'s-problem'},
+  '5':{text:'派件中', cls:'s-delivery'},
+  '6':{text:'退回中', cls:'s-problem'},
+};
+var CICON = {dhl:'✈',fedex:'🚀',ups:'🟤',cdek:'🇷🇺',aramex:'🌙',shunfeng:'📮',ems:'📮'};
+var CCOL  = {dhl:'#D40511',fedex:'#4D148C',ups:'#5C3317',cdek:'#00A651',aramex:'#E8562A',shunfeng:'#E31837'};
+
+/* 历史 */
+var HK='bkd_th';
+function lH(){try{return JSON.parse(localStorage.getItem(HK)||'[]');}catch(e){return[];}}
+function sH(a){try{localStorage.setItem(HK,JSON.stringify(a));}catch(e){}}
+function aH(n){var a=lH().filter(function(x){return x!==n;});a.unshift(n);if(a.length>8)a=a.slice(0,8);sH(a);rH();}
+function dH(e,n){e.stopPropagation();sH(lH().filter(function(x){return x!==n;}));rH();}
+function rH(){
+  var a=lH(),s=document.getElementById('histSection'),b=document.getElementById('histBar');
+  if(!a.length){s.style.display='none';return;}
+  s.style.display='block';
+  b.innerHTML=a.map(function(n){
+    return '<div class="htag" onclick="ft(\''+n+'\')">'
+      +n+'<span class="hdel" onclick="dH(event,\''+n+'\')"> ✕</span></div>';
+  }).join('');
+}
+function ft(n){document.getElementById('trackInput').value=n;sc();doTrack();}
+
+/* 输入框 */
+function clearInput(){document.getElementById('trackInput').value='';document.getElementById('clearBtn').style.display='none';document.getElementById('trackInput').focus();}
+function sc(){document.getElementById('clearBtn').style.display=document.getElementById('trackInput').value?'block':'none';}
+document.getElementById('trackInput').addEventListener('input',sc);
+document.getElementById('trackInput').addEventListener('keydown',function(e){if(e.key==='Enter')doTrack();});
+
+/* 查询 */
+var curNum='';
+function doTrack(){
+  var num=(document.getElementById('trackInput').value||'').trim().replace(/\s+/g,'');
+  if(!num){
+    var i=document.getElementById('trackInput');
+    i.style.borderColor='#fca5a5';i.focus();
+    setTimeout(function(){i.style.borderColor='';},1500);
+    return;
+  }
+  curNum=num;
+  aH(num);
+
+  /* 显示加载 */
+  var rc=document.getElementById('resultCard');
+  rc.style.display='block';
+  document.getElementById('loadWrap').style.display='block';
+  document.getElementById('okWrap').style.display='none';
+  document.getElementById('errWrap').style.display='none';
+  document.getElementById('trackBtn').disabled=true;
+  rc.scrollIntoView({behavior:'smooth',block:'start'});
+
+  /* POST 请求 Worker */
+  fetch(WORKER,{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({num:num})
+  })
+  .then(function(r){
+    if(!r.ok) throw new Error('HTTP '+r.status);
+    return r.json();
+  })
+  .then(function(d){render(d,num);})
+  .catch(function(e){
+    showErr('查询失败：'+e.message+'<br>请稍后重试或联系 BKD 客服');
+  });
+}
+
+function render(d,num){
+  document.getElementById('trackBtn').disabled=false;
+  document.getElementById('loadWrap').style.display='none';
+
+  if(!d||d.result===false||!d.data||!d.data.length){
+    showErr((d&&d.message)||'暂未查到物流信息，请确认单号正确');
+    return;
+  }
+
+  var com=(d.com||'').toLowerCase();
+  var st=STATE[String(d.state)]||{text:'运输中',cls:'s-transit'};
+
+  document.getElementById('cIcon').textContent=CICON[com]||'📦';
+  document.getElementById('cIcon').style.background=CCOL[com]||'var(--navy)';
+  document.getElementById('cName').textContent=d.comName||com||'国际快递';
+  document.getElementById('cNum').textContent='单号：'+num;
+  var bd=document.getElementById('sBadge');
+  bd.textContent=st.text; bd.className='status-badge '+st.cls;
+
+  document.getElementById('tlWrap').innerHTML=(d.data||[]).map(function(item,i){
+    return '<div class="tl-item">'
+      +'<div class="tl-dot '+(i===0?'first':'normal')+'">'+(i===0?'●':'○')+'</div>'
+      +'<div class="tl-content">'
+      +'<div class="tl-time">'+esc(item.ftime||item.time||'')+'</div>'
+      +'<div class="tl-text'+(i===0?' bold':'')+'">'+esc(item.context||'')+'</div>'
+      +'</div></div>';
+  }).join('');
+
+  document.getElementById('rfTime').textContent='更新于 '+new Date().toLocaleTimeString('zh-CN');
+  document.getElementById('copyBtn').onclick=function(){
+    navigator.clipboard.writeText(num).then(function(){
+      document.getElementById('copyBtn').textContent='✓ 已复制';
+      setTimeout(function(){document.getElementById('copyBtn').textContent='📋 复制单号';},2000);
+    });
+  };
+  document.getElementById('okWrap').style.display='block';
+}
+
+function showErr(msg){
+  document.getElementById('trackBtn').disabled=false;
+  document.getElementById('loadWrap').style.display='none';
+  document.getElementById('errWrap').style.display='block';
+  document.getElementById('errMsg').innerHTML=msg
+    +'<br><br><a href="mailto:bkd@baokaida.com">📧 bkd@baokaida.com</a>'
+    +'&nbsp;·&nbsp; 📞 +86 159 2184 0421';
+}
+
+function esc(s){return(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+
+/* URL 参数自动查询 */
+(function(){
+  var p=new URLSearchParams(window.location.search);
+  var n=p.get('nu')||p.get('num')||p.get('track');
+  if(n){document.getElementById('trackInput').value=n;sc();doTrack();}
+})();
+
+rH();
+</script>
+</body>
+</html>
