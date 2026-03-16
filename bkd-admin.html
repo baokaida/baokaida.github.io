@@ -1,0 +1,556 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BKD 管理后台</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=Noto+Sans+SC:wght@300;400;500&display=swap');
+
+  :root {
+    --navy: #0d1b2a;
+    --navy2: #142233;
+    --navy3: #1a2d44;
+    --amber: #e8a020;
+    --amber2: #f5b84a;
+    --text: #d4dde8;
+    --muted: #5a7a9a;
+    --border: #1e3450;
+    --success: #2ecc71;
+    --error: #e74c3c;
+    --danger: #c0392b;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--navy);
+    color: var(--text);
+    font-family: 'Noto Sans SC', sans-serif;
+    min-height: 100vh;
+  }
+
+  body::before {
+    content: '';
+    position: fixed; inset: 0;
+    background-image:
+      linear-gradient(var(--border) 1px, transparent 1px),
+      linear-gradient(90deg, var(--border) 1px, transparent 1px);
+    background-size: 48px 48px;
+    opacity: 0.3;
+    pointer-events: none; z-index: 0;
+  }
+
+  @keyframes fadeUp {
+    from { opacity:0; transform: translateY(12px); }
+    to   { opacity:1; transform: translateY(0); }
+  }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ===== AUTH OVERLAY ===== */
+  #authOverlay {
+    position: fixed; inset: 0;
+    background: var(--navy);
+    z-index: 100;
+    display: flex; align-items: center; justify-content: center;
+  }
+
+  .auth-card {
+    background: var(--navy2);
+    border: 1px solid var(--border);
+    border-top: 3px solid var(--amber);
+    padding: 44px 40px;
+    width: 380px;
+    animation: fadeUp .4s ease;
+  }
+
+  .auth-card .brand {
+    display: flex; align-items: center; gap: 10px;
+    margin-bottom: 32px;
+  }
+
+  .brand-box {
+    width: 32px; height: 32px;
+    background: var(--amber);
+    display: grid; place-items: center;
+    flex-shrink: 0;
+  }
+
+  .brand-box svg { width: 18px; height: 18px; fill: var(--navy); }
+
+  .brand-name {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 16px; font-weight: 600;
+    letter-spacing: 2px; color: #fff;
+  }
+
+  .brand-tag {
+    font-size: 11px; color: var(--amber);
+    letter-spacing: 2px; margin-top: 2px;
+    text-transform: uppercase;
+  }
+
+  .auth-card h2 {
+    font-size: 20px; font-weight: 400;
+    color: #fff; margin-bottom: 24px;
+  }
+
+  .field-label {
+    font-size: 11px; letter-spacing: 1.5px;
+    color: var(--muted); text-transform: uppercase;
+    margin-bottom: 8px; display: block;
+  }
+
+  input[type="password"], input[type="text"], input[type="email"] {
+    width: 100%;
+    background: var(--navy);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 12px 16px;
+    font-size: 14px;
+    font-family: 'IBM Plex Mono', monospace;
+    outline: none;
+    transition: border-color .2s;
+  }
+
+  input:focus { border-color: var(--amber); }
+  input::placeholder { color: var(--muted); }
+
+  .btn-primary {
+    width: 100%; margin-top: 18px;
+    padding: 13px;
+    background: var(--amber); color: var(--navy);
+    border: none; cursor: pointer;
+    font-size: 13px; font-weight: 600;
+    font-family: 'IBM Plex Mono', monospace;
+    letter-spacing: 1px;
+    transition: background .2s;
+  }
+
+  .btn-primary:hover { background: var(--amber2); }
+  .btn-primary:disabled { opacity: .5; cursor: not-allowed; }
+
+  .auth-err {
+    margin-top: 14px;
+    padding: 10px 14px;
+    background: rgba(231,76,60,.1);
+    border-left: 3px solid var(--error);
+    color: var(--error);
+    font-size: 13px;
+    display: none;
+  }
+
+  /* ===== HEADER ===== */
+  header {
+    position: relative; z-index: 1;
+    border-bottom: 1px solid var(--border);
+    padding: 0 40px;
+    display: flex; align-items: center; justify-content: space-between;
+    height: 64px;
+  }
+
+  .header-left { display: flex; align-items: center; gap: 12px; }
+  .logo-icon { width: 32px; height: 32px; background: var(--amber); display: grid; place-items: center; }
+  .logo-icon svg { width: 18px; height: 18px; fill: var(--navy); }
+  .logo-text { font-family: 'IBM Plex Mono', monospace; font-size: 16px; font-weight: 600; letter-spacing: 2px; color: #fff; }
+  .admin-badge {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px; letter-spacing: 2px;
+    color: var(--amber); border: 1px solid var(--amber);
+    padding: 2px 8px; text-transform: uppercase;
+  }
+
+  .header-right {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px; color: var(--muted);
+    display: flex; align-items: center; gap: 16px;
+  }
+
+  .lock-btn {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--muted);
+    padding: 6px 14px;
+    font-size: 12px; font-family: 'IBM Plex Mono', monospace;
+    cursor: pointer; transition: all .2s;
+  }
+
+  .lock-btn:hover { border-color: var(--error); color: var(--error); }
+
+  /* ===== MAIN ===== */
+  main {
+    position: relative; z-index: 1;
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 40px;
+  }
+
+  .section-title {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px; letter-spacing: 2px;
+    color: var(--muted); text-transform: uppercase;
+    margin-bottom: 16px;
+    display: flex; align-items: center; gap: 12px;
+  }
+
+  .section-title::after {
+    content: '';
+    flex: 1; height: 1px;
+    background: var(--border);
+  }
+
+  /* ADD CUSTOMER */
+  .add-section {
+    background: var(--navy2);
+    border: 1px solid var(--border);
+    border-top: 3px solid var(--amber);
+    padding: 24px;
+    margin-bottom: 32px;
+    animation: fadeUp .4s ease;
+  }
+
+  .add-section h3 {
+    font-size: 15px; font-weight: 500;
+    color: #fff; margin-bottom: 20px;
+  }
+
+  .input-row {
+    display: flex; gap: 12px;
+  }
+
+  .input-row input { flex: 1; }
+
+  .btn-add {
+    padding: 12px 24px;
+    background: var(--amber); color: var(--navy);
+    border: none; cursor: pointer;
+    font-size: 13px; font-family: 'IBM Plex Mono', monospace;
+    font-weight: 600; letter-spacing: 1px;
+    transition: background .2s; white-space: nowrap;
+  }
+
+  .btn-add:hover { background: var(--amber2); }
+  .btn-add:disabled { opacity: .5; cursor: not-allowed; }
+
+  .add-msg {
+    margin-top: 14px; font-size: 13px; display: none;
+    padding: 10px 14px;
+  }
+
+  .add-msg.success { display: block; background: rgba(46,204,113,.1); border-left: 3px solid var(--success); color: var(--success); }
+  .add-msg.error   { display: block; background: rgba(231,76,60,.1);  border-left: 3px solid var(--error);   color: var(--error); }
+
+  /* CUSTOMER TABLE */
+  .table-section {
+    background: var(--navy2);
+    border: 1px solid var(--border);
+    animation: fadeUp .4s .1s ease both;
+  }
+
+  .table-header {
+    padding: 16px 24px;
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between;
+  }
+
+  .table-header-title {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px; letter-spacing: 2px;
+    color: var(--muted); text-transform: uppercase;
+  }
+
+  .count-badge {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px; color: var(--amber);
+    background: rgba(232,160,32,.1);
+    border: 1px solid rgba(232,160,32,.3);
+    padding: 2px 10px;
+  }
+
+  .refresh-btn {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--muted);
+    padding: 5px 12px;
+    font-size: 11px; font-family: 'IBM Plex Mono', monospace;
+    cursor: pointer; transition: all .2s;
+  }
+
+  .refresh-btn:hover { border-color: var(--amber); color: var(--amber); }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  th {
+    padding: 12px 24px;
+    text-align: left;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px; letter-spacing: 1.5px;
+    color: var(--muted); text-transform: uppercase;
+    border-bottom: 1px solid var(--border);
+    background: var(--navy3);
+  }
+
+  td {
+    padding: 14px 24px;
+    font-size: 13px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  tr:last-child td { border-bottom: none; }
+
+  tr:hover td { background: rgba(255,255,255,.02); }
+
+  .td-email {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px; color: var(--amber);
+  }
+
+  .td-date {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px; color: var(--muted);
+  }
+
+  .del-btn {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--muted);
+    padding: 4px 12px;
+    font-size: 11px; font-family: 'IBM Plex Mono', monospace;
+    cursor: pointer; transition: all .2s;
+  }
+
+  .del-btn:hover { border-color: var(--error); color: var(--error); }
+
+  .empty-row td {
+    text-align: center;
+    padding: 40px;
+    color: var(--muted);
+    font-size: 13px;
+  }
+
+  .spinner-inline {
+    display: inline-block;
+    width: 14px; height: 14px;
+    border: 2px solid var(--border);
+    border-top-color: var(--amber);
+    border-radius: 50%;
+    animation: spin .6s linear infinite;
+    vertical-align: middle;
+    margin-right: 6px;
+  }
+</style>
+</head>
+<body>
+
+<!-- 密码验证层 -->
+<div id="authOverlay">
+  <div class="auth-card">
+    <div class="brand">
+      <div class="brand-box">
+        <svg viewBox="0 0 24 24"><path d="M12 2L2 7v10l10 5 10-5V7L12 2zm0 2.18L20 8.5v7L12 19.82 4 15.5v-7l8-4.32z"/></svg>
+      </div>
+      <div>
+        <div class="brand-name">BKD</div>
+        <div class="brand-tag">管理后台</div>
+      </div>
+    </div>
+
+    <h2>身份验证</h2>
+    <label class="field-label" for="adminPwd">管理员密码</label>
+    <input type="password" id="adminPwd" placeholder="••••••••" autofocus>
+    <button class="btn-primary" onclick="checkAdmin()">进入后台</button>
+    <div class="auth-err" id="authErr">密码错误，请重试。</div>
+  </div>
+</div>
+
+<!-- 主内容 -->
+<header>
+  <div class="header-left">
+    <div class="logo-icon">
+      <svg viewBox="0 0 24 24"><path d="M12 2L2 7v10l10 5 10-5V7L12 2zm0 2.18L20 8.5v7L12 19.82 4 15.5v-7l8-4.32z"/></svg>
+    </div>
+    <div class="logo-text">BKD</div>
+    <div class="admin-badge">Admin</div>
+  </div>
+  <div class="header-right">
+    <span id="headerTime">—</span>
+    <button class="lock-btn" onclick="lockAdmin()">锁定后台</button>
+  </div>
+</header>
+
+<main>
+  <div class="section-title">添加客户</div>
+
+  <div class="add-section">
+    <h3>新增客户账号</h3>
+    <div class="input-row">
+      <input type="text" id="newName" placeholder="客户名称（公司/姓名）">
+      <input type="email" id="newEmail" placeholder="客户邮箱">
+      <button class="btn-add" id="addBtn" onclick="addCustomer()">添加</button>
+    </div>
+    <div class="add-msg" id="addMsg"></div>
+  </div>
+
+  <div class="section-title">客户列表</div>
+
+  <div class="table-section">
+    <div class="table-header">
+      <div class="table-header-title">已注册客户</div>
+      <div style="display:flex;gap:10px;align-items:center;">
+        <span class="count-badge" id="countBadge">0 位客户</span>
+        <button class="refresh-btn" onclick="loadCustomers()">刷新</button>
+      </div>
+    </div>
+    <table>
+      <thead>
+        <tr>
+          <th>客户名称</th>
+          <th>邮箱</th>
+          <th>注册时间</th>
+          <th>操作</th>
+        </tr>
+      </thead>
+      <tbody id="customerList">
+        <tr class="empty-row"><td colspan="4">加载中...</td></tr>
+      </tbody>
+    </table>
+  </div>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+const ADMIN_PWD     = 'BKD@2026';
+const SUPABASE_URL  = 'https://zbilkisspbqzqqbhoxvv.supabase.co';
+const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpiaWxraXNzcGJxenFxYmhveHZ2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM2MjcxNDYsImV4cCI6MjA4OTIwMzE0Nn0.IFTXWGpBNAcQQJMbQCf1qwfOkEjgDhqmDWctpQYIwFI';
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
+
+// 时钟
+function updateTime() {
+  document.getElementById('headerTime').textContent =
+    new Date().toLocaleString('zh-CN', { hour12: false });
+}
+setInterval(updateTime, 1000);
+updateTime();
+
+// 密码验证
+function checkAdmin() {
+  const pwd = document.getElementById('adminPwd').value;
+  if (pwd === ADMIN_PWD) {
+    document.getElementById('authOverlay').style.display = 'none';
+    loadCustomers();
+  } else {
+    document.getElementById('authErr').style.display = 'block';
+    document.getElementById('adminPwd').value = '';
+    document.getElementById('adminPwd').focus();
+  }
+}
+
+document.getElementById('adminPwd').addEventListener('keydown', e => {
+  if (e.key === 'Enter') checkAdmin();
+});
+
+function lockAdmin() {
+  document.getElementById('authOverlay').style.display = 'flex';
+  document.getElementById('adminPwd').value = '';
+  document.getElementById('authErr').style.display = 'none';
+  document.getElementById('adminPwd').focus();
+}
+
+// 加载客户列表
+async function loadCustomers() {
+  const tbody = document.getElementById('customerList');
+  tbody.innerHTML = '<tr class="empty-row"><td colspan="4"><span class="spinner-inline"></span>加载中...</td></tr>';
+
+  const { data, error } = await sb
+    .from('customers')
+    .select('*')
+    .order('created_at', { ascending: false });
+
+  if (error || !data) {
+    tbody.innerHTML = `<tr class="empty-row"><td colspan="4" style="color:var(--error)">加载失败：${error?.message || '未知错误'}</td></tr>`;
+    return;
+  }
+
+  document.getElementById('countBadge').textContent = `${data.length} 位客户`;
+
+  if (data.length === 0) {
+    tbody.innerHTML = '<tr class="empty-row"><td colspan="4">暂无客户，请先添加。</td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = data.map(c => `
+    <tr>
+      <td>${escHtml(c.name || '—')}</td>
+      <td class="td-email">${escHtml(c.email)}</td>
+      <td class="td-date">${c.created_at ? new Date(c.created_at).toLocaleString('zh-CN', {hour12:false}) : '—'}</td>
+      <td><button class="del-btn" onclick="deleteCustomer('${c.id}', '${escHtml(c.email)}')">删除</button></td>
+    </tr>
+  `).join('');
+}
+
+// 添加客户
+async function addCustomer() {
+  const name  = document.getElementById('newName').value.trim();
+  const email = document.getElementById('newEmail').value.trim();
+  const msgEl = document.getElementById('addMsg');
+  const btn   = document.getElementById('addBtn');
+
+  if (!name || !email) {
+    showAddMsg('请填写客户名称和邮箱。', 'error');
+    return;
+  }
+
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner-inline"></span>添加中...';
+
+  const { error } = await sb.from('customers').insert({ name, email });
+
+  if (error) {
+    const msg = error.code === '23505'
+      ? `邮箱 ${email} 已存在，无法重复添加。`
+      : `添加失败：${error.message}`;
+    showAddMsg(msg, 'error');
+  } else {
+    showAddMsg(`✅ 客户 ${name}（${email}）已添加成功。`, 'success');
+    document.getElementById('newName').value  = '';
+    document.getElementById('newEmail').value = '';
+    loadCustomers();
+  }
+
+  btn.disabled = false;
+  btn.textContent = '添加';
+}
+
+// 删除客户
+async function deleteCustomer(id, email) {
+  if (!confirm(`确定要删除客户 ${email} 吗？此操作不可撤销。`)) return;
+
+  const { error } = await sb.from('customers').delete().eq('id', id);
+
+  if (error) {
+    alert('删除失败：' + error.message);
+  } else {
+    loadCustomers();
+  }
+}
+
+function showAddMsg(text, type) {
+  const el = document.getElementById('addMsg');
+  el.textContent = text;
+  el.className = 'add-msg ' + type;
+}
+
+function escHtml(str) {
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+</script>
+</body>
+</html>
