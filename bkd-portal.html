@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BKD 客户中心</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=Noto+Sans+SC:wght@300;400;500&display=swap');
+  :root{--navy:#0d1b2a;--navy2:#142233;--navy3:#1a2d44;--amber:#e8a020;--amber2:#f5b84a;--text:#d4dde8;--muted:#5a7a9a;--border:#1e3450;--success:#2ecc71;}
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{background:var(--navy);color:var(--text);font-family:'Noto Sans SC',sans-serif;min-height:100vh;}
+  body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(var(--border) 1px,transparent 1px),linear-gradient(90deg,var(--border) 1px,transparent 1px);background-size:48px 48px;opacity:.3;pointer-events:none;z-index:0;}
+  @keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  #authGate{position:fixed;inset:0;background:var(--navy);z-index:100;display:flex;align-items:center;justify-content:center;}
+  .spin-lg{width:32px;height:32px;border:2px solid var(--border);border-top-color:var(--amber);border-radius:50%;animation:spin .7s linear infinite;margin:0 auto 16px;}
+  .auth-msg{text-align:center;font-family:'IBM Plex Mono',monospace;color:var(--muted);font-size:14px;}
+  header{position:relative;z-index:1;border-bottom:1px solid var(--border);padding:0 40px;display:flex;align-items:center;justify-content:space-between;height:64px;}
+  .logo-row{display:flex;align-items:center;gap:12px;}
+  .logo-icon{width:32px;height:32px;background:var(--amber);display:grid;place-items:center;}
+  .logo-icon svg{width:18px;height:18px;fill:var(--navy);}
+  .logo-text{font-family:'IBM Plex Mono',monospace;font-size:16px;font-weight:600;letter-spacing:2px;color:#fff;}
+  .user-row{display:flex;align-items:center;gap:16px;font-size:13px;}
+  .user-name{color:var(--muted);}
+  .user-email{font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--amber);}
+  .logout-btn{background:transparent;border:1px solid var(--border);color:var(--muted);padding:6px 14px;font-size:12px;font-family:'IBM Plex Mono',monospace;cursor:pointer;transition:all .2s;}
+  .logout-btn:hover{border-color:var(--amber);color:var(--amber);}
+  main{position:relative;z-index:1;max-width:980px;margin:0 auto;padding:48px 40px;}
+  .welcome{margin-bottom:40px;animation:fadeUp .4s ease both;}
+  .welcome h1{font-size:28px;font-weight:300;color:#fff;margin-bottom:8px;}
+  .welcome h1 strong{color:var(--amber);font-weight:500;}
+  .welcome p{font-size:14px;color:var(--muted);}
+  /* MODULE CARDS */
+  .modules{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-bottom:40px;}
+  .mod-card{background:var(--navy2);border:1px solid var(--border);border-top:2px solid var(--border);padding:22px;text-decoration:none;color:inherit;display:block;transition:all .2s;animation:fadeUp .4s ease both;}
+  .mod-card:nth-child(1){animation-delay:.05s;border-top-color:var(--amber);}
+  .mod-card:nth-child(2){animation-delay:.10s;}
+  .mod-card:nth-child(3){animation-delay:.15s;}
+  .mod-card:hover{border-color:var(--amber);border-top-color:var(--amber);transform:translateY(-2px);}
+  .mod-icon{width:36px;height:36px;background:var(--navy3);border:1px solid var(--border);display:grid;place-items:center;margin-bottom:14px;}
+  .mod-icon svg{width:18px;height:18px;stroke:var(--amber);fill:none;stroke-width:1.5;}
+  .mod-title{font-size:15px;font-weight:500;color:#fff;margin-bottom:4px;}
+  .mod-desc{font-size:12px;color:var(--muted);line-height:1.5;}
+  /* QUOTE SECTION */
+  .quote-section{background:var(--navy2);border:1px solid var(--border);border-top:3px solid var(--amber);margin-bottom:32px;animation:fadeUp .4s .2s ease both;}
+  .section-header{padding:18px 24px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+  .section-header-title{font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:2px;color:var(--muted);text-transform:uppercase;}
+  .quote-body{padding:24px;}
+  .weight-input-row{display:flex;align-items:flex-end;gap:16px;margin-bottom:28px;}
+  .weight-group{display:flex;flex-direction:column;gap:8px;}
+  .weight-label{font-size:11px;color:var(--muted);letter-spacing:1.5px;text-transform:uppercase;}
+  .weight-input{background:var(--navy);border:1px solid var(--border);color:#fff;padding:14px 16px;font-size:22px;font-family:'IBM Plex Mono',monospace;width:180px;outline:none;transition:border-color .2s;}
+  .weight-input:focus{border-color:var(--amber);}
+  .weight-unit{font-size:14px;color:var(--muted);padding-bottom:14px;}
+  .calc-btn{padding:14px 28px;background:var(--amber);color:var(--navy);border:none;font-size:14px;font-weight:600;font-family:'IBM Plex Mono',monospace;cursor:pointer;transition:background .2s;letter-spacing:1px;}
+  .calc-btn:hover{background:var(--amber2);}
+  /* RESULTS */
+  .results{display:none;}
+  .results.show{display:block;}
+  .result-title{font-size:12px;color:var(--muted);margin-bottom:16px;font-family:'IBM Plex Mono',monospace;letter-spacing:1px;}
+  .rate-cards{display:grid;gap:12px;}
+  .rate-card{background:var(--navy3);border:1px solid var(--border);padding:18px 20px;display:flex;align-items:center;justify-content:space-between;transition:border-color .2s;}
+  .rate-card:hover{border-color:var(--amber);}
+  .rc-left{}
+  .rc-name{font-size:15px;font-weight:500;color:#fff;margin-bottom:4px;}
+  .rc-detail{font-size:12px;color:var(--muted);font-family:'IBM Plex Mono',monospace;}
+  .rc-price{text-align:right;}
+  .rc-amount{font-size:26px;font-weight:600;color:var(--amber);font-family:'IBM Plex Mono',monospace;}
+  .rc-currency{font-size:12px;color:var(--muted);}
+  /* INFO */
+  .info-section{background:var(--navy2);border:1px solid var(--border);animation:fadeUp .4s .3s ease both;}
+  .info-row{display:flex;padding:14px 24px;border-bottom:1px solid var(--border);font-size:13px;gap:24px;}
+  .info-row:last-child{border-bottom:none;}
+  .info-label{color:var(--muted);min-width:120px;font-size:12px;}
+  .info-value{color:var(--text);font-family:'IBM Plex Mono',monospace;font-size:12px;}
+  .no-rates{text-align:center;padding:40px;color:var(--muted);font-size:13px;}
+</style>
+</head>
+<body>
+
+<div id="authGate">
+  <div class="auth-msg"><div class="spin-lg"></div><div>验证登录状态中...</div></div>
+</div>
+
+<header>
+  <div class="logo-row">
+    <div class="logo-icon"><svg viewBox="0 0 24 24"><path d="M12 2L2 7v10l10 5 10-5V7L12 2zm0 2.18L20 8.5v7L12 19.82 4 15.5v-7l8-4.32z"/></svg></div>
+    <div class="logo-text">BKD</div>
+  </div>
+  <div class="user-row">
+    <div><div class="user-name" id="userName">—</div><div class="user-email" id="userEmail">—</div></div>
+    <button class="logout-btn" onclick="handleLogout()">退出登录</button>
+  </div>
+</header>
+
+<main>
+  <div class="welcome">
+    <h1>欢迎回来，<strong id="welcomeName">—</strong></h1>
+    <p>保凯达国际物流客户服务中心</p>
+  </div>
+
+  <div class="modules">
+    <a class="mod-card" href="bkd-quote.html">
+      <div class="mod-icon"><svg viewBox="0 0 24 24"><path d="M12 2L2 7v5c0 5.5 4.2 10.7 10 12 5.8-1.3 10-6.5 10-12V7L12 2z"/><path d="M9 12l2 2 4-4"/></svg></div>
+      <div class="mod-title">专属报价</div>
+      <div class="mod-desc">查看您的专属运费报价</div>
+    </a>
+    <a class="mod-card" href="bkd-order.html">
+      <div class="mod-icon"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="1"/><path d="M8 12h8M12 8v8"/></svg></div>
+      <div class="mod-title">在线下单</div>
+      <div class="mod-desc">填写货物信息，提交出口运输订单</div>
+    </a>
+    <a class="mod-card" href="bkd-track.html">
+      <div class="mod-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v4M12 18v4M2 12h4M18 12h4"/></svg></div>
+      <div class="mod-title">运单追踪</div>
+      <div class="mod-desc">实时查询 DHL / FedEx / UPS 物流轨迹</div>
+    </a>
+    <a class="mod-card" href="mailto:bkd@baokaida.com">
+      <div class="mod-icon"><svg viewBox="0 0 24 24"><path d="M4 4h16v16H4zM4 4l8 9 8-9"/></svg></div>
+      <div class="mod-title">联系客服</div>
+      <div class="mod-desc">发送邮件至 bkd@baokaida.com</div>
+    </a>
+  </div>
+
+  <!-- 专属报价计算器 -->
+  <div class="quote-section">
+    <div class="section-header">
+      <div class="section-header-title">专属报价计算器</div>
+      <span style="font-size:12px;color:var(--muted);">基于您的合同价格</span>
+    </div>
+    <div class="quote-body">
+      <div class="weight-input-row">
+        <div class="weight-group">
+          <div class="weight-label">货物重量</div>
+          <input type="number" class="weight-input" id="weightInput" placeholder="0.5" step="0.5" min="0.5">
+        </div>
+        <div class="weight-unit">KG</div>
+        <button class="calc-btn" onclick="calcPrice()">计算运费</button>
+      </div>
+
+      <div class="results" id="results">
+        <div class="result-title" id="resultTitle"></div>
+        <div class="rate-cards" id="rateCards"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 账户信息 -->
+  <div class="info-section">
+    <div class="section-header"><div class="section-header-title">账户信息</div></div>
+    <div class="info-row"><div class="info-label">客户名称</div><div class="info-value" id="infoName">—</div></div>
+    <div class="info-row"><div class="info-label">邮箱</div><div class="info-value" id="infoEmail">—</div></div>
+    <div class="info-row"><div class="info-label">注册时间</div><div class="info-value" id="infoCreated">—</div></div>
+    <div class="info-row"><div class="info-label">服务热线</div><div class="info-value">bkd@baokaida.com</div></div>
+  </div>
+</main>
+
+<script src="/supabase.min.js"></script>
+<script>
+const SB_URL='https://zbilkisspbqzqqbhoxvv.supabase.co';
+const SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpiaWxraXNzcGJxenFxYmhveHZ2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM2MjcxNDYsImV4cCI6MjA4OTIwMzE0Nn0.IFTXWGpBNAcQQJMbQCf1qwfOkEjgDhqmDWctpQYIwFI';
+let sb, customerRates=[], customerId=null;
+
+window.onload=async function(){
+  sb=supabase.createClient(SB_URL,SB_KEY);
+  const{data:{session}}=await sb.auth.getSession();
+  if(!session){window.location.href='bkd-login.html';return;}
+
+  const email=session.user.email;
+  const{data:cust}=await sb.from('customers').select('*').eq('email',email).single();
+  const name=cust?.name||email.split('@')[0];
+  customerId=cust?.id||null;
+  const created=cust?.created_at?new Date(cust.created_at).toLocaleDateString('zh-CN'):'—';
+
+  document.getElementById('userName').textContent=name;
+  document.getElementById('userEmail').textContent=email;
+  document.getElementById('welcomeName').textContent=name;
+  document.getElementById('infoName').textContent=name;
+  document.getElementById('infoEmail').textContent=email;
+  document.getElementById('infoCreated').textContent=created;
+  document.getElementById('authGate').style.display='none';
+
+  // 加载该客户的报价
+  if(customerId){
+    const{data:rates}=await sb.from('customer_rates').select('*').eq('customer_id',customerId).order('id');
+    customerRates=rates||[];
+  }
+
+  document.getElementById('weightInput').addEventListener('keydown',e=>{if(e.key==='Enter')calcPrice();});
+};
+
+function calcPrice(){
+  const w=parseFloat(document.getElementById('weightInput').value);
+  if(!w||w<=0){alert('请输入有效重量');return;}
+  if(!customerRates.length){
+    document.getElementById('rateCards').innerHTML='<div class="no-rates">暂无专属报价，请联系 BKD 客服开通。</div>';
+    document.getElementById('resultTitle').textContent='';
+    document.getElementById('results').classList.add('show');
+    return;
+  }
+
+  const cards=customerRates.map(r=>{
+    let price=0;
+    if(r.rate_type==='first_extra'){
+      const fw=parseFloat(r.first_weight)||1;
+      const fp=parseFloat(r.first_price)||0;
+      const eu=parseFloat(r.extra_unit)||0.5;
+      const ep=parseFloat(r.extra_price)||0;
+      if(w<=fw){price=fp;}
+      else{const extra=Math.ceil((w-fw)/eu);price=fp+extra*ep;}
+    } else {
+      const us=parseFloat(r.unit_size)||0.5;
+      const up=parseFloat(r.unit_price)||0;
+      price=Math.ceil(w/us)*up;
+    }
+    const detail=r.rate_type==='first_extra'
+      ?`首重${r.first_weight}kg ¥${r.first_price} + 续重每${r.extra_unit}kg ¥${r.extra_price}`
+      :`¥${r.unit_price} / ${r.unit_size}kg`;
+    return `<div class="rate-card">
+      <div class="rc-left">
+        <div class="rc-name">${esc(r.channel_name)}${r.notes?` <span style="color:var(--muted);font-size:12px;font-weight:400;">— ${esc(r.notes)}</span>`:''}</div>
+        <div class="rc-detail">${detail}</div>
+      </div>
+      <div class="rc-price">
+        <div class="rc-amount">¥${price.toLocaleString()}</div>
+        <div class="rc-currency">人民币 · ${w}kg</div>
+      </div>
+    </div>`;
+  }).join('');
+
+  document.getElementById('resultTitle').textContent=`重量 ${w}kg 的运费估算（共 ${customerRates.length} 条渠道）`;
+  document.getElementById('rateCards').innerHTML=cards;
+  document.getElementById('results').classList.add('show');
+}
+
+async function handleLogout(){
+  await sb.auth.signOut();
+  window.location.href='bkd-login.html';
+}
+
+function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+</script>
+</body>
+</html>
