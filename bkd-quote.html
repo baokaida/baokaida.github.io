@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BKD 专属报价</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=Noto+Sans+SC:wght@300;400;500&display=swap');
+  :root{--navy:#0d1b2a;--navy2:#142233;--navy3:#1a2d44;--amber:#e8a020;--amber2:#f5b84a;--text:#d4dde8;--muted:#5a7a9a;--border:#1e3450;--success:#2ecc71;--error:#e74c3c}
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:var(--navy);color:var(--text);font-family:'Noto Sans SC',sans-serif;min-height:100vh}
+  body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(var(--border) 1px,transparent 1px),linear-gradient(90deg,var(--border) 1px,transparent 1px);background-size:48px 48px;opacity:.3;pointer-events:none;z-index:0}
+  @keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  #authGate{position:fixed;inset:0;background:var(--navy);z-index:100;display:flex;align-items:center;justify-content:center}
+  .auth-msg{text-align:center;font-family:'IBM Plex Mono',monospace;color:var(--muted);font-size:14px}
+  .auth-msg .spinner{width:32px;height:32px;border:2px solid var(--border);border-top-color:var(--amber);border-radius:50%;animation:spin .7s linear infinite;margin:0 auto 16px}
+  header{position:relative;z-index:1;border-bottom:1px solid var(--border);padding:0 40px;display:flex;align-items:center;justify-content:space-between;height:64px}
+  .logo-row{display:flex;align-items:center;gap:12px}
+  .logo-icon{width:32px;height:32px;background:var(--amber);display:grid;place-items:center}
+  .logo-icon svg{width:18px;height:18px;fill:var(--navy)}
+  .logo-text{font-family:'IBM Plex Mono',monospace;font-size:16px;font-weight:600;letter-spacing:2px;color:#fff}
+  .user-row{display:flex;align-items:center;gap:16px;font-size:13px}
+  .user-email{font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--amber)}
+  .back-btn,.logout-btn{background:transparent;border:1px solid var(--border);color:var(--muted);padding:6px 14px;font-size:12px;font-family:'IBM Plex Mono',monospace;cursor:pointer;transition:all .2s;text-decoration:none;display:inline-block}
+  .back-btn:hover{border-color:var(--amber);color:var(--amber)}
+  .logout-btn:hover{border-color:var(--error);color:var(--error)}
+  main{position:relative;z-index:1;max-width:900px;margin:0 auto;padding:48px 40px}
+  .welcome{margin-bottom:40px;animation:fadeUp .4s ease}
+  .welcome h1{font-size:26px;font-weight:300;color:#fff;margin-bottom:6px}
+  .welcome h1 strong{color:var(--amber);font-weight:500}
+  .welcome p{font-size:13px;color:var(--muted)}
+  .calc-section{margin-bottom:40px;animation:fadeUp .4s .05s ease both}
+  .calc-card{background:var(--navy2);border:1px solid var(--border);border-top:3px solid var(--amber);padding:28px}
+  .calc-title{font-size:15px;font-weight:500;color:#fff;margin-bottom:20px}
+  .calc-row{display:flex;gap:16px;align-items:flex-end;flex-wrap:wrap}
+  .calc-field{flex:1;min-width:140px}
+  .calc-label{font-size:11px;letter-spacing:1.5px;color:var(--muted);text-transform:uppercase;margin-bottom:8px;display:block}
+  input[type=number]{width:100%;background:var(--navy);border:1px solid var(--border);color:var(--text);padding:12px 16px;font-size:15px;font-family:'IBM Plex Mono',monospace;outline:none;transition:border-color .2s}
+  input[type=number]:focus{border-color:var(--amber)}
+  .calc-btn{padding:13px 28px;background:var(--amber);color:var(--navy);border:none;cursor:pointer;font-size:14px;font-family:'IBM Plex Mono',monospace;font-weight:600;transition:background .2s;white-space:nowrap}
+  .calc-btn:hover{background:var(--amber2)}
+  .results-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px;margin-top:24px}
+  .result-card{background:var(--navy3);border:1px solid var(--border);padding:20px;transition:border-color .2s;animation:fadeUp .3s ease both}
+  .result-card:hover{border-color:var(--amber)}
+  .result-channel{font-family:'IBM Plex Mono',monospace;font-size:13px;font-weight:600;color:#fff;margin-bottom:12px;display:flex;align-items:center;gap:8px}
+  .result-channel::before{content:'';width:8px;height:8px;background:var(--amber);display:inline-block}
+  .result-price{font-family:'IBM Plex Mono',monospace;font-size:28px;font-weight:600;color:var(--amber);margin-bottom:4px}
+  .result-price span{font-size:14px;color:var(--muted)}
+  .result-days{font-size:12px;color:var(--muted);margin-bottom:12px}
+  .result-detail{font-size:11px;color:var(--muted);border-top:1px solid var(--border);padding-top:10px;margin-top:10px;font-family:'IBM Plex Mono',monospace;line-height:1.8}
+  .no-rates{background:var(--navy2);border:1px solid var(--border);padding:40px;text-align:center;color:var(--muted);font-size:14px;animation:fadeUp .4s .1s ease both}
+  .section-label{font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:2px;color:var(--muted);text-transform:uppercase;margin-bottom:16px;display:flex;align-items:center;gap:12px}
+  .section-label::after{content:'';flex:1;height:1px;background:var(--border)}
+</style>
+</head>
+<body>
+
+<div id="authGate">
+  <div class="auth-msg">
+    <div class="spinner"></div>
+    <div>验证登录状态中...</div>
+  </div>
+</div>
+
+<header>
+  <div class="logo-row">
+    <div class="logo-icon"><svg viewBox="0 0 24 24"><path d="M12 2L2 7v10l10 5 10-5V7L12 2zm0 2.18L20 8.5v7L12 19.82 4 15.5v-7l8-4.32z"/></svg></div>
+    <div class="logo-text">BKD</div>
+  </div>
+  <div class="user-row">
+    <span class="user-email" id="userEmail">—</span>
+    <a href="bkd-portal.html" class="back-btn">← 返回首页</a>
+    <button class="logout-btn" onclick="handleLogout()">退出</button>
+  </div>
+</header>
+
+<main>
+  <div class="welcome">
+    <h1>您好，<strong id="welcomeName">—</strong></h1>
+    <p>以下是您的专属运费报价，输入重量即可即时计算。</p>
+  </div>
+
+  <div class="calc-section">
+    <div class="section-label">运费计算器</div>
+    <div class="calc-card">
+      <div class="calc-title">输入货物重量，查看各渠道报价</div>
+      <div class="calc-row">
+        <div class="calc-field">
+          <label class="calc-label">货物重量 (kg)</label>
+          <input type="number" id="weightInput" placeholder="如 2.5" step="0.1" min="0.1">
+        </div>
+        <button class="calc-btn" onclick="calculate()">计算运费</button>
+      </div>
+    </div>
+    <div id="resultsGrid" class="results-grid" style="display:none"></div>
+  </div>
+
+  <div class="section-label">我的专属报价表</div>
+  <div id="ratesTable"></div>
+</main>
+
+<script src="/supabase.min.js"></script>
+<script>
+const sb = supabase.createClient(
+  'https://zbilkisspbqzqqbhoxvv.supabase.co',
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpiaWxraXNzcGJxenFxYmhveHZ2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM2MjcxNDYsImV4cCI6MjA4OTIwMzE0Nn0.IFTXWGpBNAcQQJMbQCf1qwfOkEjgDhqmDWctpQYIwFI'
+);
+
+let myRates = [];
+let customerId = null;
+
+async function init(){
+  const {data:{session}} = await sb.auth.getSession();
+  if(!session){window.location.href='bkd-login.html';return;}
+  const email = session.user.email;
+  const {data:cust} = await sb.from('customers').select('*').eq('email',email).single();
+  if(!cust){window.location.href='bkd-login.html';return;}
+  customerId = cust.id;
+  const name = cust.name || email.split('@')[0];
+  document.getElementById('userEmail').textContent = email;
+  document.getElementById('welcomeName').textContent = name;
+  document.getElementById('authGate').style.display = 'none';
+  await loadRates();
+}
+
+async function loadRates(){
+  const {data,error} = await sb.from('customer_rates').select('*').eq('customer_id',customerId).order('channel');
+  const container = document.getElementById('ratesTable');
+  if(error||!data||!data.length){
+    container.innerHTML='<div class="no-rates">暂无专属报价，请联系 BKD 运营团队开通。<br><br><strong style="color:var(--text)">bkd@baokaida.com</strong></div>';
+    return;
+  }
+  myRates = data;
+  container.innerHTML = `<table style="width:100%;border-collapse:collapse;background:var(--navy2);border:1px solid var(--border)">
+    <thead><tr>
+      <th style="padding:12px 20px;text-align:left;font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:1.5px;color:var(--muted);text-transform:uppercase;border-bottom:1px solid var(--border);background:var(--navy3)">渠道</th>
+      <th style="padding:12px 20px;text-align:left;font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:1.5px;color:var(--muted);text-transform:uppercase;border-bottom:1px solid var(--border);background:var(--navy3)">首重</th>
+      <th style="padding:12px 20px;text-align:left;font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:1.5px;color:var(--muted);text-transform:uppercase;border-bottom:1px solid var(--border);background:var(--navy3)">续重</th>
+      <th style="padding:12px 20px;text-align:left;font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:1.5px;color:var(--muted);text-transform:uppercase;border-bottom:1px solid var(--border);background:var(--navy3)">时效</th>
+    </tr></thead>
+    <tbody>${data.map(r=>`<tr>
+      <td style="padding:14px 20px;font-family:'IBM Plex Mono',monospace;font-size:13px;color:var(--amber);border-bottom:1px solid var(--border)">${r.channel}</td>
+      <td style="padding:14px 20px;font-size:13px;border-bottom:1px solid var(--border)">前 ${r.first_weight}kg · <strong style="color:var(--text)">¥${r.first_price}</strong></td>
+      <td style="padding:14px 20px;font-size:13px;border-bottom:1px solid var(--border)">每 ${r.extra_unit}kg · <strong style="color:var(--text)">¥${r.extra_price}</strong></td>
+      <td style="padding:14px 20px;font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--muted);border-bottom:1px solid var(--border)">${r.days_min}–${r.days_max} 天</td>
+    </tr>`).join('')}</tbody>
+  </table>`;
+}
+
+function calcPrice(r, weight){
+  if(weight <= r.first_weight) return r.first_price;
+  const extra = weight - r.first_weight;
+  const units = Math.ceil(extra / r.extra_unit);
+  return r.first_price + units * r.extra_price;
+}
+
+function calculate(){
+  const weight = parseFloat(document.getElementById('weightInput').value);
+  if(!weight||weight<=0){alert('请输入有效重量');return;}
+  if(!myRates.length){alert('暂无报价数据');return;}
+  const grid = document.getElementById('resultsGrid');
+  grid.style.display = 'grid';
+  grid.innerHTML = myRates.map((r,i)=>{
+    const price = calcPrice(r, weight);
+    const extraKg = Math.max(0, weight - r.first_weight);
+    const extraUnits = Math.ceil(extraKg / r.extra_unit);
+    return `<div class="result-card" style="animation-delay:${i*0.05}s">
+      <div class="result-channel">${r.channel}</div>
+      <div class="result-price">¥${price.toFixed(0)}<span> / ${weight}kg</span></div>
+      <div class="result-days">预计 ${r.days_min}–${r.days_max} 工作日</div>
+      <div class="result-detail">
+        首重 ${r.first_weight}kg = ¥${r.first_price}<br>
+        ${extraKg>0?`续重 ${extraUnits}×${r.extra_unit}kg×¥${r.extra_price} = ¥${(extraUnits*r.extra_price).toFixed(0)}`:'（在首重范围内）'}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+document.addEventListener('DOMContentLoaded',()=>{
+  document.getElementById('weightInput').addEventListener('keydown',e=>{if(e.key==='Enter')calculate();});
+});
+
+async function handleLogout(){
+  await sb.auth.signOut();
+  window.location.href='bkd-login.html';
+}
+
+init();
+</script>
+</body>
+</html>
