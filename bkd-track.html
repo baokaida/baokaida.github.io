@@ -291,3 +291,13 @@ function showErr(msg){
 function esc(s){return(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
 
 /* URL 参数自动查询 */
+(function(){
+  var p=new URLSearchParams(window.location.search);
+  var n=p.get('nu')||p.get('num')||p.get('track');
+  if(n){document.getElementById('trackInput').value=n;sc();doTrack();}
+})();
+
+rH();
+</script>
+</body>
+</html>
