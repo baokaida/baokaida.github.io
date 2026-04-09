@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BKD 专属报价</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=Noto+Sans+SC:wght@300;400;500;700&display=swap');
+  :root{
+    --blue:#0A6EBD;--blue2:#0D85E0;--navy:#0D2D4A;
+    --green:#0E9E6E;--amber:#e8a020;
+    --bg:#F5F9FF;--white:#fff;--border:#D8E6F5;
+    --text:#1a3350;--muted:#6B8CAE;--light:#EAF4FE;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:var(--bg);color:var(--text);font-family:'Noto Sans SC',sans-serif;min-height:100vh}
+  @keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+  @keyframes spin{to{transform:rotate(360deg)}}
+
+  /* HEADER */
+  header{background:var(--white);border-bottom:1px solid var(--border);padding:0 40px;display:flex;align-items:center;justify-content:space-between;height:64px;box-shadow:0 2px 8px rgba(10,110,189,.06)}
+  .logo-row{display:flex;align-items:center;gap:10px}
+  .logo-mark{width:32px;height:32px;background:var(--blue);border-radius:6px;display:grid;place-items:center;font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:700;color:#fff;letter-spacing:1px}
+  .logo-text{font-weight:700;font-size:17px;color:var(--navy)}
+  .logo-text span{color:var(--blue)}
+  .user-row{display:flex;align-items:center;gap:12px}
+  .user-email{font-size:13px;color:var(--muted)}
+  .btn-outline{background:transparent;border:1px solid var(--border);color:var(--muted);padding:6px 16px;font-size:12px;border-radius:6px;cursor:pointer;transition:all .2s;text-decoration:none;display:inline-block}
+  .btn-outline:hover{border-color:var(--blue);color:var(--blue)}
+  .btn-danger{background:transparent;border:1px solid #fcd0d0;color:#e74c3c;padding:6px 16px;font-size:12px;border-radius:6px;cursor:pointer;transition:all .2s}
+  .btn-danger:hover{background:#fff0f0}
+
+  /* MAIN */
+  main{max-width:900px;margin:0 auto;padding:40px}
+
+  .welcome{margin-bottom:32px;animation:fadeUp .4s ease}
+  .welcome h1{font-size:24px;font-weight:700;color:var(--navy);margin-bottom:4px}
+  .welcome h1 span{color:var(--blue)}
+  .welcome p{font-size:13px;color:var(--muted)}
+
+  /* TABS */
+  .type-tabs{display:flex;gap:0;margin-bottom:28px;background:var(--white);border:1px solid var(--border);border-radius:10px;padding:4px;width:fit-content;animation:fadeUp .4s .05s ease both}
+  .type-tab{padding:10px 28px;font-size:14px;font-weight:500;border-radius:8px;cursor:pointer;transition:all .2s;color:var(--muted)}
+  .type-tab.active{background:var(--blue);color:#fff;box-shadow:0 2px 8px rgba(10,110,189,.3)}
+  .type-tab:not(.active):hover{background:var(--light);color:var(--blue)}
+
+  /* CALC CARD */
+  .calc-card{background:var(--white);border:1px solid var(--border);border-radius:12px;padding:28px;margin-bottom:24px;box-shadow:0 2px 12px rgba(10,110,189,.05);animation:fadeUp .4s .1s ease both}
+  .calc-title{font-size:15px;font-weight:600;color:var(--navy);margin-bottom:20px}
+  .calc-row{display:flex;gap:14px;align-items:flex-end;flex-wrap:wrap}
+  .calc-field{flex:1;min-width:160px}
+  .calc-label{font-size:11px;letter-spacing:1px;color:var(--muted);text-transform:uppercase;margin-bottom:6px;display:block;font-weight:600}
+  input[type=number]{width:100%;background:var(--bg);border:1.5px solid var(--border);color:var(--text);padding:11px 14px;font-size:15px;border-radius:8px;outline:none;transition:border-color .2s;font-family:'Noto Sans SC',sans-serif}
+  input[type=number]:focus{border-color:var(--blue);background:var(--white)}
+  .calc-btn{padding:12px 28px;background:var(--blue);color:#fff;border:none;border-radius:8px;cursor:pointer;font-size:14px;font-weight:600;transition:all .2s;white-space:nowrap}
+  .calc-btn:hover{background:var(--blue2);transform:translateY(-1px);box-shadow:0 4px 12px rgba(10,110,189,.3)}
+
+  /* RESULTS */
+  .results-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:14px;margin-top:20px}
+  .result-card{background:var(--light);border:1.5px solid var(--border);border-radius:10px;padding:20px;transition:all .2s;animation:fadeUp .3s ease both}
+  .result-card:hover{border-color:var(--blue);transform:translateY(-2px);box-shadow:0 4px 16px rgba(10,110,189,.12)}
+  .result-channel{font-size:13px;font-weight:700;color:var(--navy);margin-bottom:10px;display:flex;align-items:center;gap:8px}
+  .result-channel::before{content:'';width:8px;height:8px;background:var(--blue);border-radius:2px;display:inline-block}
+  .result-price{font-family:'IBM Plex Mono',monospace;font-size:30px;font-weight:700;color:var(--blue);margin-bottom:4px}
+  .result-price span{font-size:14px;color:var(--muted);font-weight:400}
+  .result-days{font-size:12px;color:var(--muted);margin-bottom:10px}
+  .result-detail{font-size:11px;color:var(--muted);border-top:1px solid var(--border);padding-top:10px;margin-top:6px;line-height:1.9;font-family:'IBM Plex Mono',monospace}
+
+  /* EMAIL SEND */
+  .send-section{background:var(--white);border:1px solid var(--border);border-radius:12px;padding:24px;margin-top:20px;display:none;animation:fadeUp .3s ease}
+  .send-title{font-size:14px;font-weight:600;color:var(--navy);margin-bottom:16px}
+  .send-row{display:flex;gap:12px;align-items:flex-end;flex-wrap:wrap}
+  .send-field{flex:1;min-width:200px}
+  input[type=email]{width:100%;background:var(--bg);border:1.5px solid var(--border);color:var(--text);padding:11px 14px;font-size:14px;border-radius:8px;outline:none;transition:border-color .2s;font-family:'Noto Sans SC',sans-serif}
+  input[type=email]:focus{border-color:var(--blue);background:var(--white)}
+  .send-btn{padding:12px 24px;background:var(--green);color:#fff;border:none;border-radius:8px;cursor:pointer;font-size:13px;font-weight:600;transition:all .2s;white-space:nowrap}
+  .send-btn:hover{background:#0ab57d}
+  .send-btn:disabled{opacity:.5;cursor:not-allowed}
+  .send-msg{margin-top:10px;font-size:13px;padding:10px 14px;border-radius:6px;display:none}
+  .send-msg.success{display:block;background:#e8f8f2;color:var(--green);border:1px solid #b6e8d3}
+  .send-msg.error{display:block;background:#fff0f0;color:#e74c3c;border:1px solid #fcd0d0}
+
+  /* RATE TABLE */
+  .section-title{font-size:12px;font-weight:700;letter-spacing:1.5px;color:var(--muted);text-transform:uppercase;margin-bottom:14px;display:flex;align-items:center;gap:10px}
+  .section-title::after{content:'';flex:1;height:1px;background:var(--border)}
+  .rate-table-wrap{background:var(--white);border:1px solid var(--border);border-radius:12px;overflow:hidden;box-shadow:0 2px 8px rgba(10,110,189,.04);animation:fadeUp .4s .15s ease both}
+  .rate-table{width:100%;border-collapse:collapse}
+  .rate-table th{padding:12px 20px;text-align:left;font-size:11px;font-weight:700;letter-spacing:1px;color:var(--muted);text-transform:uppercase;border-bottom:1px solid var(--border);background:var(--bg)}
+  .rate-table td{padding:14px 20px;font-size:13px;border-bottom:1px solid var(--border)}
+  .rate-table tr:last-child td{border-bottom:none}
+  .rate-table tr:hover td{background:var(--light)}
+  .td-blue{font-weight:700;color:var(--blue)}
+  .td-muted{font-size:12px;color:var(--muted);font-family:'IBM Plex Mono',monospace}
+  .tag{display:inline-block;padding:2px 10px;border-radius:20px;font-size:11px;font-weight:600;background:var(--light);color:var(--blue);border:1px solid var(--border)}
+
+  .note-box{background:#fff8e8;border:1px solid #f0d080;border-radius:8px;padding:12px 16px;font-size:12px;color:#7a5a00;margin-top:16px;line-height:1.7}
+
+  .tab-content{display:none}
+  .tab-content.active{display:block}
+</style>
+</head>
+<body>
+<header>
+  <div class="logo-row">
+    <div class="logo-mark">BKD</div>
+    <div class="logo-text">保凯达<span>国际物流</span></div>
+  </div>
+  <div class="user-row">
+    <span class="user-email" id="userEmail">—</span>
+    <a href="bkd-portal.html" class="btn-outline">← 返回</a>
+    <button class="btn-danger" onclick="handleLogout()">退出</button>
+  </div>
+</header>
+
+<main>
+  <div class="welcome">
+    <h1>化工品 · 专属报价</h1>
+    <p>2026年度化工类运费报价 · F渠道和U渠道同价 · 人民币计价</p>
+  </div>
+
+  <!-- 类型切换 -->
+  <div class="type-tabs">
+    <div class="type-tab active" onclick="switchType('H')">🔵 H品名报价</div>
+    <div class="type-tab" onclick="switchType('Y')">🟢 Y品名报价</div>
+  </div>
+
+  <!-- H品名 -->
+  <div class="tab-content active" id="tab-H">
+    <div class="calc-card">
+      <div class="calc-title">H品名 · 运费计算器</div>
+      <div class="calc-row">
+        <div class="calc-field">
+          <label class="calc-label">货物重量 (KG)</label>
+          <input type="number" id="weightH" placeholder="如 3.5" step="0.5" min="0.5">
+        </div>
+        <button class="calc-btn" onclick="calcH()">计算运费</button>
+      </div>
+      <div class="results-grid" id="resultsH" style="display:none"></div>
+    </div>
+
+    <!-- 邮件发送 -->
+    <div class="send-section" id="sendH">
+      <div class="send-title">📧 将报价截图发送至邮箱</div>
+      <div class="send-row">
+        <div class="send-field">
+          <label class="calc-label">收件邮箱</label>
+          <input type="email" id="sendEmailH" placeholder="client@company.com">
+        </div>
+        <button class="send-btn" id="sendBtnH" onclick="sendQuote('H')">发送报价</button>
+      </div>
+      <div class="send-msg" id="sendMsgH"></div>
+    </div>
+
+    <div class="section-title" style="margin-top:28px">H品名报价表</div>
+    <div class="rate-table-wrap">
+      <table class="rate-table">
+        <thead><tr><th>服务类型</th><th>适用货物</th><th>首重</th><th>续重单位</th><th>时效参考</th></tr></thead>
+        <tbody>
+          <tr><td class="td-blue">H品名 1种</td><td>粉末 / 液体 / 颗粒</td><td><strong>¥675</strong> / 首0.5kg</td><td>¥162 / 0.5kg</td><td class="td-muted">3–7 工作日</td></tr>
+          <tr><td class="td-blue">H品名 2种</td><td>郑州仓 · 杂货</td><td><strong>¥750</strong> / 首0.5kg</td><td>¥180 / 0.5kg</td><td class="td-muted">3–7 工作日</td></tr>
+          <tr><td class="td-blue">H品名 3种</td><td>北京仓 · 杂货</td><td><strong>¥825</strong> / 首0.5kg</td><td>¥198 / 0.5kg</td><td class="td-muted">3–7 工作日</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="note-box">📌 F渠道和U渠道同价，暂无 DHL 模式 · 每月 15 票以上 · 4月燃油附加费另算 · 人民币结算</div>
+  </div>
+
+  <!-- Y品名 -->
+  <div class="tab-content" id="tab-Y">
+    <div class="calc-card">
+      <div class="calc-title">Y品名 · 运费计算器</div>
+      <div class="calc-row">
+        <div class="calc-field">
+          <label class="calc-label">货物重量 (KG)</label>
+          <input type="number" id="weightY" placeholder="如 3" step="1" min="1">
+        </div>
+        <button class="calc-btn" onclick="calcY()">计算运费</button>
+      </div>
+      <div class="results-grid" id="resultsY" style="display:none"></div>
+    </div>
+
+    <!-- 邮件发送 -->
+    <div class="send-section" id="sendY">
+      <div class="send-title">📧 将报价截图发送至邮箱</div>
+      <div class="send-row">
+        <div class="send-field">
+          <label class="calc-label">收件邮箱</label>
+          <input type="email" id="sendEmailY" placeholder="client@company.com">
+        </div>
+        <button class="send-btn" id="sendBtnY" onclick="sendQuote('Y')">发送报价</button>
+      </div>
+      <div class="send-msg" id="sendMsgY"></div>
+    </div>
+
+    <div class="section-title" style="margin-top:28px">Y品名报价表</div>
+    <div class="rate-table-wrap">
+      <table class="rate-table">
+        <thead><tr><th>服务类型</th><th>适用范围</th><th>单价</th><th>计费方式</th><th>时效参考</th></tr></thead>
+        <tbody>
+          <tr><td class="td-blue">Y品名 1种</td><td>1个包裹 · 1个品名</td><td><strong>¥380</strong> / 0.5kg</td><td>按0.5kg取整计费</td><td class="td-muted">3–7 工作日</td></tr>
+          <tr><td class="td-blue">Y品名 2种</td><td>1个包裹 · 2个品名</td><td><strong>¥460</strong> / 0.5kg</td><td>按0.5kg取整计费</td><td class="td-muted">3–7 工作日</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="note-box">📌 F渠道和U渠道同价 · 原品名提供鉴定复印件每票加 ¥250 · 外加 ¥100 报关费 · 4月燃油另算</div>
+  </div>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
+<script>
+var currentType = 'H';
+var lastResultH = '';
+var lastResultY = '';
+var userName = '';
+var userEmailVal = '';
+
+window.onload = function(){
+  var user = sessionStorage.getItem('bkd_user');
+  if(!user){window.location.href='bkd-login.html';return;}
+  var u = JSON.parse(user);
+  userName = u.name || u.email.split('@')[0];
+  userEmailVal = u.email;
+  document.getElementById('userEmail').textContent = u.email;
+  document.getElementById('welcomeName').textContent = userName;
+  document.getElementById('sendEmailH').value = u.email;
+  document.getElementById('sendEmailY').value = u.email;
+
+  document.getElementById('weightH').addEventListener('keydown',function(e){if(e.key==='Enter')calcH();});
+  document.getElementById('weightY').addEventListener('keydown',function(e){if(e.key==='Enter')calcY();});
+};
+
+function switchType(type){
+  currentType = type;
+  document.querySelectorAll('.type-tab').forEach(function(t,i){
+    t.classList.toggle('active', (i===0&&type==='H')||(i===1&&type==='Y'));
+  });
+  document.getElementById('tab-H').classList.toggle('active', type==='H');
+  document.getElementById('tab-Y').classList.toggle('active', type==='Y');
+}
+
+// H品名计算
+var H_RATES = [
+  {name:'H品名 1种（粉末/液体/颗粒）', first:675, firstKg:0.5, extra:162, extraUnit:0.5, days:'3–7'},
+  {name:'H品名 2种（郑州仓·杂货）', first:750, firstKg:0.5, extra:180, extraUnit:0.5, days:'3–7'},
+  {name:'H品名 3种（北京仓·杂货）', first:825, firstKg:0.5, extra:198, extraUnit:0.5, days:'3–7'},
+];
+
+function calcH(){
+  var w = parseFloat(document.getElementById('weightH').value);
+  if(!w||w<=0){alert('请输入有效重量');return;}
+  var grid = document.getElementById('resultsH');
+  grid.style.display = 'grid';
+  var html = '';
+  var summary = 'H品名报价 · '+w+'kg\n\n';
+  H_RATES.forEach(function(r,i){
+    var price = r.first;
+    var extraKg = 0; var units = 0;
+    if(w > r.firstKg){
+      extraKg = w - r.firstKg;
+      units = Math.ceil(extraKg / r.extraUnit);
+      price = r.first + units * r.extra;
+    }
+    summary += r.name+': ¥'+price+'\n';
+    html += '<div class="result-card" style="animation-delay:'+i*0.06+'s">'+
+      '<div class="result-channel">'+r.name+'</div>'+
+      '<div class="result-price">¥'+price+'<span> / '+w+'kg</span></div>'+
+      '<div class="result-days">预计 '+r.days+' 工作日 · F渠道和U渠道同价</div>'+
+      '<div class="result-detail">首重 '+r.firstKg+'kg = ¥'+r.first+'<br>'+
+      (extraKg>0?'续重 '+units+'×'+r.extraUnit+'kg×¥'+r.extra+' = ¥'+(units*r.extra):'（在首重范围内）')+
+      '</div></div>';
+  });
+  grid.innerHTML = html;
+  lastResultH = summary;
+  document.getElementById('sendH').style.display = 'block';
+}
+
+// Y品名计算
+var Y_RATES = [
+  {name:'Y品名 1种（1包裹1品名）', rate:760, unit:1, days:'3–7'},
+  {name:'Y品名 2种（1包裹2品名）', rate:920, unit:1, days:'3–7'},
+];
+
+function calcY(){
+  var w = parseFloat(document.getElementById('weightY').value);
+  if(!w||w<=0){alert('请输入有效重量');return;}
+  var grid = document.getElementById('resultsY');
+  grid.style.display = 'grid';
+  var html = '';
+  var summary = 'Y品名报价 · '+w+'kg\n\n';
+  Y_RATES.forEach(function(r,i){
+    var units = Math.ceil(w / r.unit);
+    var price = units * r.rate;
+    summary += r.name+': ¥'+price+'\n';
+    html += '<div class="result-card" style="animation-delay:'+i*0.06+'s">'+
+      '<div class="result-channel">'+r.name+'</div>'+
+      '<div class="result-price">¥'+price+'<span> / '+w+'kg</span></div>'+
+      '<div class="result-days">预计 '+r.days+' 工作日 · F渠道和U渠道同价</div>'+
+      '</div>';
+  });
+  grid.innerHTML = html;
+  lastResultY = summary;
+  document.getElementById('sendY').style.display = 'block';
+}
+
+// 发送报价
+function sendQuote(type){
+  var emailInput = document.getElementById('sendEmail'+type);
+  var btn = document.getElementById('sendBtn'+type);
+  var msgEl = document.getElementById('sendMsg'+type);
+  var toEmail = emailInput.value.trim();
+  if(!toEmail){showSendMsg(type,'请输入收件邮箱','error');return;}
+
+  var result = type==='H' ? lastResultH : lastResultY;
+  if(!result){showSendMsg(type,'请先计算运费','error');return;}
+
+  btn.disabled=true;btn.textContent='发送中...';
+
+  emailjs.init('YHvUgG6O1FuMM5qiL');
+  emailjs.send('service_78rh9xw','template_epeisgh',{
+    to_email: toEmail,
+    order_id: 'BKD报价-'+new Date().toLocaleDateString('zh-CN').replace(/\//g,''),
+    sender_company: userName,
+    email: userEmailVal,
+    channel: type==='H'?'H品名':'Y品名',
+    country: '全球',
+    address: '—',
+    recv_name: '—',
+    recv_phone: '—',
+    goods: result,
+    unit_price: '见报价',
+    quantity: '—',
+    weight: document.getElementById('weight'+type).value+'kg',
+    special: '2026年度化工类报价 · 报价仅供参考，最终以账单为准。',
+    order_date: new Date().toLocaleDateString('zh-CN')
+  }).then(function(){
+    showSendMsg(type,'✅ 报价已发送至 '+toEmail,'success');
+    btn.textContent='已发送';
+  }).catch(function(e){
+    showSendMsg(type,'发送失败：'+JSON.stringify(e),'error');
+    btn.disabled=false;btn.textContent='发送报价';
+  });
+}
+
+function showSendMsg(type,text,cls){
+  var el=document.getElementById('sendMsg'+type);
+  el.textContent=text;el.className='send-msg '+cls;
+}
+
+function handleLogout(){
+  sessionStorage.removeItem('bkd_user');
+  window.location.href='bkd-login.html';
+}
+</script>
+</body>
+</html>
