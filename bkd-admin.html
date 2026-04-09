@@ -1,0 +1,782 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>BKD Admin — 保凯达后台</title>
+<style>
+:root {
+  --navy:#0a1628;--blue:#1a56db;--teal:#0d9488;--red:#dc2626;--amber:#d97706;--green:#16a34a;
+  --bg:#f0f4fa;--card:#ffffff;--border:#e2e8f2;--text:#0f172a;--muted:#64748b;--light:#f8faff;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'SF Pro Display',-apple-system,system-ui,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;}
+
+/* LOGIN */
+#loginScreen{display:flex;align-items:center;justify-content:center;min-height:100vh;background:var(--navy);position:fixed;inset:0;z-index:100;}
+.login-box{background:#111f3a;border:1px solid #1e3a5f;border-radius:16px;padding:40px 36px;width:340px;text-align:center;}
+.login-logo{width:56px;height:56px;background:linear-gradient(135deg,var(--blue),var(--teal));border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:900;color:#fff;margin:0 auto 20px;}
+.login-box h2{color:#fff;font-size:20px;font-weight:700;margin-bottom:4px;}
+.login-box p{color:#94a3b8;font-size:12px;margin-bottom:28px;}
+.login-box input{width:100%;padding:11px 14px;background:#0d1e38;border:1.5px solid #1e3a5f;border-radius:9px;color:#fff;font-size:14px;outline:none;margin-bottom:12px;}
+.login-box input:focus{border-color:var(--blue);}
+.login-box input::placeholder{color:#475569;}
+.btn-login{width:100%;padding:12px;background:linear-gradient(135deg,var(--blue),#1d4ed8);color:#fff;border:none;border-radius:9px;font-size:14px;font-weight:700;cursor:pointer;}
+.btn-login:hover{opacity:.9;}
+.login-err{color:#f87171;font-size:12px;margin-top:8px;display:none;}
+
+/* LAYOUT */
+#app{display:none;}
+.sidebar{width:220px;background:var(--navy);position:fixed;top:0;left:0;bottom:0;display:flex;flex-direction:column;z-index:50;}
+.sb-logo{padding:20px 18px 16px;display:flex;align-items:center;gap:10px;border-bottom:1px solid #1e3a5f;}
+.sb-logo img{height:32px;border-radius:6px;}
+.sb-logo .lt{color:#fff;font-size:14px;font-weight:700;line-height:1.2;}
+.sb-logo .ls{color:#64748b;font-size:10px;}
+.sb-nav{flex:1;padding:12px 0;}
+.nav-item{display:flex;align-items:center;gap:10px;padding:10px 18px;color:#94a3b8;font-size:13px;font-weight:500;cursor:pointer;border-left:3px solid transparent;transition:all .15s;}
+.nav-item:hover{color:#fff;background:rgba(255,255,255,.05);}
+.nav-item.active{color:#fff;background:rgba(26,86,219,.18);border-left-color:var(--blue);}
+.nav-icon{font-size:15px;width:18px;text-align:center;}
+.sb-footer{padding:14px 18px;border-top:1px solid #1e3a5f;}
+.sb-footer button{background:none;border:none;color:#64748b;font-size:12px;cursor:pointer;}
+.sb-footer button:hover{color:#fff;}
+
+.main{margin-left:220px;min-height:100vh;}
+.topbar{background:var(--card);border-bottom:1px solid var(--border);padding:0 28px;height:56px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:40;}
+.topbar-title{font-size:15px;font-weight:700;color:var(--navy);}
+.topbar-right{display:flex;align-items:center;gap:12px;}
+.badge-admin{background:#dbeafe;color:#1e40af;font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px;}
+
+.content{padding:24px 28px;}
+.page{display:none;}
+.page.active{display:block;}
+
+/* STATS */
+.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:24px;}
+.stat-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:18px 20px;}
+.stat-label{font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px;}
+.stat-val{font-size:28px;font-weight:700;color:var(--navy);}
+.stat-sub{font-size:11px;color:var(--muted);margin-top:4px;}
+
+/* TABLE */
+.table-card{background:var(--card);border:1px solid var(--border);border-radius:12px;overflow:hidden;}
+.table-header{padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;}
+.table-header h3{font-size:14px;font-weight:700;color:var(--navy);}
+.search-bar{display:flex;align-items:center;gap:8px;}
+.search-bar input{padding:7px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;color:var(--text);outline:none;width:200px;}
+.search-bar input:focus{border-color:var(--blue);}
+.btn{padding:7px 14px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;border:none;transition:opacity .15s;}
+.btn:hover{opacity:.85;}
+.btn-primary{background:var(--blue);color:#fff;}
+.btn-teal{background:var(--teal);color:#fff;}
+.btn-outline{background:#fff;border:1.5px solid var(--border);color:var(--text);}
+.btn-sm{padding:4px 10px;font-size:11px;}
+.btn-danger{background:var(--red);color:#fff;}
+
+table{width:100%;border-collapse:collapse;}
+th{background:#f8faff;padding:10px 14px;text-align:left;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;border-bottom:1px solid var(--border);}
+td{padding:11px 14px;font-size:13px;border-bottom:1px solid #f1f5f9;vertical-align:middle;}
+tr:last-child td{border-bottom:none;}
+tr:hover td{background:#fafbff;}
+.order-id{font-family:monospace;font-weight:700;color:var(--blue);font-size:12px;}
+.status-badge{display:inline-block;padding:3px 9px;border-radius:20px;font-size:11px;font-weight:700;}
+.s-pending{background:#fef3c7;color:#92400e;}
+.s-transit{background:#dbeafe;color:#1e40af;}
+.s-delivered{background:#dcfce7;color:#166534;}
+.s-exception{background:#fee2e2;color:#991b1b;}
+.tracking-input{font-family:monospace;font-size:12px;padding:5px 9px;border:1.5px solid var(--border);border-radius:6px;width:140px;outline:none;}
+.tracking-input:focus{border-color:var(--teal);}
+.carrier-select{font-size:12px;padding:5px 9px;border:1.5px solid var(--border);border-radius:6px;outline:none;background:#fff;}
+.carrier-select:focus{border-color:var(--teal);}
+
+/* MODAL */
+.overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:200;align-items:center;justify-content:center;}
+.overlay.on{display:flex;}
+.modal{background:#fff;border-radius:14px;width:min(94vw,520px);box-shadow:0 20px 60px rgba(0,0,0,.18);}
+.modal-head{padding:18px 20px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+.modal-head h3{font-size:15px;font-weight:700;}
+.modal-close{background:none;border:none;font-size:18px;cursor:pointer;color:var(--muted);padding:2px 8px;}
+.modal-body{padding:18px 20px;}
+.field{margin-bottom:14px;}
+.field label{display:block;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:5px;}
+.field input,.field select,.field textarea{width:100%;padding:9px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;color:var(--text);outline:none;font-family:inherit;}
+.field input:focus,.field select:focus,.field textarea:focus{border-color:var(--blue);}
+.field textarea{resize:vertical;min-height:60px;}
+.modal-foot{padding:14px 20px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:8px;}
+
+/* TRACKING DETAIL */
+.track-timeline{margin-top:12px;}
+.track-item{display:flex;gap:14px;padding:10px 0;border-bottom:1px solid #f1f5f9;}
+.track-item:last-child{border-bottom:none;}
+.track-dot{width:10px;height:10px;border-radius:50%;background:var(--blue);flex-shrink:0;margin-top:4px;}
+.track-dot.latest{background:var(--teal);box-shadow:0 0 0 4px rgba(13,148,136,.15);}
+.track-time{font-size:11px;color:var(--muted);white-space:nowrap;}
+.track-desc{font-size:13px;color:var(--text);}
+
+/* LOADING */
+.loading{text-align:center;padding:40px;color:var(--muted);font-size:13px;}
+.spin{display:inline-block;width:16px;height:16px;border:2px solid #e2e8f0;border-top-color:var(--blue);border-radius:50%;animation:sp .6s linear infinite;vertical-align:middle;margin-right:6px;}
+@keyframes sp{to{transform:rotate(360deg);}}
+
+.empty{text-align:center;padding:48px 0;color:var(--muted);}
+.empty-icon{font-size:36px;margin-bottom:12px;}
+.empty p{font-size:13px;}
+
+.alert{padding:10px 14px;border-radius:8px;font-size:12px;margin-bottom:14px;display:none;}
+.alert-ok{background:#f0fdf4;border:1px solid #86efac;color:#166534;}
+.alert-err{background:#fef2f2;border:1px solid #fca5a5;color:#dc2626;}
+
+.refresh-btn{background:none;border:1.5px solid var(--border);border-radius:8px;padding:6px 12px;font-size:12px;cursor:pointer;color:var(--muted);}
+.refresh-btn:hover{border-color:var(--blue);color:var(--blue);}
+
+@media(max-width:768px){
+  .sidebar{transform:translateX(-100%);transition:transform .2s;}
+  .sidebar.open{transform:none;}
+  .main{margin-left:0;}
+  .stats-grid{grid-template-columns:1fr 1fr;}
+  .content{padding:16px;}
+}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="loginScreen">
+  <div class="login-box">
+    <div class="login-logo">B</div>
+    <h2>BKD 后台管理</h2>
+    <p>保凯达·霖霖 国际物流 Admin</p>
+    <input type="password" id="pwInput" placeholder="管理员密码" autocomplete="current-password">
+    <button class="btn-login" id="loginBtn">登 录</button>
+    <div class="login-err" id="loginErr">密码错误，请重试</div>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app">
+  <div class="sidebar" id="sidebar">
+    <div class="sb-logo">
+      <img src="logo.png" onerror="this.style.display='none'">
+      <div><div class="lt">BKD Admin</div><div class="ls">保凯达·霖霖</div></div>
+    </div>
+    <nav class="sb-nav">
+      <div class="nav-item active" data-page="orders"><span class="nav-icon">📦</span>订单管理</div>
+      <div class="nav-item" data-page="tracking"><span class="nav-icon">🔍</span>物流查询</div>
+      <div class="nav-item" data-page="stats"><span class="nav-icon">📊</span>数据统计</div>
+    </nav>
+    <div class="sb-footer">
+      <button id="logoutBtn">⬅ 退出登录</button>
+    </div>
+  </div>
+
+  <div class="main">
+    <div class="topbar">
+      <div class="topbar-title" id="pageTitle">订单管理</div>
+      <div class="topbar-right">
+        <span class="badge-admin">管理员</span>
+        <button class="refresh-btn" id="refreshBtn">↻ 刷新</button>
+      </div>
+    </div>
+
+    <div class="content">
+
+      <!-- 订单管理 -->
+      <div class="page active" id="page-orders">
+        <div class="stats-grid" id="statsRow">
+          <div class="stat-card"><div class="stat-label">总订单</div><div class="stat-val" id="s-total">—</div><div class="stat-sub">全部订单</div></div>
+          <div class="stat-card"><div class="stat-label">待处理</div><div class="stat-val" id="s-pending">—</div><div class="stat-sub">未录运单号</div></div>
+          <div class="stat-card"><div class="stat-label">运输中</div><div class="stat-val" id="s-transit">—</div><div class="stat-sub">已录单号</div></div>
+          <div class="stat-card"><div class="stat-label">已签收</div><div class="stat-val" id="s-delivered">—</div><div class="stat-sub">完成</div></div>
+        </div>
+
+        <div class="table-card">
+          <div class="table-header">
+            <h3>所有订单</h3>
+            <div class="search-bar">
+              <input type="text" id="searchInput" placeholder="搜索订单号 / 客户 / 货物…">
+              <button class="btn btn-teal" id="exportBtn">⬇ 导出 Excel</button>
+            </div>
+          </div>
+          <div id="ordersTableWrap">
+            <div class="loading"><span class="spin"></span>加载中…</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 物流查询 -->
+      <div class="page" id="page-tracking">
+        <div class="table-card" style="margin-bottom:20px;">
+          <div class="table-header">
+            <h3>手动查询运单</h3>
+          </div>
+          <div style="padding:20px;">
+            <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;">
+              <div class="field" style="margin:0;flex:1;min-width:160px;">
+                <label>快递公司</label>
+                <select id="manualCarrier">
+                  <option value="auto">自动识别</option>
+                  <option value="dhl">DHL</option>
+                  <option value="fedex">FedEx</option>
+                  <option value="ups">UPS</option>
+                  <option value="usps">USPS</option>
+                  <option value="aramex">Aramex</option>
+                  <option value="cdek">CDEK</option>
+                  <option value="jd">京东快递</option>
+                </select>
+              </div>
+              <div class="field" style="margin:0;flex:2;min-width:200px;">
+                <label>运单号</label>
+                <input type="text" id="manualTrackNum" placeholder="输入运单号…" style="font-family:monospace;">
+              </div>
+              <button class="btn btn-primary" id="manualQueryBtn" style="margin-bottom:0;height:38px;">查 询</button>
+            </div>
+            <div id="trackResult" style="margin-top:16px;"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 数据统计 -->
+      <div class="page" id="page-stats">
+        <div class="stats-grid" style="grid-template-columns:repeat(3,1fr);">
+          <div class="stat-card"><div class="stat-label">本月订单</div><div class="stat-val" id="ss-month">—</div></div>
+          <div class="stat-card"><div class="stat-label">最常用渠道</div><div class="stat-val" id="ss-channel" style="font-size:16px;margin-top:4px;">—</div></div>
+          <div class="stat-card"><div class="stat-label">目的地Top1</div><div class="stat-val" id="ss-country" style="font-size:16px;margin-top:4px;">—</div></div>
+        </div>
+        <div class="table-card">
+          <div class="table-header"><h3>渠道分布</h3></div>
+          <div id="channelStats" style="padding:16px 20px;"></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- 录入运单号 Modal -->
+<div class="overlay" id="trackModal">
+  <div class="modal">
+    <div class="modal-head">
+      <h3>📦 录入运单号</h3>
+      <button class="modal-close" id="trackModalClose">✕</button>
+    </div>
+    <div class="modal-body">
+      <div id="trackModalAlert" class="alert"></div>
+      <div style="background:#f8faff;border:1px solid var(--border);border-radius:8px;padding:12px 14px;margin-bottom:16px;font-size:12px;line-height:1.8;">
+        <div><span style="color:var(--muted);">订单号：</span><strong id="tm-orderId" style="font-family:monospace;"></strong></div>
+        <div><span style="color:var(--muted);">客户：</span><strong id="tm-company"></strong></div>
+        <div><span style="color:var(--muted);">货物：</span><span id="tm-goods"></span></div>
+        <div><span style="color:var(--muted);">渠道：</span><span id="tm-channel"></span></div>
+      </div>
+      <div class="field">
+        <label>快递公司</label>
+        <select id="tm-carrier">
+          <option value="auto">自动识别</option>
+          <option value="dhl">DHL</option>
+          <option value="fedex">FedEx</option>
+          <option value="ups">UPS</option>
+          <option value="usps">USPS</option>
+          <option value="aramex">Aramex</option>
+          <option value="cdek">CDEK</option>
+          <option value="jd">京东快递</option>
+          <option value="ems">EMS</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>运单号 Tracking Number</label>
+        <input type="text" id="tm-trackingNum" placeholder="输入快递运单号…" style="font-family:monospace;font-size:14px;">
+      </div>
+      <div class="field">
+        <label>目的国 Destination</label>
+        <input type="text" id="tm-country" placeholder="如：United States / 美国">
+      </div>
+      <div class="field">
+        <label>备注（可选）</label>
+        <textarea id="tm-note" placeholder="如：拆分两票，第一票…"></textarea>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-outline" id="trackModalCancel">取消</button>
+      <button class="btn btn-teal" id="trackModalSave">保存运单号</button>
+    </div>
+  </div>
+</div>
+
+<!-- 订单详情/编辑 Modal -->
+<div class="overlay" id="detailModal">
+  <div class="modal" style="width:min(94vw,620px);">
+    <div class="modal-head">
+      <h3 id="detail-title">订单详情</h3>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <button class="btn btn-teal btn-sm" id="editToggleBtn">✏️ 编辑</button>
+        <button class="modal-close" id="detailClose">✕</button>
+      </div>
+    </div>
+    <div class="modal-body" id="detailBody" style="max-height:70vh;overflow-y:auto;"></div>
+    <div class="modal-foot" id="detailFoot" style="display:none;">
+      <button class="btn btn-outline" id="editCancelBtn">取消</button>
+      <button class="btn btn-teal" id="editSaveBtn">保存修改</button>
+    </div>
+  </div>
+</div>
+
+<!-- Firebase SDK -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getFirestore, collection, getDocs, doc, updateDoc, query, orderBy, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyA71fC4aW55bUx2UyLONCOJq27IC4OxGEs",
+  authDomain: "bkdll-8323a.firebaseapp.com",
+  projectId: "bkdll-8323a",
+  storageBucket: "bkdll-8323a.firebasestorage.app",
+  messagingSenderId: "149876578128",
+  appId: "1:149876578128:web:4997c5b1ba8edad8c7fe55"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+window._bkdDB = db;
+window._bkdFirestore = { collection, getDocs, doc, updateDoc, query, orderBy, serverTimestamp };
+window.dispatchEvent(new Event('firebaseReady'));
+</script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
+<script>
+(function(){
+'use strict';
+
+const PASS = 'BKD@2026';
+const KD100_WORKER = 'https://bkd-track.bkd-666.workers.dev';
+
+// ── 登录 ──
+var G = id => document.getElementById(id);
+
+G('pwInput').addEventListener('keydown', e => { if(e.key==='Enter') doLogin(); });
+G('loginBtn').addEventListener('click', doLogin);
+
+function doLogin(){
+  if(G('pwInput').value === PASS){
+    G('loginScreen').style.display='none';
+    G('app').style.display='block';
+    waitFirebase();
+  } else {
+    G('loginErr').style.display='block';
+    G('pwInput').value='';
+    G('pwInput').focus();
+  }
+}
+
+G('logoutBtn').addEventListener('click', () => {
+  G('loginScreen').style.display='flex';
+  G('app').style.display='none';
+  G('pwInput').value='';
+});
+
+// ── 等待 Firebase ──
+function waitFirebase(){
+  if(window._bkdDB){ initApp(); }
+  else { window.addEventListener('firebaseReady', initApp, {once:true}); }
+}
+
+// ── 全局状态 ──
+var allOrders = [];
+
+function initApp(){
+  loadOrders();
+  initNav();
+  G('refreshBtn').addEventListener('click', loadOrders);
+  G('searchInput').addEventListener('input', renderTable);
+  G('exportBtn').addEventListener('click', exportExcel);
+  G('manualQueryBtn').addEventListener('click', manualQuery);
+  initTrackModal();
+  initDetailModal();
+}
+
+// ── 导航 ──
+function initNav(){
+  document.querySelectorAll('.nav-item').forEach(item => {
+    item.addEventListener('click', () => {
+      document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+      document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+      item.classList.add('active');
+      var pg = item.dataset.page;
+      G('page-'+pg).classList.add('active');
+      G('pageTitle').textContent = item.textContent.trim();
+      if(pg==='stats') renderStats();
+    });
+  });
+}
+
+// ── 加载订单 ──
+async function loadOrders(){
+  G('ordersTableWrap').innerHTML = '<div class="loading"><span class="spin"></span>加载中…</div>';
+  try {
+    var { collection, getDocs, query, orderBy } = window._bkdFirestore;
+    var db = window._bkdDB;
+    var q = query(collection(db,'orders'), orderBy('createdAt','desc'));
+    var snap = await getDocs(q);
+    allOrders = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    renderTable();
+    updateStats();
+  } catch(e){
+    G('ordersTableWrap').innerHTML = '<div class="loading">加载失败：'+e.message+'</div>';
+  }
+}
+
+function updateStats(){
+  var total = allOrders.length;
+  var pending = allOrders.filter(o => !o.trackingNumber && o.status==='待处理').length;
+  var transit = allOrders.filter(o => o.trackingNumber && o.status!=='已签收').length;
+  var delivered = allOrders.filter(o => o.status==='已签收').length;
+  G('s-total').textContent = total;
+  G('s-pending').textContent = pending;
+  G('s-transit').textContent = transit;
+  G('s-delivered').textContent = delivered;
+}
+
+function renderTable(){
+  var kw = (G('searchInput').value||'').toLowerCase();
+  var list = kw ? allOrders.filter(o =>
+    (o.orderId||'').toLowerCase().includes(kw) ||
+    (o.senderCompany||'').toLowerCase().includes(kw) ||
+    (o.goods||'').toLowerCase().includes(kw) ||
+    (o.trackingNumber||'').toLowerCase().includes(kw)
+  ) : allOrders;
+
+  if(!list.length){
+    G('ordersTableWrap').innerHTML = '<div class="empty"><div class="empty-icon">📭</div><p>暂无订单数据</p></div>';
+    return;
+  }
+
+  var rows = list.map(o => {
+    var st = o.status || '待处理';
+    var stClass = st==='已签收'?'s-delivered':st==='运输中'?'s-transit':st==='异常'?'s-exception':'s-pending';
+    var date = '';
+    if(o.createdAt && o.createdAt.toDate){ date = o.createdAt.toDate().toLocaleDateString('zh-CN'); }
+    else if(o.submitTime){ date = o.submitTime.slice(0,10); }
+    var trackCell = o.trackingNumber
+      ? `<span style="font-family:monospace;font-size:12px;color:var(--teal);">${esc(o.trackingNumber)}</span>`
+      : `<span style="color:#cbd5e1;font-size:11px;">未录入</span>`;
+    return `<tr>
+      <td><span class="order-id">${esc(o.orderId||o.id.slice(0,8))}</span></td>
+      <td>${esc(o.senderCompany||'—')}</td>
+      <td style="max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${esc(o.goods||'—')}</td>
+      <td style="font-size:12px;">${esc(o.channel||'—')}</td>
+      <td>${trackCell}</td>
+      <td><span class="status-badge ${stClass}">${esc(st)}</span></td>
+      <td style="font-size:11px;color:var(--muted);">${date}</td>
+      <td>
+        <button class="btn btn-teal btn-sm" data-action="track" data-id="${o.id}">录运单</button>
+        <button class="btn btn-outline btn-sm" data-action="detail" data-id="${o.id}" style="margin-left:4px;">详情</button>
+      </td>
+    </tr>`;
+  }).join('');
+
+  G('ordersTableWrap').innerHTML = `
+    <div style="overflow-x:auto;">
+    <table>
+      <thead><tr>
+        <th>订单号</th><th>客户</th><th>货物</th><th>渠道</th>
+        <th>运单号</th><th>状态</th><th>日期</th><th>操作</th>
+      </tr></thead>
+      <tbody>${rows}</tbody>
+    </table></div>`;
+
+  G('ordersTableWrap').querySelectorAll('[data-action]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      var o = allOrders.find(x=>x.id===btn.dataset.id);
+      if(!o) return;
+      if(btn.dataset.action==='track') openTrackModal(o);
+      else openDetailModal(o);
+    });
+  });
+}
+
+// ── 录入运单号 Modal ──
+var currentOrder = null;
+
+function initTrackModal(){
+  G('trackModalClose').addEventListener('click', ()=>closeModal('trackModal'));
+  G('trackModalCancel').addEventListener('click', ()=>closeModal('trackModal'));
+  G('trackModal').addEventListener('click', e=>{ if(e.target===G('trackModal'))closeModal('trackModal'); });
+  G('trackModalSave').addEventListener('click', saveTracking);
+}
+
+function openTrackModal(o){
+  currentOrder = o;
+  G('tm-orderId').textContent = o.orderId || o.id;
+  G('tm-company').textContent = o.senderCompany || '—';
+  G('tm-goods').textContent = o.goods || '—';
+  G('tm-channel').textContent = o.channel || '—';
+  G('tm-trackingNum').value = o.trackingNumber || '';
+  G('tm-carrier').value = o.carrier || 'auto';
+  G('tm-country').value = o.destCountry || o.country || '';
+  G('tm-note').value = o.adminNote || '';
+  G('trackModalAlert').style.display='none';
+  openModal('trackModal');
+  setTimeout(()=>G('tm-trackingNum').focus(),100);
+}
+
+async function saveTracking(){
+  var tn = (G('tm-trackingNum').value||'').trim();
+  if(!tn){ showAlert('trackModalAlert','err','请填写运单号'); return; }
+  var btn = G('trackModalSave');
+  btn.disabled=true; btn.textContent='保存中…';
+  try {
+    var { doc, updateDoc } = window._bkdFirestore;
+    var db = window._bkdDB;
+    await updateDoc(doc(db,'orders',currentOrder.id), {
+      trackingNumber: tn,
+      carrier: G('tm-carrier').value,
+      destCountry: G('tm-country').value,
+      adminNote: G('tm-note').value,
+      status: '运输中',
+      updatedAt: new Date().toISOString()
+    });
+    var idx = allOrders.findIndex(x=>x.id===currentOrder.id);
+    if(idx>=0){ allOrders[idx].trackingNumber=tn; allOrders[idx].carrier=G('tm-carrier').value; allOrders[idx].destCountry=G('tm-country').value; allOrders[idx].status='运输中'; }
+    renderTable(); updateStats();
+    closeModal('trackModal');
+  } catch(e){
+    showAlert('trackModalAlert','err','保存失败：'+e.message);
+  }
+  btn.disabled=false; btn.textContent='保存运单号';
+}
+
+// ── 订单详情/编辑 Modal ──
+var isEditing = false;
+
+function initDetailModal(){
+  G('detailClose').addEventListener('click', ()=>{ isEditing=false; closeModal('detailModal'); });
+  G('detailModal').addEventListener('click', e=>{ if(e.target===G('detailModal')){ isEditing=false; closeModal('detailModal'); }});
+  G('editToggleBtn').addEventListener('click', ()=>{ isEditing=true; renderDetailEdit(currentOrder); });
+  G('editCancelBtn').addEventListener('click', ()=>{ isEditing=false; openDetailModal(currentOrder); });
+  G('editSaveBtn').addEventListener('click', saveDetailEdit);
+}
+
+function openDetailModal(o){
+  currentOrder = o;
+  isEditing = false;
+  G('detail-title').textContent = '订单详情 — ' + (o.orderId||o.id);
+  G('editToggleBtn').style.display = 'inline-block';
+  G('detailFoot').style.display = 'none';
+  var date='';
+  if(o.createdAt&&o.createdAt.toDate) date=o.createdAt.toDate().toLocaleString('zh-CN');
+  else if(o.submitTime) date=o.submitTime.replace('T',' ').slice(0,16);
+  var fields = [
+    ['订单号',o.orderId||o.id],['客户',o.senderCompany],['邮箱',o.email],
+    ['渠道',o.channel],['货物',o.goods],['数量',o.qty],
+    ['单价',o.unitPrice+' '+(o.currency||'USD')],['申报总价',o.amount+' '+(o.currency||'USD')],
+    ['HS Code',o.hsCode||'—'],['特殊货物',o.special||'—'],
+    ['目的地',o.country+(o.city?'·'+o.city:'')],['邮编',o.zip],
+    ['目的国',o.destCountry||'—'],
+    ['运单号',o.trackingNumber||'未录入'],['快递公司',o.carrier||'—'],
+    ['物流状态',o.status||'待处理'],['最新动态',o.lastStatus||'—'],
+    ['备注',o.remarks||'—'],['下单时间',date],['收件地址',o.address||'—']
+  ];
+  G('detailBody').innerHTML = fields.map(([k,v])=>`
+    <div style="display:flex;gap:10px;padding:8px 0;border-bottom:1px solid #f1f5f9;font-size:13px;">
+      <span style="color:var(--muted);min-width:80px;flex-shrink:0;">${esc(k)}</span>
+      <span style="word-break:break-all;">${esc(v||'—')}</span>
+    </div>`).join('');
+  openModal('detailModal');
+}
+
+function renderDetailEdit(o){
+  G('detail-title').textContent = '编辑订单 — ' + (o.orderId||o.id);
+  G('editToggleBtn').style.display = 'none';
+  G('detailFoot').style.display = 'flex';
+  var editFields = [
+    ['senderCompany','客户名','text',o.senderCompany],
+    ['email','邮箱','email',o.email],
+    ['channel','渠道','text',o.channel],
+    ['goods','货物描述','text',o.goods],
+    ['qty','数量','text',o.qty],
+    ['unitPrice','单价','text',o.unitPrice],
+    ['currency','货币','text',o.currency||'USD'],
+    ['hsCode','HS Code','text',o.hsCode],
+    ['country','目的国家','text',o.country],
+    ['destCountry','目的国（中文）','text',o.destCountry],
+    ['zip','邮编','text',o.zip],
+    ['trackingNumber','运单号','text',o.trackingNumber],
+    ['carrier','快递公司','text',o.carrier],
+    ['status','状态','select',o.status],
+    ['remarks','备注','textarea',o.remarks],
+    ['address','收件地址','textarea',o.address],
+  ];
+  G('detailBody').innerHTML = editFields.map(([id,label,type,val])=>{
+    var input = type==='textarea'
+      ? `<textarea id="ef-${id}" style="width:100%;padding:7px 10px;border:1.5px solid var(--border);border-radius:7px;font-size:12px;font-family:inherit;min-height:60px;outline:none;">${esc(val||'')}</textarea>`
+      : type==='select'
+      ? `<select id="ef-${id}" style="width:100%;padding:7px 10px;border:1.5px solid var(--border);border-radius:7px;font-size:12px;outline:none;">
+          ${['待处理','运输中','已签收','异常'].map(s=>`<option${s===val?' selected':''}>${s}</option>`).join('')}
+         </select>`
+      : `<input type="${type}" id="ef-${id}" value="${esc(val||'')}" style="width:100%;padding:7px 10px;border:1.5px solid var(--border);border-radius:7px;font-size:12px;outline:none;">`;
+    return `<div style="padding:7px 0;border-bottom:1px solid #f1f5f9;">
+      <div style="font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px;">${label}</div>
+      ${input}
+    </div>`;
+  }).join('');
+}
+
+async function saveDetailEdit(){
+  var btn = G('editSaveBtn');
+  btn.disabled=true; btn.textContent='保存中…';
+  try {
+    var { doc, updateDoc } = window._bkdFirestore;
+    var db = window._bkdDB;
+    var updates = {
+      senderCompany: G('ef-senderCompany').value,
+      email: G('ef-email').value,
+      channel: G('ef-channel').value,
+      goods: G('ef-goods').value,
+      qty: G('ef-qty').value,
+      unitPrice: G('ef-unitPrice').value,
+      currency: G('ef-currency').value,
+      hsCode: G('ef-hsCode').value,
+      country: G('ef-country').value,
+      destCountry: G('ef-destCountry').value,
+      zip: G('ef-zip').value,
+      trackingNumber: G('ef-trackingNumber').value,
+      carrier: G('ef-carrier').value,
+      status: G('ef-status').value,
+      remarks: G('ef-remarks').value,
+      address: G('ef-address').value,
+      updatedAt: new Date().toISOString()
+    };
+    await updateDoc(doc(db,'orders',currentOrder.id), updates);
+    var idx = allOrders.findIndex(x=>x.id===currentOrder.id);
+    if(idx>=0) allOrders[idx] = Object.assign({}, allOrders[idx], updates);
+    currentOrder = allOrders[idx];
+    renderTable(); updateStats();
+    isEditing = false;
+    openDetailModal(currentOrder);
+  } catch(e){
+    alert('保存失败：'+e.message);
+  }
+  btn.disabled=false; btn.textContent='保存修改';
+}
+
+// ── 手动查询 ──
+async function manualQuery(){
+  var num = (G('manualTrackNum').value||'').trim();
+  var carrier = G('manualCarrier').value;
+  if(!num){ alert('请输入运单号'); return; }
+  var btn = G('manualQueryBtn');
+  btn.disabled=true; btn.textContent='查询中…';
+  G('trackResult').innerHTML = '<div class="loading"><span class="spin"></span>查询中…</div>';
+  try {
+    var url = KD100_WORKER+'?carrier='+encodeURIComponent(carrier)+'&num='+encodeURIComponent(num);
+    var r = await fetch(url);
+    var d = await r.json();
+    renderTrackResult(d, num);
+  } catch(e){
+    G('trackResult').innerHTML = '<div style="color:var(--red);font-size:13px;">查询失败：'+e.message+'</div>';
+  }
+  btn.disabled=false; btn.textContent='查 询';
+}
+
+function renderTrackResult(d, num){
+  if(!d || d.returnCode==='500' || (!d.data && !d.traces)){
+    G('trackResult').innerHTML = '<div style="color:var(--amber);font-size:13px;padding:12px;background:#fffbeb;border-radius:8px;border:1px solid #fde68a;">⚠ 未查到该运单，可能尚未入网或单号有误。</div>';
+    return;
+  }
+  var traces = d.data || d.traces || [];
+  if(!traces.length){
+    G('trackResult').innerHTML = '<div style="color:var(--muted);font-size:13px;">暂无轨迹</div>';
+    return;
+  }
+  var stateMap = {'0':'待揽件','1':'已揽件','2':'运输中','3':'已签收','4':'问题件'};
+  var stateText = stateMap[d.state||''] || '运输中';
+  var items = traces.map((t,i) => `
+    <div class="track-item">
+      <div class="track-dot ${i===0?'latest':''}"></div>
+      <div style="flex:1;">
+        <div class="track-desc">${esc(t.context||t.desc||'')}</div>
+        <div class="track-time">${esc(t.time||t.ftime||'')}</div>
+      </div>
+    </div>`).join('');
+  G('trackResult').innerHTML = `
+    <div style="background:#f0fdf4;border:1px solid #86efac;border-radius:8px;padding:10px 14px;margin-bottom:12px;font-size:12px;">
+      ✓ 查询成功 &nbsp;·&nbsp; 运单：<strong style="font-family:monospace;">${esc(num)}</strong> &nbsp;·&nbsp; 状态：<strong>${stateText}</strong>
+    </div>
+    <div class="track-timeline">${items}</div>`;
+}
+
+// ── 数据统计 ──
+function renderStats(){
+  var now = new Date();
+  var thisMonth = allOrders.filter(o => {
+    var d = o.createdAt?.toDate?.() || (o.submitTime?new Date(o.submitTime):null);
+    return d && d.getMonth()===now.getMonth() && d.getFullYear()===now.getFullYear();
+  });
+  G('ss-month').textContent = thisMonth.length;
+
+  var channels = {};
+  allOrders.forEach(o=>{ var c=o.channel||'未知'; channels[c]=(channels[c]||0)+1; });
+  var topCh = Object.entries(channels).sort((a,b)=>b[1]-a[1])[0];
+  G('ss-channel').textContent = topCh ? topCh[0].slice(0,12) : '—';
+
+  var countries = {};
+  allOrders.forEach(o=>{ var c=o.country||'未知'; countries[c]=(countries[c]||0)+1; });
+  var topCo = Object.entries(countries).sort((a,b)=>b[1]-a[1])[0];
+  G('ss-country').textContent = topCo ? topCo[0] : '—';
+
+  var chRows = Object.entries(channels).sort((a,b)=>b[1]-a[1]).map(([ch,cnt])=>{
+    var pct = Math.round(cnt/allOrders.length*100);
+    return `<div style="display:flex;align-items:center;gap:12px;padding:8px 0;border-bottom:1px solid #f1f5f9;">
+      <span style="font-size:13px;min-width:140px;">${esc(ch)}</span>
+      <div style="flex:1;background:#f1f5f9;border-radius:4px;height:8px;overflow:hidden;">
+        <div style="width:${pct}%;height:100%;background:var(--blue);border-radius:4px;"></div>
+      </div>
+      <span style="font-size:12px;color:var(--muted);min-width:40px;text-align:right;">${cnt} 票</span>
+    </div>`;
+  }).join('');
+  G('channelStats').innerHTML = chRows || '<div style="color:var(--muted);font-size:13px;">暂无数据</div>';
+}
+
+// ── 导出 Excel ──
+function exportExcel(){
+  if(!window.XLSX){ alert('Excel库加载中，请稍后再试'); return; }
+  var data = allOrders.map(o => ({
+    '订单号': o.orderId||o.id,
+    '客户': o.senderCompany||'',
+    '邮箱': o.email||'',
+    '渠道': o.channel||'',
+    '货物': o.goods||'',
+    '数量': o.qty||'',
+    '申报价值': (o.amount||'')+' '+(o.currency||'USD'),
+    '目的国': o.country||'',
+    '邮编': o.zip||'',
+    '运单号': o.trackingNumber||'',
+    '状态': o.status||'待处理',
+    '最新动态': o.lastStatus||'',
+    '备注': o.remarks||'',
+    '下单时间': o.submitTime||(o.createdAt?.toDate?.()?.toLocaleString('zh-CN')||'')
+  }));
+  var ws = XLSX.utils.json_to_sheet(data);
+  var wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, '订单');
+  var cols = [20,16,20,14,20,6,14,12,8,18,8,20,16,18].map(w=>({wch:w}));
+  ws['!cols'] = cols;
+  XLSX.writeFile(wb, 'BKD订单_'+new Date().toLocaleDateString('zh-CN').replace(/\//g,'')+'.xlsx');
+}
+
+// ── 工具函数 ──
+function openModal(id){ G(id).classList.add('on'); document.body.style.overflow='hidden'; }
+function closeModal(id){ G(id).classList.remove('on'); document.body.style.overflow=''; }
+function showAlert(id, type, msg){
+  var el=G(id);
+  el.className='alert alert-'+(type==='err'?'err':'ok');
+  el.textContent=msg;
+  el.style.display='block';
+  setTimeout(()=>el.style.display='none', 4000);
+}
+function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+})();
+</script>
+</body>
+</html>
