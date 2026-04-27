@@ -1,0 +1,1330 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>BKD Admin — 保凯达后台</title>
+<style>
+:root {
+  --blue:#1a56db;--teal:#0d9488;--red:#dc2626;--amber:#d97706;
+  --bg:#e8f1fb;--card:#ffffff;--border:#cfe0f5;--text:#0f172a;--muted:#64748b;
+  --sb-bg:#e8f0fe;--sb-border:#c5d8f8;--sb-text:#1e3a6e;--sb-muted:#5a7bbf;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:-apple-system,'SF Pro Display',system-ui,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;}
+
+/* LOGIN */
+#loginScreen{display:flex;align-items:center;justify-content:center;min-height:100vh;background:linear-gradient(135deg,#0f2057 0%,#1a56db 100%);position:fixed;inset:0;z-index:100;}
+.login-box{background:#fff;border-radius:18px;padding:36px 32px;width:340px;text-align:center;box-shadow:0 24px 60px rgba(15,32,87,.3);}
+.login-logo{width:52px;height:52px;background:linear-gradient(135deg,var(--blue),var(--teal));border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:900;color:#fff;margin:0 auto 16px;}
+.login-box h2{color:#0f172a;font-size:18px;font-weight:700;margin-bottom:3px;}
+.login-box p{color:#94a3b8;font-size:11px;margin-bottom:22px;}
+.login-box input{width:100%;padding:11px 14px;background:#f8faff;border:1.5px solid #dce6f5;border-radius:9px;color:#0f172a;font-size:13px;outline:none;margin-bottom:10px;font-family:inherit;}
+.login-box input:focus{border-color:var(--blue);background:#fff;}
+.login-box input::placeholder{color:#94a3b8;}
+.btn-login{width:100%;padding:12px;background:linear-gradient(135deg,var(--blue),#1d4ed8);color:#fff;border:none;border-radius:9px;font-size:13px;font-weight:700;cursor:pointer;margin-top:4px;}
+.btn-login:hover{opacity:.9;}
+.btn-login:disabled{opacity:.55;cursor:not-allowed;}
+.login-err{color:#dc2626;font-size:11px;margin-top:8px;display:none;line-height:1.5;}
+
+/* LAYOUT */
+#app{display:none;}
+.sidebar{width:208px;background:var(--sb-bg);border-right:1px solid var(--sb-border);position:fixed;top:0;left:0;bottom:0;display:flex;flex-direction:column;z-index:50;}
+.sb-logo{padding:15px 15px 12px;display:flex;align-items:center;gap:9px;border-bottom:1px solid var(--sb-border);}
+.sb-logo img{height:30px;border-radius:6px;}
+.sb-logo .lt{color:var(--sb-text);font-size:13px;font-weight:700;line-height:1.2;}
+.sb-logo .ls{color:var(--sb-muted);font-size:9px;margin-top:1px;}
+.sb-nav{flex:1;padding:7px 0;}
+.nav-item{display:flex;align-items:center;gap:9px;padding:8px 15px;color:var(--sb-text);font-size:12px;font-weight:500;cursor:pointer;border-left:3px solid transparent;transition:all .12s;margin:1px 0;}
+.nav-item:hover{background:#d4e4fc;color:var(--blue);}
+.nav-item.active{color:#fff;background:var(--blue);border-left-color:#fff;border-radius:0 8px 8px 0;margin-right:8px;}
+.nav-icon{font-size:14px;width:17px;text-align:center;flex-shrink:0;}
+.sb-footer{padding:10px 15px;border-top:1px solid var(--sb-border);}
+.sb-footer button{background:none;border:none;color:var(--sb-muted);font-size:11px;cursor:pointer;}
+.sb-footer button:hover{color:var(--sb-text);}
+
+.main{margin-left:208px;min-height:100vh;}
+.topbar{background:var(--card);border-bottom:1px solid var(--border);padding:0 22px;height:50px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:40;box-shadow:0 1px 4px rgba(26,86,219,.06);}
+.topbar-title{font-size:14px;font-weight:700;color:#0f172a;}
+.topbar-right{display:flex;align-items:center;gap:10px;}
+.admin-email{font-size:11px;color:var(--muted);font-family:monospace;}
+.badge-admin{background:#dbeafe;color:#1e40af;font-size:10px;font-weight:700;padding:2px 9px;border-radius:20px;}
+.refresh-btn{background:none;border:1.5px solid var(--border);border-radius:7px;padding:5px 11px;font-size:11px;cursor:pointer;color:var(--muted);}
+.refresh-btn:hover{border-color:var(--blue);color:var(--blue);}
+
+.content{padding:16px 20px;}
+.page{display:none;}
+.page.active{display:block;}
+
+/* STATS */
+.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px;}
+.stat-card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:12px 15px;}
+.stat-label{font-size:10px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px;}
+.stat-val{font-size:24px;font-weight:700;color:#0f172a;}
+.stat-sub{font-size:10px;color:var(--muted);margin-top:2px;}
+
+/* TABLE CARD */
+.table-card{background:var(--card);border:1px solid var(--border);border-radius:10px;overflow:hidden;}
+.table-header{padding:10px 15px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;}
+.table-header h3{font-size:13px;font-weight:700;color:#0f172a;}
+.search-bar{display:flex;align-items:center;gap:6px;flex-wrap:wrap;}
+.search-bar input{padding:5px 10px;border:1.5px solid var(--border);border-radius:7px;font-size:12px;outline:none;width:170px;}
+.search-bar input:focus{border-color:var(--blue);}
+
+/* BUTTONS */
+.btn{padding:5px 12px;border-radius:7px;font-size:11px;font-weight:700;cursor:pointer;border:none;transition:opacity .12s;line-height:1.5;}
+.btn:hover{opacity:.85;}
+.btn-primary{background:var(--blue);color:#fff;}
+.btn-teal{background:var(--teal);color:#fff;}
+.btn-outline{background:#fff;border:1.5px solid var(--border);color:var(--text);}
+.btn-sm{padding:3px 8px;font-size:11px;}
+.btn-danger{background:var(--red);color:#fff;}
+.btn-del{background:none;border:1.5px solid #fca5a5;color:#fca5a5;padding:3px 7px;font-size:10px;border-radius:5px;cursor:pointer;transition:all .12s;font-weight:700;line-height:1;}
+.btn-del:hover{background:var(--red);border-color:var(--red);color:#fff;}
+#batchDeleteBtn{display:none;background:var(--red);color:#fff;border:none;padding:5px 12px;border-radius:7px;font-size:11px;font-weight:700;cursor:pointer;align-items:center;gap:4px;}
+#batchDeleteBtn.visible{display:inline-flex;}
+
+/* TABLE */
+table{width:100%;border-collapse:collapse;}
+th{background:#deeaf8;padding:7px 10px;text-align:left;font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;border-bottom:1px solid var(--border);}
+td{padding:7px 10px;font-size:12px;border-bottom:1px solid #f1f5f9;vertical-align:middle;}
+tr:last-child td{border-bottom:none;}
+tr:hover td{background:#fafbff;}
+td.td-idx{color:var(--muted);font-size:10px;font-weight:600;text-align:center;width:28px;padding:7px 4px;}
+td.td-doc{white-space:nowrap;min-width:82px;}
+td.td-doc{white-space:nowrap;min-width:80px;}
+th.th-idx{text-align:center;width:28px;padding:7px 4px;}
+th.th-chk,td.td-chk{width:28px;text-align:center;padding:7px 4px;}
+input[type=checkbox]{width:13px;height:13px;accent-color:var(--blue);cursor:pointer;}
+
+.order-id{font-family:monospace;font-weight:700;color:var(--blue);font-size:11px;}
+.status-badge{display:inline-block;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:700;}
+.s-pending{background:#fef3c7;color:#92400e;}
+.s-transit{background:#dbeafe;color:#1e40af;}
+.s-delivered{background:#dcfce7;color:#166534;}
+.s-exception{background:#fee2e2;color:#991b1b;}
+
+/* SF 内联 */
+.sf-wrap{display:flex;align-items:center;gap:3px;}
+.sf-inline{font-family:monospace;font-size:11px;padding:3px 6px;border:1.5px solid #fed7aa;border-radius:5px;width:108px;outline:none;background:#fff7ed;color:#c2410c;}
+.sf-inline:focus{border-color:#f97316;background:#fff;}
+.sf-inline::placeholder{color:#fdba74;font-size:10px;}
+.sf-save-btn{padding:3px 6px;font-size:10px;font-weight:700;background:#f97316;color:#fff;border:none;border-radius:4px;cursor:pointer;flex-shrink:0;}
+.sf-save-btn:hover{background:#ea580c;}
+.sf-badge{display:inline-block;background:#fff7ed;border:1px solid #fed7aa;color:#c2410c;border-radius:4px;font-size:10px;font-weight:700;padding:2px 6px;font-family:monospace;}
+td.td-doc{white-space:nowrap;min-width:80px;}
+.doc-upload-label:hover{text-decoration:underline;}
+
+/* MODAL */
+.overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:200;align-items:center;justify-content:center;}
+.overlay.on{display:flex;}
+.modal{background:#fff;border-radius:12px;width:min(94vw,510px);box-shadow:0 20px 60px rgba(0,0,0,.16);}
+.modal-head{padding:13px 17px 10px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+.modal-head h3{font-size:13px;font-weight:700;}
+.modal-close{background:none;border:none;font-size:17px;cursor:pointer;color:var(--muted);padding:2px 6px;}
+.modal-body{padding:14px 17px;}
+.field{margin-bottom:10px;}
+.field label{display:block;font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:3px;}
+.field input,.field select,.field textarea{width:100%;padding:7px 10px;border:1.5px solid var(--border);border-radius:7px;font-size:12px;color:var(--text);outline:none;font-family:inherit;}
+.field input:focus,.field select:focus,.field textarea:focus{border-color:var(--blue);}
+.field textarea{resize:vertical;min-height:52px;}
+.modal-foot{padding:10px 17px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:6px;}
+
+/* TRACKING */
+.track-timeline{margin-top:10px;}
+.track-item{display:flex;gap:11px;padding:7px 0;border-bottom:1px solid #f1f5f9;}
+.track-item:last-child{border-bottom:none;}
+.track-dot{width:8px;height:8px;border-radius:50%;background:var(--blue);flex-shrink:0;margin-top:3px;}
+.track-dot.latest{background:var(--teal);box-shadow:0 0 0 3px rgba(13,148,136,.15);}
+.track-time{font-size:10px;color:var(--muted);white-space:nowrap;}
+.track-desc{font-size:12px;color:var(--text);}
+
+/* MISC */
+.loading{text-align:center;padding:30px;color:var(--muted);font-size:12px;}
+.spin{display:inline-block;width:13px;height:13px;border:2px solid #e2e8f0;border-top-color:var(--blue);border-radius:50%;animation:sp .6s linear infinite;vertical-align:middle;margin-right:5px;}
+@keyframes sp{to{transform:rotate(360deg);}}
+.empty{text-align:center;padding:36px 0;color:var(--muted);}
+.empty-icon{font-size:28px;margin-bottom:8px;}
+.empty p{font-size:12px;}
+.alert{padding:7px 11px;border-radius:7px;font-size:11px;margin-bottom:10px;display:none;}
+.alert-ok{background:#f0fdf4;border:1px solid #86efac;color:#166534;}
+.alert-err{background:#fef2f2;border:1px solid #fca5a5;color:#dc2626;}
+.confirm-icon{font-size:26px;text-align:center;margin-bottom:7px;}
+.confirm-msg{font-size:12px;line-height:1.7;color:var(--text);text-align:center;}
+.confirm-sub{font-size:10px;color:var(--muted);text-align:center;margin-top:4px;}
+
+/* ITDIDA 易抵达指示灯 */
+.itdida-status{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:20px;font-size:10px;font-weight:600;background:#f1f5f9;color:var(--muted);border:1px solid #e2e8f0;cursor:default;}
+.itdida-status.ok{background:#f0fdf4;border-color:#86efac;color:#166534;}
+.itdida-status.err{background:#fef2f2;border-color:#fca5a5;color:#dc2626;}
+.itdida-dot{font-size:9px;line-height:1;}
+
+/* 订单号编辑按钮 */
+.order-edit-btn{margin-left:5px;background:none;border:none;cursor:pointer;font-size:11px;opacity:.45;padding:0;line-height:1;vertical-align:middle;}
+.order-edit-btn:hover{opacity:1;}
+
+/* ITDIDA 同步按钮 */
+.btn-itdida{background:#7c3aed;color:#fff;}
+.btn-itdida:hover{background:#6d28d9;}
+.btn-itdida:disabled{opacity:.55;cursor:not-allowed;}
+
+/* ITDIDA 轨迹时间线 */
+.itdida-track-box{background:#faf5ff;border:1px solid #d8b4fe;border-radius:8px;padding:10px 12px;margin:10px 0;}
+.itdida-track-title{font-size:11px;font-weight:700;color:#6d28d9;margin-bottom:8px;display:flex;align-items:center;gap:5px;}
+.itdida-track-item{display:flex;gap:10px;padding:6px 0;border-bottom:1px solid #f3e8ff;font-size:11px;}
+.itdida-track-item:last-child{border-bottom:none;}
+.itdida-track-item.first{font-weight:600;color:#6d28d9;}
+.itdida-track-time{color:var(--muted);font-size:10px;font-family:monospace;flex-shrink:0;min-width:115px;}
+.itdida-track-loc{color:var(--muted);font-size:10px;flex-shrink:0;min-width:50px;}
+.itdida-track-desc{color:var(--text);flex:1;}
+
+/* 客户管理 */
+.cust-info-card{background:#f4f9ff;border:1px solid var(--border);border-radius:8px;padding:10px 12px;margin-bottom:12px;font-size:11px;color:var(--muted);line-height:1.7;}
+.cust-info-card strong{color:var(--text);}
+.cred-display{background:#f0fdf4;border:1px solid #86efac;border-radius:8px;padding:12px 14px;margin-top:10px;display:none;}
+.cred-display.show{display:block;}
+.cred-display .cred-title{font-size:11px;font-weight:700;color:#166534;margin-bottom:8px;}
+.cred-display .cred-row{display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px dashed #bbf7d0;font-size:12px;}
+.cred-display .cred-row:last-child{border-bottom:none;}
+.cred-display .cred-label{color:var(--muted);font-size:11px;}
+.cred-display .cred-val{font-family:monospace;font-weight:600;color:#166534;}
+.cred-copy-btn{background:#fff;border:1px solid #86efac;color:#166534;padding:2px 8px;font-size:10px;border-radius:5px;cursor:pointer;margin-left:6px;font-weight:600;}
+.cred-copy-btn:hover{background:#bbf7d0;}
+.cred-tip{font-size:10px;color:#16a34a;margin-top:8px;line-height:1.5;}
+.gen-pwd-btn{background:#fff;border:1px solid var(--border);color:var(--blue);padding:5px 9px;font-size:10px;border-radius:6px;cursor:pointer;font-weight:600;margin-left:4px;}
+.gen-pwd-btn:hover{background:#f4f8ff;}
+
+@media(max-width:768px){
+  .sidebar{transform:translateX(-100%);transition:transform .2s;}
+  .main{margin-left:0;}
+  .stats-grid{grid-template-columns:1fr 1fr;}
+  .content{padding:12px;}
+}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="loginScreen">
+  <div class="login-box">
+    <div class="login-logo">B</div>
+    <h2>BKD 后台管理</h2>
+    <p>保凯达·霖霖 国际物流 Admin</p>
+    <input type="email" id="emailInput" placeholder="管理员邮箱" autocomplete="email">
+    <input type="password" id="pwInput" placeholder="管理员密码" autocomplete="current-password">
+    <button class="btn-login" id="loginBtn">登 录</button>
+    <div class="login-err" id="loginErr"></div>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app">
+  <div class="sidebar">
+    <div class="sb-logo">
+      <img src="logo.png" onerror="this.style.display='none'">
+      <div><div class="lt">BKD Admin</div><div class="ls">保凯达·霖霖</div></div>
+    </div>
+    <nav class="sb-nav">
+      <div class="nav-item active" data-page="orders"><span class="nav-icon">📦</span>订单管理</div>
+      <div class="nav-item" data-page="tracking"><span class="nav-icon">🔍</span>物流查询</div>
+      <div class="nav-item" data-page="stats"><span class="nav-icon">📊</span>数据统计</div>
+      <div class="nav-item" data-page="customers"><span class="nav-icon">👥</span>客户管理</div>
+    </nav>
+    <div class="sb-footer"><button id="logoutBtn">⬅ 退出登录</button></div>
+  </div>
+
+  <div class="main">
+    <div class="topbar">
+      <div class="topbar-title" id="pageTitle">订单管理</div>
+      <div class="topbar-right">
+        <span class="itdida-status" id="itdidaStatus" title="霖霖深圳仓 连接状态">
+          <span class="itdida-dot" id="itdidaDot">⚪</span>
+          <span class="itdida-label" id="itdidaLabel">霖霖深圳仓 检查中…</span>
+        </span>
+        <span class="admin-email" id="adminEmail">—</span>
+        <span class="badge-admin">管理员</span>
+        <button class="refresh-btn" id="refreshBtn">↻ 刷新</button>
+      </div>
+    </div>
+
+    <div class="content">
+
+      <!-- 订单管理 -->
+      <div class="page active" id="page-orders">
+        <div class="stats-grid">
+          <div class="stat-card"><div class="stat-label">总订单</div><div class="stat-val" id="s-total">—</div><div class="stat-sub">全部</div></div>
+          <div class="stat-card"><div class="stat-label">待处理</div><div class="stat-val" id="s-pending">—</div><div class="stat-sub">未录运单</div></div>
+          <div class="stat-card"><div class="stat-label">运输中</div><div class="stat-val" id="s-transit">—</div><div class="stat-sub">已录单号</div></div>
+          <div class="stat-card"><div class="stat-label">已签收</div><div class="stat-val" id="s-delivered">—</div><div class="stat-sub">完成</div></div>
+        </div>
+        <div class="table-card">
+          <div class="table-header">
+            <h3>所有订单</h3>
+            <div class="search-bar">
+              <input type="text" id="searchInput" placeholder="搜索订单 / 客户 / 货物…">
+              <button id="batchDeleteBtn" title="批量删除选中">🗑 批量删除&nbsp;(<span id="batchCount">0</span>)</button>
+              <button class="btn btn-teal" id="exportBtn">⬇ 导出</button>
+            </div>
+          </div>
+          <!-- 筛选条 -->
+          <div id="filterBar" style="padding:8px 15px;border-bottom:1px solid var(--border);background:#f4f9ff;display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+            <span style="font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;white-space:nowrap;">筛选：</span>
+            <select id="filterStatus" style="padding:4px 9px;font-size:11px;border:1.5px solid var(--border);border-radius:6px;outline:none;background:#fff;color:var(--text);cursor:pointer;">
+              <option value="">全部状态</option>
+              <option value="待处理">待处理</option>
+              <option value="运输中">运输中</option>
+              <option value="已签收">已签收</option>
+              <option value="异常">异常</option>
+            </select>
+            <select id="filterChannel" style="padding:4px 9px;font-size:11px;border:1.5px solid var(--border);border-radius:6px;outline:none;background:#fff;color:var(--text);cursor:pointer;min-width:100px;">
+              <option value="">全部渠道</option>
+            </select>
+            <div style="display:flex;align-items:center;gap:4px;">
+              <input type="date" id="filterDateFrom" style="padding:4px 8px;font-size:11px;border:1.5px solid var(--border);border-radius:6px;outline:none;background:#fff;color:var(--text);">
+              <span style="font-size:10px;color:var(--muted);">至</span>
+              <input type="date" id="filterDateTo" style="padding:4px 8px;font-size:11px;border:1.5px solid var(--border);border-radius:6px;outline:none;background:#fff;color:var(--text);">
+            </div>
+            <button id="filterResetBtn" style="padding:4px 10px;font-size:11px;font-weight:700;border:1.5px solid var(--border);border-radius:6px;background:#fff;color:var(--muted);cursor:pointer;">✕ 重置</button>
+            <span id="filterHint" style="font-size:10px;color:var(--blue);font-weight:600;margin-left:2px;"></span>
+          </div>
+          <div id="ordersTableWrap"><div class="loading"><span class="spin"></span>加载中…</div></div>
+        </div>
+      </div>
+
+      <!-- 物流查询 -->
+      <div class="page" id="page-tracking">
+        <div class="table-card">
+          <div class="table-header"><h3>手动查询运单</h3></div>
+          <div style="padding:15px;">
+            <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end;">
+              <div class="field" style="margin:0;flex:1;min-width:130px;">
+                <label>快递公司</label>
+                <select id="manualCarrier">
+                  <option value="auto">自动识别</option>
+                  <option value="dhl">DHL</option><option value="fedex">FedEx</option>
+                  <option value="ups">UPS</option><option value="usps">USPS</option>
+                  <option value="aramex">Aramex</option><option value="cdek">CDEK</option>
+                </select>
+              </div>
+              <div class="field" style="margin:0;flex:2;min-width:170px;">
+                <label>运单号</label>
+                <input type="text" id="manualTrackNum" placeholder="输入运单号…" style="font-family:monospace;">
+              </div>
+              <button class="btn btn-primary" id="manualQueryBtn" style="height:33px;">查 询</button>
+            </div>
+            <div id="trackResult" style="margin-top:12px;"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 数据统计 -->
+      <div class="page" id="page-stats">
+        <div class="stats-grid" style="grid-template-columns:repeat(3,1fr);">
+          <div class="stat-card"><div class="stat-label">本月订单</div><div class="stat-val" id="ss-month">—</div></div>
+          <div class="stat-card"><div class="stat-label">最常用渠道</div><div class="stat-val" id="ss-channel" style="font-size:15px;margin-top:2px;">—</div></div>
+          <div class="stat-card"><div class="stat-label">目的地Top1</div><div class="stat-val" id="ss-country" style="font-size:15px;margin-top:2px;">—</div></div>
+        </div>
+        <div class="table-card">
+          <div class="table-header"><h3>渠道分布</h3></div>
+          <div id="channelStats" style="padding:12px 15px;"></div>
+        </div>
+      </div>
+
+      <!-- 客户管理 -->
+      <div class="page" id="page-customers">
+        <div class="table-card">
+          <div class="table-header">
+            <h3>客户账号管理</h3>
+            <div class="search-bar">
+              <button class="btn btn-primary" id="addCustomerBtn">+ 添加客户</button>
+            </div>
+          </div>
+          <div style="padding:18px 22px;">
+            <div class="cust-info-card">
+              <strong>📌 关于客户账号</strong><br>
+              新版 bkd-login.html 已关闭客户自助注册，所有新客户账号需在此处由管理员开通。<br>
+              开通后请将<strong>邮箱 + 临时密码</strong>通过你自己的渠道（微信/电话）告知客户，客户即可登录 Portal 查看订单或下单。<br><br>
+              <strong>说明：</strong>由于不搭后端 Admin SDK，本页暂只支持<strong>创建账号</strong>；客户列表/禁用/删除请到 Firebase Console 操作。
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- 录入运单号 Modal -->
+<div class="overlay" id="trackModal">
+  <div class="modal">
+    <div class="modal-head"><h3>📦 录入运单号</h3><button class="modal-close" id="trackModalClose">✕</button></div>
+    <div class="modal-body">
+      <div id="trackModalAlert" class="alert"></div>
+      <div style="background:#f4f8ff;border:1px solid var(--border);border-radius:7px;padding:9px 12px;margin-bottom:12px;font-size:11px;line-height:1.9;">
+        <div><span style="color:var(--muted);">订单：</span><strong id="tm-orderId" style="font-family:monospace;"></strong></div>
+        <div><span style="color:var(--muted);">客户：</span><strong id="tm-company"></strong></div>
+        <div><span style="color:var(--muted);">货物：</span><span id="tm-goods"></span></div>
+        <div><span style="color:var(--muted);">渠道：</span><span id="tm-channel"></span></div>
+      </div>
+      <div class="field">
+        <label>快递公司</label>
+        <select id="tm-carrier">
+          <option value="auto">自动识别</option><option value="dhl">DHL</option>
+          <option value="fedex">FedEx</option><option value="ups">UPS</option>
+          <option value="usps">USPS</option><option value="aramex">Aramex</option>
+          <option value="cdek">CDEK</option><option value="ems">EMS</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>运单号 Tracking Number</label>
+        <input type="text" id="tm-trackingNum" placeholder="粘贴快递运单号…" style="font-family:monospace;font-size:13px;">
+      </div>
+      <div class="field">
+        <label>顺丰单号 SF Express No.</label>
+        <input type="text" id="tm-sfNo-edit" placeholder="顺丰快递单号（如有，可更新）" style="font-family:monospace;font-size:13px;">
+      </div>
+      <div class="field">
+        <label>目的国</label>
+        <input type="text" id="tm-country" placeholder="如：United States / 美国">
+      </div>
+      <div class="field">
+        <label>备注</label>
+        <textarea id="tm-note" placeholder="如：拆分两票，第一票…"></textarea>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-outline" id="trackModalCancel">取消</button>
+      <button class="btn btn-teal" id="trackModalSave">保存</button>
+    </div>
+  </div>
+</div>
+
+<!-- 详情/编辑 Modal -->
+<div class="overlay" id="detailModal">
+  <div class="modal" style="width:min(94vw,590px);">
+    <div class="modal-head">
+      <h3 id="detail-title">订单详情</h3>
+      <div style="display:flex;gap:6px;align-items:center;">
+        <button class="btn btn-itdida btn-sm" id="syncItdidaBtn" title="从霖霖深圳仓拉取最新轨迹">📡 同步深圳仓</button>
+        <button class="btn btn-teal btn-sm" id="editToggleBtn">✏️ 编辑</button>
+        <button class="modal-close" id="detailClose">✕</button>
+      </div>
+    </div>
+    <div class="modal-body" id="detailBody" style="max-height:68vh;overflow-y:auto;"></div>
+    <div class="modal-foot" id="detailFoot" style="display:none;">
+      <button class="btn btn-outline" id="editCancelBtn">取消</button>
+      <button class="btn btn-teal" id="editSaveBtn">保存修改</button>
+    </div>
+  </div>
+</div>
+
+<!-- 删除确认 Modal -->
+<div class="overlay" id="confirmModal">
+  <div class="modal" style="width:min(92vw,370px);">
+    <div class="modal-head">
+      <h3 id="confirmTitle">确认删除</h3>
+      <button class="modal-close" id="confirmClose">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="confirm-icon">🗑️</div>
+      <div class="confirm-msg" id="confirmMsg">确定要删除这条订单吗？</div>
+      <div class="confirm-sub" id="confirm-sub">此操作不可撤销。</div>
+      <div id="confirmAlert" class="alert" style="margin-top:9px;"></div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-outline" id="confirmCancel">取消</button>
+      <button class="btn btn-danger" id="confirmOk">确认删除</button>
+    </div>
+  </div>
+</div>
+
+<!-- 添加客户 Modal -->
+<div class="overlay" id="customerModal">
+  <div class="modal" style="width:min(94vw,460px);">
+    <div class="modal-head">
+      <h3>👥 添加客户账号</h3>
+      <button class="modal-close" id="customerModalClose">✕</button>
+    </div>
+    <div class="modal-body">
+      <div id="customerModalAlert" class="alert"></div>
+      <div class="field">
+        <label>客户邮箱 *</label>
+        <input type="email" id="cust-email" placeholder="customer@example.com" autocomplete="off">
+      </div>
+      <div class="field">
+        <label>公司名 / 客户名（选填）</label>
+        <input type="text" id="cust-name" placeholder="如：ABC Trading Co." autocomplete="off">
+      </div>
+      <div class="field">
+        <label>临时密码 *（至少 6 位）</label>
+        <div style="display:flex;gap:4px;">
+          <input type="text" id="cust-password" placeholder="客户首次登录用的密码" autocomplete="off" style="flex:1;font-family:monospace;">
+          <button class="gen-pwd-btn" id="genPwdBtn" type="button">🎲 生成</button>
+        </div>
+      </div>
+      <div class="cred-display" id="credDisplay">
+        <div class="cred-title">✅ 客户账号已创建，请将以下信息告知客户：</div>
+        <div class="cred-row">
+          <span class="cred-label">邮箱</span>
+          <span><span class="cred-val" id="cred-email">—</span><button class="cred-copy-btn" data-copy="email">复制</button></span>
+        </div>
+        <div class="cred-row">
+          <span class="cred-label">密码</span>
+          <span><span class="cred-val" id="cred-password">—</span><button class="cred-copy-btn" data-copy="password">复制</button></span>
+        </div>
+        <div class="cred-row" style="border-top:1px dashed #bbf7d0;padding-top:7px;margin-top:3px;">
+          <span class="cred-label">登录地址</span>
+          <span><span class="cred-val" id="cred-url">https://www.baokaida.com/bkd-login.html</span><button class="cred-copy-btn" data-copy="all">复制全部</button></span>
+        </div>
+        <div class="cred-tip">💡 此信息仅本次显示，关闭后无法再次查看，请立即复制告知客户。</div>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-outline" id="customerModalCancel">关闭</button>
+      <button class="btn btn-primary" id="customerModalSave">创建账号</button>
+    </div>
+  </div>
+</div>
+
+<!-- Firebase -->
+<script type="module">
+import{initializeApp}from"https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import{getAuth,signInWithEmailAndPassword,signOut,onAuthStateChanged}from"https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import{getFirestore,collection,getDocs,doc,updateDoc,deleteDoc,writeBatch,query,orderBy}from"https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import{getStorage,ref,uploadBytes,getDownloadURL,deleteObject}from"https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
+const app=initializeApp({apiKey:"AIzaSyA71fC4aW55bUx2UyLONCOJq27IC4OxGEs",authDomain:"bkdll-8323a.firebaseapp.com",projectId:"bkdll-8323a",storageBucket:"bkdll-8323a.firebasestorage.app",messagingSenderId:"149876578128",appId:"1:149876578128:web:4997c5b1ba8edad8c7fe55"});
+const auth=getAuth(app);
+const db=getFirestore(app);
+const storage=getStorage(app);
+window._bkdAuth=auth;window._bkdDB=db;window._bkdStorage=storage;
+window._bkdAuthFns={signInWithEmailAndPassword,signOut,onAuthStateChanged};
+window._bkdStorageRef={ref,uploadBytes,getDownloadURL,deleteObject};
+window._bkdFS={collection,getDocs,doc,updateDoc,deleteDoc,writeBatch,query,orderBy};
+window.dispatchEvent(new Event('firebaseReady'));
+</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script>
+(function(){
+'use strict';
+const WORKER='https://bkd-track.bkd-666.workers.dev';
+const ITDIDA='https://bkd-itdida-proxy.bkd-666.workers.dev';
+const ADMIN_API='https://bkd-admin-api.bkd-666.workers.dev';
+var G=id=>document.getElementById(id);
+
+/* ── Firebase Auth 登录 ── */
+function waitFirebase(cb){if(window._bkdAuth)cb();else window.addEventListener('firebaseReady',cb,{once:true});}
+
+waitFirebase(()=>{
+  // 监听登录态：刷新页面后自动恢复登录
+  window._bkdAuthFns.onAuthStateChanged(window._bkdAuth, async user=>{
+    if(!user){
+      showLoginScreen();
+      return;
+    }
+    // 强制检查 admin claim
+    try{
+      var token=await user.getIdTokenResult(true); // true = 强制刷新 token
+      if(token.claims.admin!==true){
+        // 不是管理员 — 立刻踢出
+        await window._bkdAuthFns.signOut(window._bkdAuth);
+        showLoginScreen('此账号无管理员权限，已自动登出');
+        return;
+      }
+      // 是管理员 — 进入 App
+      G('adminEmail').textContent=user.email;
+      G('loginScreen').style.display='none';
+      G('app').style.display='block';
+      initApp();
+    }catch(e){
+      showLoginScreen('身份验证失败：'+e.message);
+    }
+  });
+});
+
+function showLoginScreen(errMsg){
+  G('loginScreen').style.display='flex';
+  G('app').style.display='none';
+  G('emailInput').value='';
+  G('pwInput').value='';
+  if(errMsg){
+    G('loginErr').textContent=errMsg;
+    G('loginErr').style.display='block';
+  }else{
+    G('loginErr').style.display='none';
+  }
+}
+
+G('emailInput').addEventListener('keydown',e=>{if(e.key==='Enter')G('pwInput').focus();});
+G('pwInput').addEventListener('keydown',e=>{if(e.key==='Enter')doLogin();});
+G('loginBtn').addEventListener('click',doLogin);
+
+async function doLogin(){
+  var email=(G('emailInput').value||'').trim();
+  var pass=G('pwInput').value;
+  if(!email||!pass){
+    G('loginErr').textContent='请填写邮箱和密码';
+    G('loginErr').style.display='block';
+    return;
+  }
+  G('loginBtn').disabled=true;
+  G('loginBtn').textContent='登录中…';
+  G('loginErr').style.display='none';
+  try{
+    await window._bkdAuthFns.signInWithEmailAndPassword(window._bkdAuth,email,pass);
+    // 登录成功后，onAuthStateChanged 监听器会自动接管，
+    // 检查 admin claim 并决定是显示 App 还是踢出。
+  }catch(e){
+    var msg='登录失败';
+    if(e.code==='auth/invalid-credential'||e.code==='auth/wrong-password'){msg='邮箱或密码错误';}
+    else if(e.code==='auth/user-not-found'){msg='邮箱未注册';}
+    else if(e.code==='auth/too-many-requests'){msg='尝试次数过多，请稍后再试';}
+    else if(e.code==='auth/network-request-failed'){msg='网络错误，请确认 VPN 已开启';}
+    else{msg=e.message;}
+    G('loginErr').textContent=msg;
+    G('loginErr').style.display='block';
+  }
+  G('loginBtn').disabled=false;
+  G('loginBtn').textContent='登 录';
+}
+
+G('logoutBtn').addEventListener('click',async()=>{
+  try{await window._bkdAuthFns.signOut(window._bkdAuth);}catch(e){}
+  // onAuthStateChanged 会自动跳回登录页
+});
+
+/* ── 状态 ── */
+var allOrders=[],selectedIds=new Set(),pendingDeleteIds=[];
+var appInited=false;
+
+function initApp(){
+  if(appInited){
+    loadOrders(); // 已初始化过 — 仅刷新数据
+    return;
+  }
+  appInited=true;
+  loadOrders();initNav();
+  G('refreshBtn').addEventListener('click',loadOrders);
+  G('searchInput').addEventListener('input',renderTable);
+  G('filterStatus').addEventListener('change',renderTable);
+  G('filterChannel').addEventListener('change',renderTable);
+  G('filterDateFrom').addEventListener('change',renderTable);
+  G('filterDateTo').addEventListener('change',renderTable);
+  G('filterResetBtn').addEventListener('click',()=>{
+    G('filterStatus').value='';G('filterChannel').value='';
+    G('filterDateFrom').value='';G('filterDateTo').value='';
+    G('searchInput').value='';renderTable();
+  });
+  G('exportBtn').addEventListener('click',exportExcel);
+  G('manualQueryBtn').addEventListener('click',manualQuery);
+  G('batchDeleteBtn').addEventListener('click',openBatchDelete);
+  initTrackModal();initDetailModal();initConfirmModal();
+  initCustomerModal(); // 客户管理模块
+  checkItdidaConnection(); // 检查易抵达连接状态
+}
+
+/* ── 易抵达连接状态 ── */
+async function checkItdidaConnection(){
+  var dot=G('itdidaDot'),lbl=G('itdidaLabel'),box=G('itdidaStatus');
+  try{
+    var r=await fetch(ITDIDA+'/info');
+    var d=await r.json();
+    if(d.success&&d.data){
+      dot.textContent='🟢';
+      lbl.textContent='霖霖深圳仓 / '+(d.data.email||d.data.name||'已连接');
+      box.classList.add('ok');box.classList.remove('err');
+      box.title='霖霖深圳仓 连接正常\n账号: '+(d.data.email||'')+'\n姓名: '+(d.data.name||'');
+    } else {
+      throw new Error(d.error||'未知错误');
+    }
+  }catch(e){
+    dot.textContent='🔴';
+    lbl.textContent='霖霖深圳仓 离线';
+    box.classList.add('err');box.classList.remove('ok');
+    box.title='霖霖深圳仓 连接失败：'+e.message;
+  }
+}
+
+/* ── 导航 ── */
+function initNav(){
+  document.querySelectorAll('.nav-item').forEach(item=>{
+    item.addEventListener('click',()=>{
+      document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+      document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+      item.classList.add('active');
+      var pg=item.dataset.page;
+      G('page-'+pg).classList.add('active');
+      G('pageTitle').textContent=item.textContent.trim();
+      if(pg==='stats')renderStats();
+    });
+  });
+}
+
+/* ── 加载 ── */
+async function loadOrders(){
+  selectedIds.clear();updateBatchBtn();
+  G('ordersTableWrap').innerHTML='<div class="loading"><span class="spin"></span>加载中…</div>';
+  try{
+    var{collection,getDocs,query,orderBy}=window._bkdFS,db=window._bkdDB;
+    var snap=await getDocs(query(collection(db,'orders'),orderBy('createdAt','desc')));
+    allOrders=snap.docs.map(d=>({id:d.id,...d.data()}));
+    renderTable();updateStats();populateChannelFilter();
+  }catch(e){G('ordersTableWrap').innerHTML='<div class="loading">加载失败：'+e.message+'</div>';}
+}
+
+function updateStats(){
+  G('s-total').textContent=allOrders.length;
+  G('s-pending').textContent=allOrders.filter(o=>!o.trackingNumber&&o.status==='待处理').length;
+  G('s-transit').textContent=allOrders.filter(o=>o.trackingNumber&&o.status!=='已签收').length;
+  G('s-delivered').textContent=allOrders.filter(o=>o.status==='已签收').length;
+}
+function updateBatchBtn(){
+  var n=selectedIds.size;G('batchCount').textContent=n;
+  G('batchDeleteBtn').classList.toggle('visible',n>0);
+}
+
+/* ── 筛选渠道下拉动态填充 ── */
+function populateChannelFilter(){
+  var sel=G('filterChannel');
+  var cur=sel.value;
+  var channels=[...new Set(allOrders.map(o=>o.channel||'').filter(Boolean))].sort();
+  sel.innerHTML='<option value="">全部渠道</option>'+channels.map(c=>`<option value="${esc(c)}">${esc(c)}</option>`).join('');
+  if(cur)sel.value=cur;
+}
+
+/* ── 渲染 ── */
+function renderTable(){
+  var kw=(G('searchInput').value||'').toLowerCase();
+  var fStatus=G('filterStatus')?G('filterStatus').value:'';
+  var fChannel=G('filterChannel')?G('filterChannel').value:'';
+  var fFrom=G('filterDateFrom')?G('filterDateFrom').value:'';
+  var fTo=G('filterDateTo')?G('filterDateTo').value:'';
+
+  var list=allOrders.filter(o=>{
+    if(kw){
+      var match=(o.orderId||'').toLowerCase().includes(kw)||(o.senderCompany||'').toLowerCase().includes(kw)||(o.goods||'').toLowerCase().includes(kw)||(o.trackingNumber||'').toLowerCase().includes(kw)||(o.email||'').toLowerCase().includes(kw)||(o.sfNo||'').toLowerCase().includes(kw);
+      if(!match)return false;
+    }
+    if(fStatus&&(o.status||'待处理')!==fStatus)return false;
+    if(fChannel&&(o.channel||'')!==fChannel)return false;
+    if(fFrom||fTo){
+      var dt=null;
+      if(o.createdAt&&o.createdAt.toDate)dt=o.createdAt.toDate();
+      else if(o.submitTime)dt=new Date(o.submitTime);
+      if(!dt)return !(fFrom||fTo);
+      var ds=dt.toISOString().slice(0,10);
+      if(fFrom&&ds<fFrom)return false;
+      if(fTo&&ds>fTo)return false;
+    }
+    return true;
+  });
+
+  var hint=G('filterHint');
+  if(hint){
+    var active=[fStatus,fChannel,fFrom,fTo,kw].filter(Boolean).length;
+    hint.textContent=active>0?('共 '+list.length+' 条'):'';
+  }
+  if(!list.length){G('ordersTableWrap').innerHTML='<div class="empty"><div class="empty-icon">📭</div><p>暂无订单</p></div>';return;}
+
+  var rows=list.map((o,idx)=>{
+    var st=o.status||'待处理';
+    var sc=st==='已签收'?'s-delivered':st==='运输中'?'s-transit':st==='异常'?'s-exception':'s-pending';
+    var dt='';
+    if(o.createdAt&&o.createdAt.toDate)dt=o.createdAt.toDate().toLocaleString('zh-CN',{year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'});
+    else if(o.submitTime)dt=o.submitTime.replace('T',' ').slice(0,16);
+    var tn=o.trackingNumber?`<span style="font-family:monospace;font-size:11px;color:var(--teal);">${esc(o.trackingNumber)}</span>`:`<span style="color:#cbd5e1;font-size:10px;">未录入</span>`;
+    var chk=selectedIds.has(o.id)?'checked':'';
+    var em=o.email?`<div style="font-size:10px;color:var(--muted);">${esc(o.email)}</div>`:'';
+    return`<tr>
+      <td class="td-chk"><input type="checkbox" class="row-chk" data-id="${o.id}" ${chk}></td>
+      <td class="td-idx">${idx+1}</td>
+      <td><span class="order-id">${esc(o.orderId||o.id.slice(0,8))}</span><button class="order-edit-btn" data-edit-id="${o.id}" title="修改订单号">✏️</button></td>
+      <td><div style="font-weight:600;">${esc(o.senderCompany||'—')}</div>${em}</td>
+      <td style="max-width:95px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:11px;">${esc(o.goods||'—')}</td>
+      <td style="font-size:11px;">${esc(o.channel||'—')}</td>
+      <td>${tn}</td>
+      <td><div class="sf-wrap"><input class="sf-inline" placeholder="顺丰单号" value="${esc(o.sfNo||'')}" data-sf-id="${o.id}"><button class="sf-save-btn" data-sf-save="${o.id}">存</button></div></td>
+      <td class="td-doc">
+        ${o.docUrl
+          ? `<a href="${esc(o.docUrl)}" target="_blank" style="font-size:11px;color:var(--teal);font-weight:700;text-decoration:none;">📄 下载</a>
+             <button class="doc-del-btn" data-doc-id="${o.id}" data-doc-path="${esc(o.docPath||'')}" style="margin-left:4px;background:none;border:none;color:#fca5a5;cursor:pointer;font-size:12px;" title="删除文件">✕</button>`
+          : `<label class="doc-upload-label" data-upload-id="${o.id}" style="cursor:pointer;font-size:11px;color:var(--blue);font-weight:600;">⬆ 上传<input type="file" accept=".png,.jpg,.jpeg,.pdf" style="display:none;" class="doc-file-input" data-upload-id="${o.id}"></label>`
+        }
+      </td>
+      <td class="td-doc">
+        ${o.invoiceUrl
+          ? `<a href="${esc(o.invoiceUrl)}" target="_blank" style="font-size:11px;color:#c2410c;font-weight:700;text-decoration:none;">📋 下载</a>
+             <button class="inv-del-btn" data-inv-id="${o.id}" data-inv-path="${esc(o.invoicePath||'')}" style="margin-left:4px;background:none;border:none;color:#fca5a5;cursor:pointer;font-size:12px;" title="删除发票">✕</button>`
+          : `<label class="inv-upload-label" data-inv-id="${o.id}" style="cursor:pointer;font-size:11px;color:#c2410c;font-weight:600;">⬆ 上传<input type="file" accept=".png,.jpg,.jpeg,.pdf,.xlsx,.xls" style="display:none;" class="inv-file-input" data-inv-id="${o.id}"></label>`
+        }
+      </td>
+      <td style="white-space:nowrap;">
+        <input type="number" class="tax-amt" data-tax-id="${o.id}" value="${esc(String(o.taxAmount||''))}" placeholder="金额" min="0" step="0.01"
+          style="width:75px;padding:4px 7px;font-size:11px;border:1.5px solid #fed7aa;border-radius:5px;outline:none;background:#fff7ed;color:#c2410c;font-weight:600;">
+      </td>
+      <td><span class="status-badge ${sc}">${esc(st)}</span></td>
+      <td style="font-size:10px;color:var(--muted);white-space:nowrap;">${dt}</td>
+      <td style="white-space:nowrap;">
+        <button class="btn btn-teal btn-sm" data-action="track" data-id="${o.id}">录运单</button>
+        <button class="btn btn-outline btn-sm" data-action="detail" data-id="${o.id}" style="margin-left:2px;">详情</button>
+        <button class="btn-del" data-action="delete" data-id="${o.id}" style="margin-left:2px;" title="删除">🗑</button>
+      </td></tr>`;
+  }).join('');
+
+  var allChk=list.length>0&&list.every(o=>selectedIds.has(o.id));
+  G('ordersTableWrap').innerHTML=`<div style="overflow-x:auto;"><table>
+    <thead><tr>
+      <th class="th-chk"><input type="checkbox" id="selectAll" ${allChk?'checked':''}></th>
+      <th class="th-idx">#</th>
+      <th>订单号</th><th>客户/邮箱</th><th>货物</th><th>渠道</th>
+      <th>运单号</th><th>顺丰单号</th>
+      <th>运单</th><th>发票</th><th>垫付</th>
+      <th>状态</th><th>下单时间</th><th>操作</th>
+    </tr></thead><tbody>${rows}</tbody></table></div>`;
+
+  G('selectAll').addEventListener('change',function(){
+    list.forEach(o=>{if(this.checked)selectedIds.add(o.id);else selectedIds.delete(o.id);});
+    updateBatchBtn();
+    G('ordersTableWrap').querySelectorAll('.row-chk').forEach(c=>c.checked=this.checked);
+  });
+  G('ordersTableWrap').querySelectorAll('.row-chk').forEach(c=>{
+    c.addEventListener('change',function(){
+      if(this.checked)selectedIds.add(this.dataset.id);else selectedIds.delete(this.dataset.id);
+      updateBatchBtn();
+    });
+  });
+  G('ordersTableWrap').querySelectorAll('[data-sf-save]').forEach(btn=>{
+    btn.addEventListener('click',async()=>{
+      var id=btn.dataset.sfSave;
+      var inp=G('ordersTableWrap').querySelector('[data-sf-id="'+id+'"]');
+      var val=(inp?inp.value:'').trim();
+      btn.textContent='…';btn.disabled=true;
+      try{
+        var{doc,updateDoc}=window._bkdFS;
+        await updateDoc(doc(window._bkdDB,'orders',id),{sfNo:val,updatedAt:new Date().toISOString()});
+        var ix=allOrders.findIndex(x=>x.id===id);if(ix>=0)allOrders[ix].sfNo=val;
+        btn.textContent='✓';setTimeout(()=>renderTable(),700);
+      }catch(e){btn.textContent='✗';alert('失败:'+e.message);}
+    });
+  });
+  G('ordersTableWrap').querySelectorAll('.doc-file-input').forEach(inp=>{
+    inp.addEventListener('change',async()=>{
+      var file=inp.files[0];if(!file)return;
+      var id=inp.dataset.uploadId;
+      var label=G('ordersTableWrap').querySelector('.doc-upload-label[data-upload-id="'+id+'"]');
+      if(label)label.textContent='上传中…';
+      try{
+        var{ref,uploadBytes,getDownloadURL}=window._bkdStorageRef;
+        var st=window._bkdStorage;
+        var path='waybills/'+id+'/'+file.name;
+        var sRef=ref(st,path);
+        await uploadBytes(sRef,file);
+        var url=await getDownloadURL(sRef);
+        var{doc,updateDoc}=window._bkdFS;
+        await updateDoc(doc(window._bkdDB,'orders',id),{docUrl:url,docPath:path,updatedAt:new Date().toISOString()});
+        var ix=allOrders.findIndex(x=>x.id===id);
+        if(ix>=0){allOrders[ix].docUrl=url;allOrders[ix].docPath=path;}
+        renderTable();
+      }catch(e){alert('上传失败：'+e.message);if(label)label.textContent='⬆ 上传';}
+    });
+  });
+  G('ordersTableWrap').querySelectorAll('.doc-del-btn').forEach(btn=>{
+    btn.addEventListener('click',async()=>{
+      if(!confirm('确认删除该运单文件？'))return;
+      var id=btn.dataset.docId,path=btn.dataset.docPath;
+      try{
+        if(path){
+          var{ref,deleteObject}=window._bkdStorageRef;
+          await deleteObject(ref(window._bkdStorage,path)).catch(()=>{});
+        }
+        var{doc,updateDoc}=window._bkdFS;
+        await updateDoc(doc(window._bkdDB,'orders',id),{docUrl:'',docPath:'',updatedAt:new Date().toISOString()});
+        var ix=allOrders.findIndex(x=>x.id===id);
+        if(ix>=0){allOrders[ix].docUrl='';allOrders[ix].docPath='';}
+        renderTable();
+      }catch(e){alert('删除失败：'+e.message);}
+    });
+  });
+
+  G('ordersTableWrap').querySelectorAll('.inv-file-input').forEach(inp=>{
+    inp.addEventListener('change',async()=>{
+      var file=inp.files[0];if(!file)return;
+      var id=inp.dataset.invId;
+      var label=G('ordersTableWrap').querySelector('.inv-upload-label[data-inv-id="'+id+'"]');
+      if(label)label.textContent='上传中…';
+      try{
+        var{ref,uploadBytes,getDownloadURL}=window._bkdStorageRef;
+        var path='invoices/'+id+'/'+file.name;
+        var sRef=ref(window._bkdStorage,path);
+        await uploadBytes(sRef,file);
+        var url=await getDownloadURL(sRef);
+        var{doc,updateDoc}=window._bkdFS;
+        await updateDoc(doc(window._bkdDB,'orders',id),{invoiceUrl:url,invoicePath:path,updatedAt:new Date().toISOString()});
+        var ix=allOrders.findIndex(x=>x.id===id);
+        if(ix>=0){allOrders[ix].invoiceUrl=url;allOrders[ix].invoicePath=path;}
+        renderTable();
+      }catch(e){alert('发票上传失败：'+e.message);if(label)label.textContent='⬆ 上传';}
+    });
+  });
+  G('ordersTableWrap').querySelectorAll('.inv-del-btn').forEach(btn=>{
+    btn.addEventListener('click',async()=>{
+      if(!confirm('确认删除该发票文件？'))return;
+      var id=btn.dataset.invId,path=btn.dataset.invPath;
+      try{
+        if(path){
+          var{ref,deleteObject}=window._bkdStorageRef;
+          await deleteObject(ref(window._bkdStorage,path)).catch(()=>{});
+        }
+        var{doc,updateDoc}=window._bkdFS;
+        await updateDoc(doc(window._bkdDB,'orders',id),{invoiceUrl:'',invoicePath:'',updatedAt:new Date().toISOString()});
+        var ix=allOrders.findIndex(x=>x.id===id);
+        if(ix>=0){allOrders[ix].invoiceUrl='';allOrders[ix].invoicePath='';}
+        renderTable();
+      }catch(e){alert('删除失败：'+e.message);}
+    });
+  });
+
+  // 垫付金额输入：有值 = 已垫付，空 = 未垫付
+  G('ordersTableWrap').querySelectorAll('.tax-amt').forEach(inp=>{
+    inp.addEventListener('blur',async()=>{
+      var id=inp.dataset.taxId;
+      var raw=inp.value.trim();
+      var val=raw===''?0:(parseFloat(raw)||0);
+      var paid=val>0;
+      try{
+        var{doc,updateDoc}=window._bkdFS;
+        await updateDoc(doc(window._bkdDB,'orders',id),{taxAmount:val,taxPaid:paid,updatedAt:new Date().toISOString()});
+        var ix=allOrders.findIndex(x=>x.id===id);
+        if(ix>=0){allOrders[ix].taxAmount=val;allOrders[ix].taxPaid=paid;}
+      }catch(e){alert('保存失败：'+e.message);}
+    });
+    inp.addEventListener('keydown',e=>{if(e.key==='Enter')inp.blur();});
+  });
+
+  // 订单号编辑：点 ✏️ → 弹窗确认 → 修改
+  G('ordersTableWrap').querySelectorAll('.order-edit-btn').forEach(btn=>{
+    btn.addEventListener('click',()=>{
+      var id=btn.dataset.editId;
+      var o=allOrders.find(x=>x.id===id);if(!o)return;
+      openOrderIdEdit(o);
+    });
+  });
+
+  G('ordersTableWrap').querySelectorAll('[data-action]').forEach(btn=>{
+    btn.addEventListener('click',()=>{
+      var o=allOrders.find(x=>x.id===btn.dataset.id);if(!o)return;
+      if(btn.dataset.action==='track')openTrackModal(o);
+      else if(btn.dataset.action==='detail')openDetailModal(o);
+      else openSingleDelete(o);
+    });
+  });
+}
+
+/* ── 订单号修改 ── */
+function openOrderIdEdit(o){
+  var newId=prompt(
+    '⚠️ 修改订单号（请谨慎！）\n\n'+
+    '当前订单号：'+(o.orderId||o.id)+'\n\n'+
+    '⚠️ 注意：\n'+
+    '1. 修改后客户在 Portal 看到的订单号也会变\n'+
+    '2. 已上传的运单/发票文件不会自动迁移路径\n'+
+    '3. 建议仅在录单刚发现错误且未上传文件时使用\n\n'+
+    '请输入新的订单号：',
+    o.orderId||''
+  );
+  if(newId===null)return; // 取消
+  newId=newId.trim();
+  if(!newId){alert('订单号不能为空');return;}
+  if(newId===o.orderId){return;} // 没变化
+  if(!confirm('确认将订单号改为：\n\n'+newId+'\n\n此操作无法自动撤销。')){return;}
+
+  (async()=>{
+    try{
+      var{doc,updateDoc}=window._bkdFS;
+      await updateDoc(doc(window._bkdDB,'orders',o.id),{orderId:newId,updatedAt:new Date().toISOString()});
+      var ix=allOrders.findIndex(x=>x.id===o.id);
+      if(ix>=0)allOrders[ix].orderId=newId;
+      renderTable();
+      alert('✅ 订单号已修改为：'+newId);
+    }catch(e){
+      alert('修改失败：'+e.message);
+    }
+  })();
+}
+
+/* ── 录运单 ── */
+var cur=null;
+function initTrackModal(){
+  G('trackModalClose').addEventListener('click',()=>closeModal('trackModal'));
+  G('trackModalCancel').addEventListener('click',()=>closeModal('trackModal'));
+  G('trackModal').addEventListener('click',e=>{if(e.target===G('trackModal'))closeModal('trackModal');});
+  G('trackModalSave').addEventListener('click',saveTracking);
+}
+function openTrackModal(o){
+  cur=o;
+  G('tm-orderId').textContent=o.orderId||o.id;G('tm-company').textContent=o.senderCompany||'—';
+  G('tm-goods').textContent=o.goods||'—';G('tm-channel').textContent=o.channel||'—';
+  G('tm-trackingNum').value=o.trackingNumber||'';G('tm-carrier').value=o.carrier||'auto';
+  G('tm-sfNo-edit').value=o.sfNo||'';
+  G('tm-country').value=o.destCountry||o.country||'';G('tm-note').value=o.adminNote||'';
+  G('trackModalAlert').style.display='none';openModal('trackModal');
+  setTimeout(()=>G('tm-trackingNum').focus(),100);
+}
+async function saveTracking(){
+  var tn=(G('tm-trackingNum').value||'').trim();
+  if(!tn){showAlert('trackModalAlert','err','请填写运单号');return;}
+  var btn=G('trackModalSave');btn.disabled=true;btn.textContent='保存…';
+  try{
+    var{doc,updateDoc}=window._bkdFS;
+    var sf=G('tm-sfNo-edit').value.trim();
+    await updateDoc(doc(window._bkdDB,'orders',cur.id),{
+      trackingNumber:tn,carrier:G('tm-carrier').value,sfNo:sf||cur.sfNo||'',
+      destCountry:G('tm-country').value,adminNote:G('tm-note').value,
+      status:'运输中',updatedAt:new Date().toISOString()
+    });
+    var ix=allOrders.findIndex(x=>x.id===cur.id);
+    if(ix>=0)Object.assign(allOrders[ix],{trackingNumber:tn,carrier:G('tm-carrier').value,sfNo:sf||allOrders[ix].sfNo||'',status:'运输中'});
+    renderTable();updateStats();closeModal('trackModal');
+  }catch(e){showAlert('trackModalAlert','err','保存失败：'+e.message);}
+  btn.disabled=false;btn.textContent='保存';
+}
+
+/* ── 详情/编辑 ── */
+var isEdit=false;
+var lastItdidaTracks=null; // 缓存最近一次易抵达查询结果
+function initDetailModal(){
+  G('detailClose').addEventListener('click',()=>{isEdit=false;closeModal('detailModal');});
+  G('detailModal').addEventListener('click',e=>{if(e.target===G('detailModal')){isEdit=false;closeModal('detailModal');}});
+  G('editToggleBtn').addEventListener('click',()=>{isEdit=true;renderDetailEdit(cur);});
+  G('editCancelBtn').addEventListener('click',()=>{isEdit=false;openDetailModal(cur);});
+  G('editSaveBtn').addEventListener('click',saveDetailEdit);
+  G('syncItdidaBtn').addEventListener('click',syncFromItdida);
+}
+
+/* ── 从易抵达同步：查 /track 接口 → 写回 Firestore → 刷新详情 ── */
+async function syncFromItdida(){
+  if(!cur)return;
+  var keHuDanHao=cur.orderId||cur.id;
+  var btn=G('syncItdidaBtn');
+  btn.disabled=true;btn.textContent='查询中…';
+  try{
+    var r=await fetch(ITDIDA+'/track/'+encodeURIComponent(keHuDanHao));
+    var d=await r.json();
+    if(!d.success){throw new Error(d.error||(d.data&&d.data[0]&&d.data[0].errorMsg)||'查询失败');}
+    if(!d.data||!d.data.length){throw new Error('未在霖霖深圳仓查到此运单');}
+    var entry=d.data[0];
+    if(entry.errorMsg){throw new Error(entry.errorMsg);}
+    var det=entry.detail||{};
+    var trackList=entry.trackList||[];
+    lastItdidaTracks={detail:det,trackList:trackList,fetchedAt:new Date().toISOString()};
+
+    // 准备写入 Firestore 的字段
+    var u={updatedAt:new Date().toISOString()};
+    if(entry.zhuanDanHao){u.trackingNumber=entry.zhuanDanHao;}
+    if(det.guoJia){u.destCountry=det.guoJia;}
+    if(trackList[0]){
+      u.lastStatus=trackList[0].desc||'';
+      u.lastTime=trackList[0].time||'';
+    }
+    // 状态映射：易抵达 detail.status 是数字，无标准映射 — 简单根据"轨迹是否有签收关键词"判断
+    var firstDesc=(trackList[0]&&trackList[0].desc||'').toLowerCase();
+    if(firstDesc.includes('签收')||firstDesc.includes('delivered')){
+      u.status='已签收';
+    } else if(trackList.length>0){
+      u.status='运输中';
+    }
+
+    // 写回 Firestore
+    var{doc,updateDoc}=window._bkdFS;
+    await updateDoc(doc(window._bkdDB,'orders',cur.id),u);
+    // 同步本地内存
+    var ix=allOrders.findIndex(x=>x.id===cur.id);
+    if(ix>=0){Object.assign(allOrders[ix],u);cur=allOrders[ix];}
+
+    // 重新渲染详情（会显示轨迹）
+    renderTable();updateStats();
+    if(!isEdit){openDetailModal(cur);}
+
+    btn.textContent='✓ 已同步';
+    setTimeout(()=>{btn.textContent='📡 同步深圳仓';btn.disabled=false;},1500);
+  }catch(e){
+    alert('同步失败：'+e.message);
+    btn.disabled=false;btn.textContent='📡 同步深圳仓';
+  }
+}
+function openDetailModal(o){
+  // 切换不同订单时清空轨迹缓存
+  if(!cur||cur.id!==o.id){lastItdidaTracks=null;}
+  cur=o;isEdit=false;
+  G('detail-title').textContent='订单详情 — '+(o.orderId||o.id);
+  G('editToggleBtn').style.display='inline-block';
+  G('syncItdidaBtn').style.display='inline-block';
+  G('syncItdidaBtn').disabled=false;
+  G('syncItdidaBtn').textContent='📡 同步深圳仓';
+  G('detailFoot').style.display='none';
+  var dt='';if(o.createdAt&&o.createdAt.toDate)dt=o.createdAt.toDate().toLocaleString('zh-CN');
+  else if(o.submitTime)dt=o.submitTime.replace('T',' ').slice(0,16);
+  var flds=[['订单号',o.orderId||o.id],['客户',o.senderCompany],['邮箱',o.email],['时间',dt],
+    ['渠道',o.channel],['货物',o.goods],['数量',o.qty],['申报总价',o.amount+' '+(o.currency||'USD')],
+    ['HS Code',o.hsCode||'—'],['特殊货物',o.special||'—'],['顺丰单号',o.sfNo||'—'],
+    ['目的地',o.country+(o.city?'·'+o.city:'')],['邮编',o.zip],['目的国',o.destCountry||'—'],
+    ['运单号',o.trackingNumber||'未录入'],['快递公司',o.carrier||'—'],
+    ['状态',o.status||'待处理'],['关税垫付',o.taxAmount?'✅ 已垫付':'—'],['关税金额',o.taxAmount||'—'],['备注',o.remarks||'—'],['收件地址',o.address||'—']];
+  var html=flds.map(([k,v])=>`<div style="display:flex;gap:8px;padding:5px 0;border-bottom:1px solid #f1f5f9;font-size:12px;"><span style="color:var(--muted);min-width:72px;flex-shrink:0;font-size:11px;">${esc(k)}</span><span style="word-break:break-all;">${esc(v||'—')}</span></div>`).join('');
+
+  // 如果有易抵达轨迹缓存，渲染时间线
+  if(lastItdidaTracks&&lastItdidaTracks.trackList&&lastItdidaTracks.trackList.length){
+    var tl=lastItdidaTracks.trackList.map((t,i)=>`
+      <div class="itdida-track-item ${i===0?'first':''}">
+        <span class="itdida-track-time">${esc(t.time||'')}</span>
+        <span class="itdida-track-loc">${esc(t.localtion||t.eventCity||'')}</span>
+        <span class="itdida-track-desc">${esc(t.desc||'')}</span>
+      </div>`).join('');
+    html+=`<div class="itdida-track-box">
+      <div class="itdida-track-title">📡 霖霖深圳仓轨迹（${lastItdidaTracks.trackList.length} 条 · ${esc(lastItdidaTracks.fetchedAt.slice(0,16).replace('T',' '))} 拉取）</div>
+      ${tl}
+    </div>`;
+  }
+
+  G('detailBody').innerHTML=html;
+  openModal('detailModal');
+}
+function renderDetailEdit(o){
+  G('detail-title').textContent='编辑 — '+(o.orderId||o.id);
+  G('editToggleBtn').style.display='none';
+  G('syncItdidaBtn').style.display='none';
+  G('detailFoot').style.display='flex';
+  var ef=[['senderCompany','客户名','text',o.senderCompany],['email','邮箱','email',o.email],
+    ['channel','渠道','text',o.channel],['goods','货物','text',o.goods],
+    ['qty','数量','text',o.qty],['currency','货币','text',o.currency||'USD'],
+    ['hsCode','HS Code','text',o.hsCode],['sfNo','顺丰单号','text',o.sfNo],
+    ['country','目的国家','text',o.country],['zip','邮编','text',o.zip],
+    ['trackingNumber','运单号','text',o.trackingNumber],['carrier','快递公司','text',o.carrier],
+    ['status','状态','select',o.status],['remarks','备注','textarea',o.remarks],
+    ['address','收件地址','textarea',o.address]];
+  G('detailBody').innerHTML=ef.map(([id,lb,tp,v])=>{
+    var inp=tp==='textarea'?`<textarea id="ef-${id}" style="width:100%;padding:5px 8px;border:1.5px solid var(--border);border-radius:6px;font-size:11px;font-family:inherit;min-height:48px;outline:none;">${esc(v||'')}</textarea>`:
+    tp==='select'?`<select id="ef-${id}" style="width:100%;padding:5px 8px;border:1.5px solid var(--border);border-radius:6px;font-size:11px;outline:none;">${['待处理','运输中','已签收','异常'].map(s=>`<option${s===v?' selected':''}>${s}</option>`).join('')}</select>`:
+    `<input type="${tp}" id="ef-${id}" value="${esc(v||'')}" style="width:100%;padding:5px 8px;border:1.5px solid var(--border);border-radius:6px;font-size:11px;outline:none;">`;
+    return`<div style="padding:4px 0;border-bottom:1px solid #f1f5f9;"><div style="font-size:9px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:2px;">${lb}</div>${inp}</div>`;
+  }).join('');
+}
+async function saveDetailEdit(){
+  var btn=G('editSaveBtn');btn.disabled=true;btn.textContent='保存…';
+  try{
+    var{doc,updateDoc}=window._bkdFS;
+    var u={senderCompany:G('ef-senderCompany').value,email:G('ef-email').value,channel:G('ef-channel').value,goods:G('ef-goods').value,qty:G('ef-qty').value,currency:G('ef-currency').value,hsCode:G('ef-hsCode').value,sfNo:G('ef-sfNo').value,country:G('ef-country').value,zip:G('ef-zip').value,trackingNumber:G('ef-trackingNumber').value,carrier:G('ef-carrier').value,status:G('ef-status').value,remarks:G('ef-remarks').value,address:G('ef-address').value,updatedAt:new Date().toISOString()};
+    await updateDoc(doc(window._bkdDB,'orders',cur.id),u);
+    var ix=allOrders.findIndex(x=>x.id===cur.id);
+    if(ix>=0)allOrders[ix]=Object.assign({},allOrders[ix],u);
+    cur=allOrders[ix];renderTable();updateStats();isEdit=false;openDetailModal(cur);
+  }catch(e){alert('保存失败：'+e.message);}
+  btn.disabled=false;btn.textContent='保存修改';
+}
+
+/* ── 删除 ── */
+function initConfirmModal(){
+  G('confirmClose').addEventListener('click',()=>{pendingDeleteIds=[];closeModal('confirmModal');});
+  G('confirmCancel').addEventListener('click',()=>{pendingDeleteIds=[];closeModal('confirmModal');});
+  G('confirmModal').addEventListener('click',e=>{if(e.target===G('confirmModal')){pendingDeleteIds=[];closeModal('confirmModal');}});
+  G('confirmOk').addEventListener('click',doDelete);
+}
+function openSingleDelete(o){
+  pendingDeleteIds=[o.id];
+  G('confirmTitle').textContent='确认删除';
+  G('confirmMsg').textContent='确定要删除这条订单吗？';
+  G('confirm-sub').textContent='订单：'+(o.orderId||o.id)+'　客户：'+(o.senderCompany||'—');
+  G('confirmAlert').style.display='none';openModal('confirmModal');
+}
+function openBatchDelete(){
+  if(!selectedIds.size)return;
+  pendingDeleteIds=[...selectedIds];
+  G('confirmTitle').textContent='批量删除';
+  G('confirmMsg').textContent='确定删除选中的 '+pendingDeleteIds.length+' 条订单？';
+  G('confirm-sub').textContent='此操作不可撤销。';
+  G('confirmAlert').style.display='none';openModal('confirmModal');
+}
+async function doDelete(){
+  if(!pendingDeleteIds.length)return;
+  var btn=G('confirmOk');btn.disabled=true;btn.textContent='删除中…';
+  try{
+    var{doc,deleteDoc,writeBatch}=window._bkdFS,db=window._bkdDB;
+    if(pendingDeleteIds.length===1){
+      await deleteDoc(doc(db,'orders',pendingDeleteIds[0]));
+    } else {
+      for(var i=0;i<pendingDeleteIds.length;i+=400){
+        var b=writeBatch(db);
+        pendingDeleteIds.slice(i,i+400).forEach(id=>b.delete(doc(db,'orders',id)));
+        await b.commit();
+      }
+    }
+    var del=new Set(pendingDeleteIds);
+    allOrders=allOrders.filter(o=>!del.has(o.id));
+    del.forEach(id=>selectedIds.delete(id));
+    pendingDeleteIds=[];renderTable();updateStats();updateBatchBtn();closeModal('confirmModal');
+  }catch(e){showAlert('confirmAlert','err','删除失败：'+e.message);}
+  btn.disabled=false;btn.textContent='确认删除';
+}
+
+/* ────────────────────────────────────────────────────────────────
+   客户管理模块（Customer Management）
+   ──────────────────────────────────────────────────────────────── */
+
+function initCustomerModal(){
+  G('addCustomerBtn').addEventListener('click',openCustomerModal);
+  G('customerModalClose').addEventListener('click',closeCustomerModal);
+  G('customerModalCancel').addEventListener('click',closeCustomerModal);
+  G('customerModal').addEventListener('click',e=>{if(e.target===G('customerModal'))closeCustomerModal();});
+  G('customerModalSave').addEventListener('click',createCustomer);
+  G('genPwdBtn').addEventListener('click',()=>{
+    G('cust-password').value=generatePassword();
+  });
+  // 复制按钮
+  G('customerModal').querySelectorAll('.cred-copy-btn').forEach(btn=>{
+    btn.addEventListener('click',()=>{
+      var what=btn.dataset.copy;
+      var text='';
+      if(what==='email')text=G('cred-email').textContent;
+      else if(what==='password')text=G('cred-password').textContent;
+      else if(what==='all'){
+        text='保凯达·霖霖 客户登录信息\n邮箱：'+G('cred-email').textContent+'\n密码：'+G('cred-password').textContent+'\n登录地址：'+G('cred-url').textContent;
+      }
+      navigator.clipboard.writeText(text).then(()=>{
+        var orig=btn.textContent;btn.textContent='✓ 已复制';
+        setTimeout(()=>btn.textContent=orig,1500);
+      }).catch(()=>{
+        // fallback：旧浏览器
+        var ta=document.createElement('textarea');ta.value=text;document.body.appendChild(ta);
+        ta.select();try{document.execCommand('copy');}catch(e){}
+        document.body.removeChild(ta);
+        var orig=btn.textContent;btn.textContent='✓ 已复制';
+        setTimeout(()=>btn.textContent=orig,1500);
+      });
+    });
+  });
+}
+
+function openCustomerModal(){
+  // 重置表单
+  G('cust-email').value='';
+  G('cust-name').value='';
+  G('cust-password').value='';
+  G('credDisplay').classList.remove('show');
+  G('customerModalAlert').style.display='none';
+  G('customerModalSave').style.display='inline-block';
+  G('customerModalSave').disabled=false;
+  G('customerModalSave').textContent='创建账号';
+  G('customerModalCancel').textContent='取消';
+  openModal('customerModal');
+  setTimeout(()=>G('cust-email').focus(),100);
+}
+function closeCustomerModal(){
+  closeModal('customerModal');
+}
+
+function generatePassword(len){
+  len=len||10;
+  // 简单可读的密码：大写 + 小写 + 数字（去掉容易混淆的 0/O/l/1/I）
+  var chars='abcdefghjkmnpqrstuvwxyzABCDEFGHJKMNPQRSTUVWXYZ23456789';
+  var pwd='';
+  var arr=new Uint32Array(len);
+  crypto.getRandomValues(arr);
+  for(var i=0;i<len;i++)pwd+=chars[arr[i]%chars.length];
+  return pwd;
+}
+
+async function createCustomer(){
+  var email=(G('cust-email').value||'').trim().toLowerCase();
+  var name=(G('cust-name').value||'').trim();
+  var password=G('cust-password').value;
+
+  // 验证
+  if(!email){showAlert('customerModalAlert','err','请填写客户邮箱');return;}
+  if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){showAlert('customerModalAlert','err','邮箱格式不正确');return;}
+  if(!password){showAlert('customerModalAlert','err','请填写或生成临时密码');return;}
+  if(password.length<6){showAlert('customerModalAlert','err','密码至少 6 位');return;}
+
+  var btn=G('customerModalSave');
+  btn.disabled=true;btn.textContent='创建中…';
+  G('customerModalAlert').style.display='none';
+
+  try{
+    // 拿当前 admin 的 ID Token，传给 Worker 鉴权
+    var idToken=await window._bkdAuth.currentUser.getIdToken();
+
+    var r=await fetch(ADMIN_API+'/createUser',{
+      method:'POST',
+      headers:{
+        'Content-Type':'application/json',
+        'Authorization':'Bearer '+idToken
+      },
+      body:JSON.stringify({email,password,displayName:name})
+    });
+    var d=await r.json();
+    if(!r.ok||d.error){throw new Error(d.error||('HTTP '+r.status));}
+
+    // 成功：显示凭证
+    G('cred-email').textContent=email;
+    G('cred-password').textContent=password;
+    G('credDisplay').classList.add('show');
+    showAlert('customerModalAlert','ok','✅ 客户账号已创建');
+    btn.style.display='none';
+    G('customerModalCancel').textContent='完成';
+  }catch(e){
+    showAlert('customerModalAlert','err','创建失败：'+e.message);
+    btn.disabled=false;btn.textContent='创建账号';
+  }
+}
+
+/* ── 查询 ── */
+async function manualQuery(){
+  var num=(G('manualTrackNum').value||'').trim();
+  if(!num){alert('请输入运单号');return;}
+  var btn=G('manualQueryBtn');btn.disabled=true;btn.textContent='查询…';
+  G('trackResult').innerHTML='<div class="loading"><span class="spin"></span>查询中…</div>';
+  try{
+    var r=await fetch(WORKER+'?carrier='+encodeURIComponent(G('manualCarrier').value)+'&num='+encodeURIComponent(num));
+    renderTrackResult(await r.json(),num);
+  }catch(e){G('trackResult').innerHTML='<div style="color:var(--red);font-size:12px;">查询失败：'+e.message+'</div>';}
+  btn.disabled=false;btn.textContent='查 询';
+}
+function renderTrackResult(d,num){
+  if(!d||d.returnCode==='500'||(!d.data&&!d.traces)){G('trackResult').innerHTML='<div style="color:var(--amber);font-size:12px;padding:9px;background:#fffbeb;border-radius:7px;border:1px solid #fde68a;">⚠ 未查到该运单。</div>';return;}
+  var traces=d.data||d.traces||[];
+  if(!traces.length){G('trackResult').innerHTML='<div style="color:var(--muted);font-size:12px;">暂无轨迹</div>';return;}
+  var sm={'0':'待揽件','1':'已揽件','2':'运输中','3':'已签收','4':'问题件'};
+  var items=traces.map((t,i)=>`<div class="track-item"><div class="track-dot ${i===0?'latest':''}"></div><div style="flex:1;"><div class="track-desc">${esc(t.context||t.desc||'')}</div><div class="track-time">${esc(t.time||t.ftime||'')}</div></div></div>`).join('');
+  G('trackResult').innerHTML=`<div style="background:#f0fdf4;border:1px solid #86efac;border-radius:7px;padding:7px 11px;margin-bottom:9px;font-size:11px;">✓ <strong style="font-family:monospace;">${esc(num)}</strong>　${sm[d.state||'']||'运输中'}</div><div class="track-timeline">${items}</div>`;
+}
+
+/* ── 统计 ── */
+function renderStats(){
+  var now=new Date();
+  G('ss-month').textContent=allOrders.filter(o=>{var d=o.createdAt?.toDate?.()||(o.submitTime?new Date(o.submitTime):null);return d&&d.getMonth()===now.getMonth()&&d.getFullYear()===now.getFullYear();}).length;
+  var ch={};allOrders.forEach(o=>{var c=o.channel||'未知';ch[c]=(ch[c]||0)+1;});
+  var tc=Object.entries(ch).sort((a,b)=>b[1]-a[1]);
+  G('ss-channel').textContent=tc[0]?tc[0][0].slice(0,12):'—';
+  var co={};allOrders.forEach(o=>{var c=o.country||'未知';co[c]=(co[c]||0)+1;});
+  var tc2=Object.entries(co).sort((a,b)=>b[1]-a[1]);
+  G('ss-country').textContent=tc2[0]?tc2[0][0]:'—';
+  G('channelStats').innerHTML=tc.map(([c,n])=>`<div style="display:flex;align-items:center;gap:9px;padding:5px 0;border-bottom:1px solid #f1f5f9;"><span style="font-size:12px;min-width:120px;">${esc(c)}</span><div style="flex:1;background:#f1f5f9;border-radius:3px;height:6px;overflow:hidden;"><div style="width:${Math.round(n/allOrders.length*100)}%;height:100%;background:var(--blue);border-radius:3px;"></div></div><span style="font-size:11px;color:var(--muted);min-width:32px;text-align:right;">${n}票</span></div>`).join('')||'<div style="color:var(--muted);font-size:12px;">暂无</div>';
+}
+
+/* ── 导出 ── */
+function exportExcel(){
+  if(!window.XLSX){alert('XLSX加载中');return;}
+  var data=allOrders.map((o,i)=>{var dt='';if(o.createdAt&&o.createdAt.toDate)dt=o.createdAt.toDate().toLocaleString('zh-CN');else if(o.submitTime)dt=o.submitTime.replace('T',' ').slice(0,16);return{'序号':i+1,'订单号':o.orderId||o.id,'客户':o.senderCompany||'','邮箱':o.email||'','时间':dt,'渠道':o.channel||'','货物':o.goods||'','数量':o.qty||'','申报价值':(o.amount||'')+' '+(o.currency||'USD'),'目的国':o.country||'','邮编':o.zip||'','顺丰单号':o.sfNo||'','运单号':o.trackingNumber||'','状态':o.status||'待处理','关税垫付':o.taxPaid?'是':'','关税金额':o.taxAmount||'','备注':o.remarks||''};});
+  var ws=XLSX.utils.json_to_sheet(data),wb=XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb,ws,'订单');
+  ws['!cols']=[6,20,16,22,18,14,20,6,14,12,8,14,18,8,16].map(w=>({wch:w}));
+  XLSX.writeFile(wb,'BKD订单_'+new Date().toLocaleDateString('zh-CN').replace(/\//g,'')+'.xlsx');
+}
+
+/* ── 工具 ── */
+function openModal(id){G(id).classList.add('on');document.body.style.overflow='hidden';}
+function closeModal(id){G(id).classList.remove('on');document.body.style.overflow='';}
+function showAlert(id,tp,msg){var el=G(id);el.className='alert alert-'+(tp==='err'?'err':'ok');el.textContent=msg;el.style.display='block';setTimeout(()=>el.style.display='none',4000);}
+function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+})();
+</script>
+</body>
+</html>
