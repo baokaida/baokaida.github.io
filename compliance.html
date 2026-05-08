@@ -1,0 +1,1293 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>申报合规中心 - 保凯达·霖霖国际物流</title>
+<meta name="description" content="HS Code 智能查询 · AI 物流方案 · 海关禁限管制清单查询 - BKDLL 保凯达国际物流">
+<link rel="icon" type="image/png" href="logo.png">
+<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+<style>
+  :root {
+    --brand-deep: #0F2C5C;
+    --brand-deep-light: #1a3d75;
+    --brand-gold: #C9A24A;
+    --brand-gold-light: #d8b86a;
+    --bg-page: #f5f7fb;
+    --bg-card: #ffffff;
+    --text-primary: #0F2C5C;
+    --text-secondary: #4a5878;
+    --text-muted: #8a94a8;
+    --border: #e1e6ef;
+    --border-strong: #c8d0dd;
+    --risk-high: #c0392b;
+    --risk-high-bg: #fdecec;
+    --risk-mid: #d4881a;
+    --risk-mid-bg: #fdf4e3;
+    --risk-low: #2c7be5;
+    --risk-low-bg: #e7f0fc;
+    --risk-safe: #1a8a4f;
+    --risk-safe-bg: #e3f5ec;
+    --shadow-sm: 0 1px 3px rgba(15, 44, 92, 0.06);
+    --shadow-md: 0 4px 16px rgba(15, 44, 92, 0.08);
+    --shadow-lg: 0 8px 32px rgba(15, 44, 92, 0.12);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", "Helvetica Neue", Arial, sans-serif;
+    background: var(--bg-page);
+    color: var(--text-primary);
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* 顶部导航 */
+  .nav {
+    background: #fff;
+    border-bottom: 1px solid var(--border);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: var(--shadow-sm);
+  }
+  .nav-inner {
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 14px 32px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .nav-brand {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    color: var(--brand-deep);
+    text-decoration: none;
+    font-weight: 700;
+    font-size: 18px;
+    letter-spacing: 0.5px;
+  }
+  .nav-brand img { height: 32px; }
+  .nav-brand small {
+    display: block;
+    font-size: 11px;
+    color: var(--text-muted);
+    letter-spacing: 2px;
+    font-weight: 500;
+    margin-top: 2px;
+  }
+  .nav-links { display: flex; gap: 28px; align-items: center; }
+  .nav-links a {
+    color: var(--text-secondary);
+    text-decoration: none;
+    font-size: 14px;
+    font-weight: 500;
+    transition: color 0.2s;
+  }
+  .nav-links a:hover { color: var(--brand-deep); }
+  .nav-links a.active { color: var(--brand-deep); font-weight: 600; }
+
+  /* Hero */
+  .hero {
+    background: linear-gradient(135deg, var(--brand-deep) 0%, #1a3d75 100%);
+    color: #fff;
+    padding: 56px 32px 80px;
+    position: relative;
+    overflow: hidden;
+  }
+  .hero::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    right: -10%;
+    width: 600px;
+    height: 600px;
+    background: radial-gradient(circle, rgba(201, 162, 74, 0.15) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .hero-inner {
+    max-width: 1280px;
+    margin: 0 auto;
+    position: relative;
+  }
+  .hero-tag {
+    display: inline-block;
+    padding: 6px 14px;
+    background: rgba(201, 162, 74, 0.2);
+    border: 1px solid rgba(201, 162, 74, 0.4);
+    color: var(--brand-gold-light);
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 1px;
+    margin-bottom: 20px;
+  }
+  .hero h1 {
+    font-size: 38px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    margin-bottom: 12px;
+  }
+  .hero-sub {
+    font-size: 16px;
+    opacity: 0.85;
+    max-width: 720px;
+  }
+  .hero-meta {
+    margin-top: 24px;
+    display: flex;
+    gap: 24px;
+    font-size: 13px;
+    opacity: 0.75;
+  }
+  .hero-meta span::before {
+    content: '●';
+    color: var(--brand-gold);
+    margin-right: 6px;
+    font-size: 8px;
+    vertical-align: middle;
+  }
+
+  /* 主容器 */
+  .container {
+    max-width: 1280px;
+    margin: -40px auto 0;
+    padding: 0 32px 80px;
+    position: relative;
+  }
+
+  /* 搜索区 */
+  .search-card {
+    background: #fff;
+    border-radius: 16px;
+    padding: 32px;
+    box-shadow: var(--shadow-lg);
+    margin-bottom: 24px;
+  }
+  .search-title {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 18px;
+    font-weight: 600;
+    margin-bottom: 18px;
+    color: var(--brand-deep);
+  }
+  .search-title-num {
+    width: 28px; height: 28px;
+    background: var(--brand-deep);
+    color: #fff;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    font-weight: 700;
+  }
+  .search-box {
+    position: relative;
+  }
+  .search-input {
+    width: 100%;
+    padding: 18px 56px 18px 56px;
+    font-size: 16px;
+    border: 2px solid var(--border);
+    border-radius: 12px;
+    outline: none;
+    transition: all 0.2s;
+    font-family: inherit;
+  }
+  .search-input:focus {
+    border-color: var(--brand-deep);
+    box-shadow: 0 0 0 4px rgba(15, 44, 92, 0.08);
+  }
+  .search-icon {
+    position: absolute;
+    left: 18px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-muted);
+    pointer-events: none;
+  }
+  .search-clear {
+    position: absolute;
+    right: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 28px; height: 28px;
+    border-radius: 50%;
+    background: var(--bg-page);
+    border: none;
+    cursor: pointer;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-muted);
+    transition: all 0.2s;
+  }
+  .search-clear:hover { background: var(--border); color: var(--text-primary); }
+  .search-clear.visible { display: flex; }
+
+  .search-hint {
+    margin-top: 12px;
+    font-size: 13px;
+    color: var(--text-muted);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+  }
+  .search-hint b { color: var(--text-secondary); }
+  .quick-tags {
+    margin-top: 14px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .quick-tag {
+    padding: 6px 12px;
+    background: var(--bg-page);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    font-size: 12px;
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .quick-tag:hover {
+    border-color: var(--brand-deep);
+    color: var(--brand-deep);
+    background: #fff;
+  }
+
+  /* 结果区 */
+  .results-meta {
+    padding: 14px 4px;
+    font-size: 13px;
+    color: var(--text-secondary);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .results-meta strong { color: var(--brand-deep); font-size: 15px; }
+
+  .result-item {
+    background: #fff;
+    border-radius: 12px;
+    margin-bottom: 12px;
+    overflow: hidden;
+    border: 1px solid var(--border);
+    transition: all 0.2s;
+  }
+  .result-item:hover {
+    border-color: var(--brand-deep-light);
+    box-shadow: var(--shadow-md);
+  }
+  .result-header {
+    padding: 18px 22px;
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+    cursor: pointer;
+  }
+  .result-code {
+    flex-shrink: 0;
+    background: var(--bg-page);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 14px;
+    font-family: 'SF Mono', 'Monaco', 'Consolas', monospace;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--brand-deep);
+    letter-spacing: 0.5px;
+  }
+  .result-body { flex: 1; min-width: 0; }
+  .result-name {
+    font-size: 14px;
+    color: var(--text-primary);
+    line-height: 1.55;
+    margin-bottom: 8px;
+  }
+  .result-tags { display: flex; flex-wrap: wrap; gap: 6px; }
+  .tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 3px 10px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+  }
+  .tag-risk-high { background: var(--risk-high-bg); color: var(--risk-high); }
+  .tag-risk-mid { background: var(--risk-mid-bg); color: var(--risk-mid); }
+  .tag-risk-low { background: var(--risk-low-bg); color: var(--risk-low); }
+  .tag-direction { background: #f0f3f9; color: var(--text-secondary); }
+  .tag-mofcom { background: #fef0f0; color: #c0392b; border: 1px solid #f5c6c6; }
+
+  .result-action {
+    flex-shrink: 0;
+    background: var(--brand-deep);
+    color: #fff;
+    border: none;
+    padding: 10px 18px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.2s;
+    white-space: nowrap;
+    font-family: inherit;
+  }
+  .result-action:hover {
+    background: var(--brand-deep-light);
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-md);
+  }
+  .result-action.gold {
+    background: linear-gradient(135deg, var(--brand-gold) 0%, var(--brand-gold-light) 100%);
+  }
+  .result-action.gold:hover {
+    background: linear-gradient(135deg, var(--brand-gold-light) 0%, var(--brand-gold) 100%);
+  }
+
+  .result-detail {
+    border-top: 1px solid var(--border);
+    padding: 18px 22px;
+    background: #fafbfd;
+    display: none;
+  }
+  .result-detail.open { display: block; }
+  .detail-section { margin-bottom: 14px; }
+  .detail-section:last-child { margin-bottom: 0; }
+  .detail-label {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-muted);
+    letter-spacing: 1px;
+    margin-bottom: 6px;
+    text-transform: uppercase;
+  }
+  .detail-content {
+    font-size: 13px;
+    color: var(--text-primary);
+    line-height: 1.7;
+  }
+  .detail-content ol { padding-left: 20px; }
+  .detail-content li { margin-bottom: 4px; }
+
+  /* 空状态 */
+  .empty-state {
+    background: #fff;
+    border-radius: 12px;
+    padding: 60px 32px;
+    text-align: center;
+    color: var(--text-muted);
+    border: 1px dashed var(--border);
+  }
+  .empty-state-icon { font-size: 48px; margin-bottom: 16px; opacity: 0.5; }
+  .empty-state h3 { color: var(--text-secondary); font-weight: 600; margin-bottom: 8px; }
+  .empty-state p { font-size: 13px; }
+
+  /* 弹窗 */
+  .modal-overlay {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(15, 44, 92, 0.6);
+    backdrop-filter: blur(4px);
+    z-index: 1000;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    overflow-y: auto;
+  }
+  .modal-overlay.active { display: flex; }
+  .modal {
+    background: #fff;
+    border-radius: 16px;
+    max-width: 1100px;
+    width: 100%;
+    max-height: 92vh;
+    overflow-y: auto;
+    position: relative;
+    box-shadow: var(--shadow-lg);
+  }
+  .modal-close {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    border: none;
+    background: rgba(255,255,255,0.9);
+    backdrop-filter: blur(4px);
+    cursor: pointer;
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-secondary);
+    box-shadow: var(--shadow-sm);
+    transition: all 0.2s;
+  }
+  .modal-close:hover { background: #fff; color: var(--brand-deep); }
+
+  .modal-action-bar {
+    padding: 14px 20px;
+    border-top: 1px solid var(--border);
+    background: #fafbfd;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    position: sticky;
+    bottom: 0;
+  }
+  .modal-action-bar small { color: var(--text-muted); font-size: 12px; }
+  .btn-download {
+    background: var(--brand-deep);
+    color: #fff;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-family: inherit;
+  }
+  .btn-download:hover { background: var(--brand-deep-light); }
+  .btn-download:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  /* AI方案图样式 */
+  .plan-canvas {
+    width: 1100px;
+    background: linear-gradient(180deg, #ffffff 0%, #f5f7fb 100%);
+    padding: 32px 40px;
+    font-family: -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif;
+    color: var(--brand-deep);
+  }
+  .plan-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-bottom: 16px;
+    border-bottom: 2px solid var(--brand-deep);
+    margin-bottom: 24px;
+  }
+  .plan-logo {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .plan-logo-mark {
+    width: 40px; height: 40px;
+    background: var(--brand-deep);
+    color: #fff;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 800;
+    font-size: 18px;
+    letter-spacing: 1px;
+  }
+  .plan-logo-text {
+    font-size: 18px;
+    font-weight: 700;
+    letter-spacing: 2px;
+  }
+  .plan-logo-text small {
+    display: block;
+    font-size: 9px;
+    color: var(--text-muted);
+    letter-spacing: 2px;
+    font-weight: 500;
+    margin-top: 2px;
+  }
+  .plan-title {
+    font-size: 22px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-align: center;
+    flex: 1;
+  }
+  .plan-date {
+    font-size: 11px;
+    color: var(--text-muted);
+    background: var(--bg-page);
+    padding: 6px 12px;
+    border-radius: 4px;
+  }
+
+  .plan-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    margin-bottom: 20px;
+  }
+  .plan-section {
+    background: #fff;
+    border-radius: 10px;
+    padding: 18px 20px;
+    box-shadow: 0 1px 4px rgba(15, 44, 92, 0.05);
+    border: 1px solid var(--border);
+  }
+  .plan-section-full { grid-column: 1 / -1; }
+  .plan-section-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--brand-deep);
+    margin-bottom: 12px;
+    padding-bottom: 10px;
+    border-bottom: 1px dashed var(--border-strong);
+  }
+  .plan-section-num {
+    width: 22px; height: 22px;
+    background: var(--brand-deep);
+    color: #fff;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    font-weight: 700;
+    flex-shrink: 0;
+  }
+  .plan-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+  }
+  .plan-table td {
+    padding: 6px 8px;
+    border-bottom: 1px solid #f0f3f9;
+    vertical-align: top;
+  }
+  .plan-table td:first-child {
+    color: var(--text-muted);
+    width: 90px;
+    font-weight: 500;
+  }
+  .plan-table td:last-child { color: var(--text-primary); }
+  .plan-port-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 11px;
+  }
+  .plan-port-table th {
+    background: var(--brand-deep);
+    color: #fff;
+    padding: 8px 6px;
+    text-align: left;
+    font-weight: 600;
+    font-size: 11px;
+  }
+  .plan-port-table th:first-child { border-radius: 6px 0 0 0; }
+  .plan-port-table th:last-child { border-radius: 0 6px 0 0; }
+  .plan-port-table td {
+    padding: 8px 6px;
+    border-bottom: 1px solid var(--border);
+    font-size: 11px;
+  }
+  .plan-tip-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+  .plan-tip-list li {
+    padding: 6px 0 6px 22px;
+    position: relative;
+    font-size: 12px;
+    line-height: 1.6;
+    color: var(--text-primary);
+  }
+  .plan-tip-list li::before {
+    content: '✓';
+    position: absolute;
+    left: 0;
+    top: 6px;
+    color: var(--brand-gold);
+    font-weight: 700;
+  }
+  .plan-warn-list li::before { content: '!'; color: var(--risk-high); }
+  .plan-info-list li::before { content: '•'; color: var(--brand-deep); font-size: 14px; top: 2px; }
+
+  .plan-disclaimer {
+    margin-top: 20px;
+    padding: 12px 16px;
+    background: #fef9ed;
+    border-left: 3px solid var(--brand-gold);
+    font-size: 11px;
+    color: var(--text-secondary);
+    line-height: 1.6;
+    border-radius: 4px;
+  }
+  .plan-footer {
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    font-size: 11px;
+    color: var(--text-muted);
+  }
+  .plan-footer-brand { color: var(--brand-deep); font-weight: 600; letter-spacing: 1px; }
+
+  /* Loading状态 */
+  .loading-state {
+    padding: 60px 32px;
+    text-align: center;
+  }
+  .loading-spinner {
+    width: 48px; height: 48px;
+    margin: 0 auto 20px;
+    border: 3px solid var(--border);
+    border-top-color: var(--brand-deep);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .loading-state h3 { color: var(--brand-deep); margin-bottom: 8px; }
+  .loading-state p { color: var(--text-secondary); font-size: 13px; }
+  .loading-progress {
+    margin-top: 24px;
+    max-width: 400px;
+    margin-left: auto;
+    margin-right: auto;
+    text-align: left;
+  }
+  .loading-progress li {
+    list-style: none;
+    padding: 6px 0 6px 28px;
+    position: relative;
+    font-size: 13px;
+    color: var(--text-secondary);
+  }
+  .loading-progress li::before {
+    content: '○';
+    position: absolute;
+    left: 0;
+    top: 6px;
+    color: var(--text-muted);
+  }
+  .loading-progress li.done::before { content: '✓'; color: var(--risk-safe); }
+  .loading-progress li.active::before {
+    content: '◉';
+    color: var(--brand-deep);
+    animation: pulse 1.2s infinite;
+  }
+  @keyframes pulse { 50% { opacity: 0.4; } }
+
+  /* 提示横幅 */
+  .info-banner {
+    background: linear-gradient(135deg, #fef9ed 0%, #fdf4e3 100%);
+    border: 1px solid #f0e0b8;
+    border-radius: 10px;
+    padding: 14px 20px;
+    margin-bottom: 24px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 13px;
+    color: #7a5a1a;
+  }
+  .info-banner-icon {
+    flex-shrink: 0;
+    width: 32px; height: 32px;
+    background: var(--brand-gold);
+    color: #fff;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+  }
+
+  /* 移动端 */
+  @media (max-width: 768px) {
+    .nav-inner { padding: 12px 16px; }
+    .nav-links { gap: 14px; font-size: 12px; }
+    .hero { padding: 36px 16px 56px; }
+    .hero h1 { font-size: 24px; }
+    .hero-sub { font-size: 14px; }
+    .container { padding: 0 16px 40px; }
+    .search-card { padding: 20px; }
+    .result-header { flex-wrap: wrap; }
+    .result-action { width: 100%; justify-content: center; margin-top: 8px; }
+    .modal { max-width: 100%; }
+    .plan-canvas { width: 100%; padding: 16px; }
+    .plan-grid { grid-template-columns: 1fr; gap: 12px; }
+    .plan-header { flex-direction: column; gap: 12px; align-items: flex-start; }
+  }
+</style>
+</head>
+<body>
+
+<!-- 导航 -->
+<nav class="nav">
+  <div class="nav-inner">
+    <a href="index.html" class="nav-brand">
+      <img src="logo.png" alt="BKDLL" onerror="this.style.display='none'">
+      <div>
+        保凯达·霖霖
+        <small>BKDLL · INTERNATIONAL</small>
+      </div>
+    </a>
+    <div class="nav-links">
+      <a href="index.html">首页</a>
+      <a href="bkd-order.html">在线下单</a>
+      <a href="bkd-track.html">订单追踪</a>
+      <a href="compliance.html" class="active">申报合规</a>
+      <a href="bkd-login.html">客户登录</a>
+    </div>
+  </div>
+</nav>
+
+<!-- Hero -->
+<header class="hero">
+  <div class="hero-inner">
+    <span class="hero-tag">⚡ COMPLIANCE CENTER</span>
+    <h1>申报合规中心</h1>
+    <p class="hero-sub">海关禁限管制清单智能查询 · AI 专属物流方案 · 帮助您准确申报、安全通关</p>
+    <div class="hero-meta">
+      <span>数据版本 20260418</span>
+      <span>覆盖 341 条受管制商品</span>
+      <span>9 大申报要素类别</span>
+    </div>
+  </div>
+</header>
+
+<div class="container">
+
+  <!-- 搜索卡片 -->
+  <div class="search-card">
+    <div class="search-title">
+      <span class="search-title-num">1</span>
+      HS Code 智能查询
+    </div>
+    <div class="search-box">
+      <svg class="search-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+      <input type="text" id="searchInput" class="search-input" placeholder="输入 HS 编码或商品名称(支持前缀模糊匹配)" autocomplete="off">
+      <button class="search-clear" id="searchClear" aria-label="清除">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <div class="search-hint">
+      <span><b>编码查询</b>:8501、8806、9013</span>
+      <span><b>关键词</b>:无人机、电动机、激光器</span>
+      <span><b>商务部代码</b>:9A012</span>
+    </div>
+    <div class="quick-tags">
+      <span class="quick-tag" data-q="8501">8501 电动机</span>
+      <span class="quick-tag" data-q="8806">8806 无人机</span>
+      <span class="quick-tag" data-q="9013">9013 激光器</span>
+      <span class="quick-tag" data-q="无人机">无人机</span>
+      <span class="quick-tag" data-q="发动机">发动机</span>
+      <span class="quick-tag" data-q="加密">加密设备</span>
+    </div>
+  </div>
+
+  <!-- 提示 -->
+  <div class="info-banner" id="infoBanner">
+    <div class="info-banner-icon">i</div>
+    <div>
+      数据来源:海关总署公开发布的禁限管制识别码清单(20260418 版),仅供申报参考。具体商品归类与申报要求以海关现场审核为准,如有疑问请联系保凯达客服或专业报关行。
+    </div>
+  </div>
+
+  <!-- 结果区 -->
+  <div id="resultsArea">
+    <div class="empty-state" id="emptyState">
+      <div class="empty-state-icon">🔍</div>
+      <h3>请输入 HS 编码或商品关键词</h3>
+      <p>支持精确编码、前缀匹配(如 8501)、品名关键词搜索</p>
+    </div>
+  </div>
+
+</div>
+
+<!-- AI 方案弹窗 -->
+<div class="modal-overlay" id="planModal">
+  <div class="modal">
+    <button class="modal-close" id="modalClose" aria-label="关闭">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg>
+    </button>
+    <div id="modalContent"></div>
+    <div class="modal-action-bar">
+      <small>所有数据来自海关公开清单 · AI 生成内容仅供参考</small>
+      <button class="btn-download" id="btnDownload" disabled>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+        下载方案图
+      </button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ============ 数据 ============
+const HS_DATA = {"v":"20260418","i":[{"c":"8407101090","n":"用于“无人驾驶航空器” 或“ 无人驾驶飞艇”的发动机：最大持续功率超过16 kW 的航空发动机","i":"3101","d":"E","m":"9A012.b.2"},{"c":"8407101090","n":"其他不涉及两用物项管制的，输出功率≤298kw航空器内燃引擎","i":"3990","d":"E","e":"3002"},{"c":"8407102010","n":"设计或改进后用于在15420m（50000英尺）以上“高空”飞行的吸气活塞式或转子式内燃发动机","i":"3101","d":"E","m":"9A012.b.1"},{"c":"8407102010","n":"最大持续功率超过16 kW 的航空发动机","i":"3102","d":"E","m":"9A012.b.2"},{"c":"8407102090","n":"用于“无人驾驶航空器” 或“ 无人驾驶飞艇”的发动机：设计或改进后用于在15420m（50000英尺）以上“高空”飞行的吸气活塞式或转子式内燃发动机","i":"3101","d":"E","m":"9A012.b.1"},{"c":"8407102090","n":"用于“无人驾驶航空器” 或“ 无人驾驶飞艇”的发动机：最大持续功率超过16 kW 的航空发动机","i":"3102","d":"E","m":"9A012.b.2"},{"c":"8407102090","n":"其他不涉及两用物项管制的，输出功率＞298kw航空器内燃引擎","i":"3990","d":"E","e":"3002"},{"c":"8408909290","n":"用于“无人驾驶航空器” 或“ 无人驾驶飞艇”的发动机：最大持续功率超过16 kW 的航空发动机","i":"3101","d":"E","m":"9A012.b.2"},{"c":"8408909290","n":"其他不涉及两用物项管制的，14<功率<132.39KW的柴油机","i":"3990","d":"E","e":"3002"},{"c":"8408909390","n":"用于“无人驾驶航空器” 或“ 无人驾驶飞艇”的发动机：最大持续功率超过16 kW 的航空发动机","i":"3101","d":"E","m":"9A012.b.2"},{"c":"8408909390","n":"其他不涉及两用物项管制的，功率≥132.39KW的柴油发动机","i":"3990","d":"E","e":"3002"},{"c":"8411111090","n":"用于“无人驾驶航空器” 或“ 无人驾驶飞艇”的发动机：最大持续功率超过16 kW 的航空发动机","i":"3101","d":"E","m":"9A012.b.2"},{"c":"8411111090","n":"其他不涉及两用物项管制的，推力≦25千牛顿涡轮风扇发动机","i":"3990","d":"E","e":"3002"},{"c":"8411119090","n":"用于“无人驾驶航空器” 或“ 无人驾驶飞艇”的发动机：最大持续功率超过16 kW 的航空发动机","i":"3101","d":"E","m":"9A012.b.2"},{"c":"8411119090","n":"其他不涉及两用物项管制的，推力≦25千牛顿涡轮喷气发动机","i":"3990","d":"E","e":"3002"},{"c":"8411121090","n":"用于“无人驾驶航空器” 或“ 无人驾驶飞艇”的发动机：最大持续功率超过16 kW 的航空发动机","i":"3101","d":"E","m":"9A012.b.2"},{"c":"8411121090","n":"其他不涉及两用物项管制的，推力>25千牛顿涡轮风扇发动机","i":"3990","d":"E","e":"3002"},{"c":"8411129090","n":"用于“无人驾驶航空器” 或“ 无人驾驶飞艇”的发动机：最大持续功率超过16 kW 的航空发动机","i":"3101","d":"E","m":"9A012.b.2"},{"c":"8411129090","n":"其他不涉及两用物项管制的，推力>25千牛顿涡轮喷气发动机","i":"3990","d":"E","e":"3002"},{"c":"8411210090","n":"用于“无人驾驶航空器” 或“ 无人驾驶飞艇”的发动机：最大持续功率超过16 kW 的航空发动机","i":"3101","d":"E","m":"9A012.b.2"},{"c":"8411210090","n":"其他不涉及两用物项管制的，功率≦1100KW涡轮螺桨发动机","i":"3990","d":"E","e":"3002"},{"c":"8411221090","n":"用于“无人驾驶航空器” 或“ 无人驾驶飞艇”的发动机：最大持续功率超过16 kW 的航空发动机","i":"3101","d":"E","m":"9A012.b.2"},{"c":"8411221090","n":"其他不涉及两用物项管制的，1100<功率≦2238KW涡轮螺桨引擎","i":"3990","d":"E","e":"3002"},{"c":"8411222090","n":"用于“无人驾驶航空器” 或“ 无人驾驶飞艇”的发动机：最大持续功率超过16 kW 的航空发动机","i":"3101","d":"E","m":"9A012.b.2"},{"c":"8411222090","n":"其他不涉及两用物项管制的，2238<功率≦3730KW涡轮螺桨引擎","i":"3990","d":"E","e":"3002"},{"c":"8411223090","n":"用于“无人驾驶航空器” 或“ 无人驾驶飞艇”的发动机：最大持续功率超过16 kW 的航空发动机","i":"3101","d":"E","m":"9A012.b.2"},{"c":"8411223090","n":"其他不涉及两用物项管制的，功率>3730KW涡轮螺桨引擎","i":"3990","d":"E","e":"3002"},{"c":"8411810090","n":"用于“无人驾驶航空器” 或“ 无人驾驶飞艇”的发动机：最大持续功率超过16 kW 的航空发动机","i":"3101","d":"E","m":"9A012.b.2"},{"c":"8411810090","n":"其他不涉及两用物项管制的，功率≦5000KW的燃气轮机","i":"3990","d":"E","e":"3002"},{"c":"8412101040","n":"冲压喷气发动机(集成到民用飞机、通用航空器等民用航空器上的除外）","i":"3101","d":"E","m":"9A111.a"},{"c":"8412101040","n":"超燃冲压喷气发动机(集成到民用飞机、通用航空器等民用航空器上的除外）","i":"3102","d":"E","m":"9A111.b"},{"c":"8412101040","n":"脉冲喷气发动机(集成到民用飞机、通用航空器等民用航空器上的除外）","i":"3103","d":"E","m":"9A111.c"},{"c":"8412101040","n":"组合循环发动机(集成到民用飞机、通用航空器等民用航空器上的除外）","i":"3104","d":"E","m":"9A111.d"},{"c":"8412101090","n":"冲压喷气发动机(集成到民用飞机、通用航空器等民用航空器上的除外）","i":"3101","d":"E","m":"9A111.a"},{"c":"8412101090","n":"超燃冲压喷气发动机(集成到民用飞机、通用航空器等民用航空器上的除外）","i":"3102","d":"E","m":"9A111.b"},{"c":"8412101090","n":"脉冲喷气发动机(集成到民用飞机、通用航空器等民用航空器上的除外）","i":"3103","d":"E","m":"9A111.c"},{"c":"8412101090","n":"组合循环发动机(集成到民用飞机、通用航空器等民用航空器上的除外）","i":"3104","d":"E","m":"9A111.d"},{"c":"8412101090","n":"其他不涉及两用物项管制的航空、航天器用喷气发动机","i":"3990","d":"E","e":"3002"},{"c":"8412901090","n":"用于冲压喷气、超燃冲压喷气、脉冲喷气、组合循环发动机的燃烧调节装置(集成到民用飞机、通用航空器等民用航空器上的除外）","i":"3101","d":"E","m":"9A111.e"},{"c":"8412901090","n":"其他航空、航天器用喷气发动机的零件","i":"3990","d":"E","e":"3002"},{"c":"8457101000","n":"符合《两用物项出口管制清单》2B201.a指标的车床","i":"3101","d":"E","m":"2B201.a"},{"c":"8457101000","n":"符合《两用物项出口管制清单》2B201.b指标的铣床","i":"3102","d":"E","m":"2B201.b"},{"c":"8457101000","n":"符合《两用物项出口管制清单》2B201.c指标的磨床","i":"3103","d":"E","m":"2B201.c"},{"c":"8457101000","n":"其他车床","i":"3991","d":"E","e":"3006"},{"c":"8457101000","n":"其他铣床","i":"3992","d":"E","e":"3007"},{"c":"8457101000","n":"其他磨床","i":"3993","d":"E","e":"3008"},{"c":"8457101000","n":"其他加工中心","i":"3999","d":"E"},{"c":"8457102000","n":"符合《两用物项出口管制清单》2B201.a指标的车床","i":"3101","d":"E","m":"2B201.a"},{"c":"8457102000","n":"符合《两用物项出口管制清单》2B201.b指标的铣床","i":"3102","d":"E","m":"2B201.b"},{"c":"8457102000","n":"符合《两用物项出口管制清单》2B201.c指标的磨床","i":"3103","d":"E","m":"2B201.c"},{"c":"8457102000","n":"其他车床","i":"3991","d":"E","e":"3006"},{"c":"8457102000","n":"其他铣床","i":"3992","d":"E","e":"3007"},{"c":"8457102000","n":"其他磨床","i":"3993","d":"E","e":"3008"},{"c":"8457102000","n":"其他加工中心","i":"3999","d":"E"},{"c":"8457103000","n":"符合《两用物项出口管制清单》2B201.a指标的车床","i":"3101","d":"E","m":"2B201.a"},{"c":"8457103000","n":"符合《两用物项出口管制清单》2B201.b指标的铣床","i":"3102","d":"E","m":"2B201.b"},{"c":"8457103000","n":"符合《两用物项出口管制清单》2B201.c指标的磨床","i":"3103","d":"E","m":"2B201.c"},{"c":"8457103000","n":"其他车床","i":"3991","d":"E","e":"3006"},{"c":"8457103000","n":"其他铣床","i":"3992","d":"E","e":"3007"},{"c":"8457103000","n":"其他磨床","i":"3993","d":"E","e":"3008"},{"c":"8457103000","n":"其他加工中心","i":"3999","d":"E"},{"c":"8457109100","n":"符合《两用物项出口管制清单》2B201.a指标的车床","i":"3101","d":"E","m":"2B201.a"},{"c":"8457109100","n":"符合《两用物项出口管制清单》2B201.b指标的铣床","i":"3102","d":"E","m":"2B201.b"},{"c":"8457109100","n":"符合《两用物项出口管制清单》2B201.c指标的磨床","i":"3103","d":"E","m":"2B201.c"},{"c":"8457109100","n":"其他车床","i":"3991","d":"E","e":"3006"},{"c":"8457109100","n":"其他铣床","i":"3992","d":"E","e":"3007"},{"c":"8457109100","n":"其他磨床","i":"3993","d":"E","e":"3008"},{"c":"8457109100","n":"其他加工中心","i":"3999","d":"E"},{"c":"8457109900","n":"符合《两用物项出口管制清单》2B201.a指标的车床","i":"3101","d":"E","m":"2B201.a"},{"c":"8457109900","n":"符合《两用物项出口管制清单》2B201.b指标的铣床","i":"3102","d":"E","m":"2B201.b"},{"c":"8457109900","n":"符合《两用物项出口管制清单》2B201.c指标的磨床","i":"3103","d":"E","m":"2B201.c"},{"c":"8457109900","n":"其他车床","i":"3991","d":"E","e":"3006"},{"c":"8457109900","n":"其他铣床","i":"3992","d":"E","e":"3007"},{"c":"8457109900","n":"其他磨床","i":"3993","d":"E","e":"3008"},{"c":"8457109900","n":"其他加工中心","i":"3999","d":"E"},{"c":"8457200000","n":"符合《两用物项出口管制清单》2B201.a指标的车床","i":"3101","d":"E","m":"2B201.a"},{"c":"8457200000","n":"符合《两用物项出口管制清单》2B201.b指标的铣床","i":"3102","d":"E","m":"2B201.b"},{"c":"8457200000","n":"符合《两用物项出口管制清单》2B201.c指标的磨床","i":"3103","d":"E","m":"2B201.c"},{"c":"8457200000","n":"其他车床","i":"3991","d":"E","e":"3006"},{"c":"8457200000","n":"其他铣床","i":"3992","d":"E","e":"3007"},{"c":"8457200000","n":"其他磨床","i":"3993","d":"E","e":"3008"},{"c":"8457200000","n":"其他单工位组合机床","i":"3999","d":"E"},{"c":"8457300000","n":"符合《两用物项出口管制清单》2B201.a指标的车床","i":"3101","d":"E","m":"2B201.a"},{"c":"8457300000","n":"符合《两用物项出口管制清单》2B201.b指标的铣床","i":"3102","d":"E","m":"2B201.b"},{"c":"8457300000","n":"符合《两用物项出口管制清单》2B201.c指标的磨床","i":"3103","d":"E","m":"2B201.c"},{"c":"8457300000","n":"其他车床","i":"3991","d":"E","e":"3006"},{"c":"8457300000","n":"其他铣床","i":"3992","d":"E","e":"3007"},{"c":"8457300000","n":"其他磨床","i":"3993","d":"E","e":"3008"},{"c":"8457300000","n":"其他多工位组合机床","i":"3999","d":"E"},{"c":"8458110090","n":"符合《两用物项出口管制清单》2B201.a指标的车床","i":"3101","d":"E","m":"2B201.a"},{"c":"8458110090","n":"其他卧式数控车床","i":"3999","d":"E","e":"3006"},{"c":"8458190000","n":"符合《两用物项出口管制清单》2B201.a指标的车床","i":"3101","d":"E","m":"2B201.a"},{"c":"8458190000","n":"其他卧式车床","i":"3999","d":"E","e":"3006"},{"c":"8458911090","n":"符合《两用物项出口管制清单》2B201.a指标的车床","i":"3101","d":"E","m":"2B201.a"},{"c":"8458911090","n":"其他立式数控车床","i":"3991","d":"E","e":"3006"},{"c":"8458912090","n":"符合《两用物项出口管制清单》2B201.a指标的车床","i":"3101","d":"E","m":"2B201.a"},{"c":"8458912090","n":"其他数控车床","i":"3991","d":"E","e":"3006"},{"c":"8458990000","n":"符合《两用物项出口管制清单》2B201.a指标的车床","i":"3101","d":"E","m":"2B201.a"},{"c":"8458990000","n":"其他车床","i":"3991","d":"E","e":"3006"},{"c":"8459310000","n":"符合《两用物项出口管制清单》2B201.b指标的铣床","i":"3102","d":"E","m":"2B201.b"},{"c":"8459310000","n":"其他数控镗铣机床","i":"3992","d":"E","e":"3007"},{"c":"8459390000","n":"符合《两用物项出口管制清单》2B201.b指标的铣床","i":"3102","d":"E","m":"2B201.b"},{"c":"8459390000","n":"其他镗铣机床","i":"3992","d":"E","e":"3007"},{"c":"8459410000","n":"符合《两用物项出口管制清单》2B201.b指标的铣床","i":"3102","d":"E","m":"2B201.b"},{"c":"8459410000","n":"其他数控镗床","i":"3992","d":"E","e":"3007"},{"c":"8459490000","n":"符合《两用物项出口管制清单》2B201.b指标的铣床","i":"3102","d":"E","m":"2B201.b"},{"c":"8459490000","n":"其他镗床","i":"3992","d":"E","e":"3007"},{"c":"8459510000","n":"符合《两用物项出口管制清单》2B201.b指标的铣床","i":"3102","d":"E","m":"2B201.b"},{"c":"8459510000","n":"其他升降台式数控铣床","i":"3992","d":"E","e":"3007"},{"c":"8459590000","n":"符合《两用物项出口管制清单》2B201.b指标的铣床","i":"3102","d":"E","m":"2B201.b"},{"c":"8459590000","n":"其他升降台式铣床","i":"3992","d":"E","e":"3007"},{"c":"8459611000","n":"符合《两用物项出口管制清单》2B201.b指标的铣床","i":"3102","d":"E","m":"2B201.b"},{"c":"8459611000","n":"其他龙门数控铣床","i":"3992","d":"E","e":"3007"},{"c":"8459619000","n":"符合《两用物项出口管制清单》2B201.b指标的铣床","i":"3102","d":"E","m":"2B201.b"},{"c":"8459619000","n":"其他数控铣床","i":"3992","d":"E","e":"3007"},{"c":"8459691000","n":"符合《两用物项出口管制清单》2B201.b指标的铣床","i":"3102","d":"E","m":"2B201.b"},{"c":"8459691000","n":"其他龙门非数控铣床","i":"3992","d":"E","e":"3007"},{"c":"8459699000","n":"符合《两用物项出口管制清单》2B201.b指标的铣床","i":"3102","d":"E","m":"2B201.b"},{"c":"8459699000","n":"其他非数控铣床","i":"3992","d":"E","e":"3007"},{"c":"8459700000","n":"符合《两用物项出口管制清单》2B201.a指标的车床","i":"3101","d":"E","m":"2B201.a"},{"c":"8459700000","n":"符合《两用物项出口管制清单》2B201.b指标的铣床","i":"3102","d":"E","m":"2B201.b"},{"c":"8459700000","n":"符合《两用物项出口管制清单》2B201.c指标的磨床","i":"3103","d":"E","m":"2B201.c"},{"c":"8459700000","n":"其他车床","i":"3991","d":"E","e":"3006"},{"c":"8459700000","n":"其他铣床","i":"3992","d":"E","e":"3007"},{"c":"8459700000","n":"其他磨床","i":"3993","d":"E","e":"3008"},{"c":"8459700000","n":"其他攻丝机床","i":"3999","d":"E"},{"c":"8460121000","n":"符合《两用物项出口管制清单》2B201.c指标的磨床","i":"3103","d":"E","m":"2B201.c"},{"c":"8460121000","n":"其他数控平面磨床","i":"3993","d":"E","e":"3008"},{"c":"8460129000","n":"符合《两用物项出口管制清单》2B201.c指标的磨床","i":"3103","d":"E","m":"2B201.c"},{"c":"8460129000","n":"其他数控平面磨床","i":"3993","d":"E","e":"3008"},{"c":"8460191000","n":"符合《两用物项出口管制清单》2B201.c指标的磨床","i":"3103","d":"E","m":"2B201.c"},{"c":"8460191000","n":"其他非数控平面磨床","i":"3993","d":"E","e":"3008"},{"c":"8460199000","n":"符合《两用物项出口管制清单》2B201.c指标的磨床","i":"3103","d":"E","m":"2B201.c"},{"c":"8460199000","n":"其他非数控平面磨床","i":"3993","d":"E","e":"3008"},{"c":"8460221000","n":"符合《两用物项出口管制清单》2B201.c指标的磨床","i":"3103","d":"E","m":"2B201.c"},{"c":"8460221000","n":"其他数控无心磨床","i":"3993","d":"E","e":"3008"},{"c":"8460229000","n":"符合《两用物项出口管制清单》2B201.c指标的磨床","i":"3103","d":"E","m":"2B201.c"},{"c":"8460229000","n":"其他数控无心磨床","i":"3993","d":"E","e":"3008"},{"c":"8460231100","n":"符合《两用物项出口管制清单》2B201.c指标的磨床","i":"3103","d":"E","m":"2B201.c"},{"c":"8460231100","n":"其他数控曲轴磨床","i":"3993","d":"E","e":"3008"},{"c":"8460231900","n":"符合《两用物项出口管制清单》2B201.c指标的磨床","i":"3103","d":"E","m":"2B201.c"},{"c":"8460231900","n":"其他数控外圆磨床","i":"3993","d":"E","e":"3008"},{"c":"8460239000","n":"符合《两用物项出口管制清单》2B201.c指标的磨床","i":"3103","d":"E","m":"2B201.c"},{"c":"8460239000","n":"其他数控外圆磨床","i":"3993","d":"E","e":"3008"},{"c":"8460241100","n":"符合《两用物项出口管制清单》2B201.c指标的磨床","i":"3103","d":"E","m":"2B201.c"},{"c":"8460241100","n":"其他数控内圆磨床","i":"3993","d":"E","e":"3008"},{"c":"8460241900","n":"符合《两用物项出口管制清单》2B201.c指标的磨床","i":"3103","d":"E","m":"2B201.c"},{"c":"8460241900","n":"其他数控磨床","i":"3993","d":"E","e":"3008"},{"c":"8460249000","n":"符合《两用物项出口管制清单》2B201.c指标的磨床","i":"3103","d":"E","m":"2B201.c"},{"c":"8460249000","n":"其他数控磨床","i":"3993","d":"E","e":"3008"},{"c":"8460291100","n":"符合《两用物项出口管制清单》2B201.c指标的磨床","i":"3103","d":"E","m":"2B201.c"},{"c":"8460291100","n":"其他非数控外圆磨床","i":"3993","d":"E","e":"3008"},{"c":"8460291200","n":"符合《两用物项出口管制清单》2B201.c指标的磨床","i":"3103","d":"E","m":"2B201.c"},{"c":"8460291200","n":"其他非数控内圆磨床","i":"3993","d":"E","e":"3008"},{"c":"8460291300","n":"符合《两用物项出口管制清单》2B201.c指标的磨床","i":"3103","d":"E","m":"2B201.c"},{"c":"8460291300","n":"其他非数控轧辊磨床","i":"3993","d":"E","e":"3008"},{"c":"8460291900","n":"符合《两用物项出口管制清单》2B201.c指标的磨床","i":"3103","d":"E","m":"2B201.c"},{"c":"8460291900","n":"其他非数控磨床","i":"3993","d":"E","e":"3008"},{"c":"8460299000","n":"符合《两用物项出口管制清单》2B201.c指标的磨床","i":"3103","d":"E","m":"2B201.c"},{"c":"8460299000","n":"其他非数控磨床","i":"3993","d":"E","e":"3008"},{"c":"8460310000","n":"符合《两用物项出口管制清单》2B201.c指标的磨床","i":"3103","d":"E","m":"2B201.c"},{"c":"8460310000","n":"其他数控刃磨机床","i":"3993","d":"E","e":"3008"},{"c":"8460390000","n":"符合《两用物项出口管制清单》2B201.c指标的磨床","i":"3103","d":"E","m":"2B201.c"},{"c":"8460390000","n":"其他刃磨机床","i":"3993","d":"E","e":"3008"},{"c":"8460401000","n":"符合《两用物项出口管制清单》2B201.c指标的磨床","i":"3103","d":"E","m":"2B201.c"},{"c":"8460401000","n":"其他金属珩磨机床","i":"3993","d":"E","e":"3008"},{"c":"8460402000","n":"符合《两用物项出口管制清单》2B201.c指标的磨床","i":"3103","d":"E","m":"2B201.c"},{"c":"8460402000","n":"其他金属研磨机床","i":"3993","d":"E","e":"3008"},{"c":"8460901000","n":"符合《两用物项出口管制清单》2B201.c指标的磨床","i":"3103","d":"E","m":"2B201.c"},{"c":"8460901000","n":"其他砂轮机","i":"3993","d":"E","e":"3008"},{"c":"8460902000","n":"符合《两用物项出口管制清单》2B201.c指标的磨床","i":"3103","d":"E","m":"2B201.c"},{"c":"8460902000","n":"其他金属抛光机床","i":"3993","d":"E","e":"3008"},{"c":"8460909000","n":"符合《两用物项出口管制清单》2B201.c指标的磨床","i":"3103","d":"E","m":"2B201.c"},{"c":"8460909000","n":"其他用磨石、磨料加工金属的机床","i":"3993","d":"E","e":"3008"},{"c":"8501200090","n":"用于“无人驾驶航空器” 或“ 无人驾驶飞艇”的发动机：最大持续功率超过16 kW 的航空发动机","i":"3101","d":"E","m":"9A012.b.2"},{"c":"8501200090","n":"其他不涉及两用物项管制的，输出功率＞37.5w的交直流两用电动机","i":"3990","d":"E","e":"3002"},{"c":"8501320090","n":"用于“无人驾驶航空器” 或“ 无人驾驶飞艇”的发动机：最大持续功率超过16 kW 的航空发动机","i":"3101","d":"E","m":"9A012.b.2"},{"c":"8501320090","n":"其他不涉及两用物项管制的，750W<输出功率≤75KW的直流电动机、发电机","i":"3990","d":"E","e":"3002"},{"c":"8501330090","n":"用于“无人驾驶航空器” 或“ 无人驾驶飞艇”的发动机：最大持续功率超过16 kW 的航空发动机","i":"3101","d":"E","m":"9A012.b.2"},{"c":"8501330090","n":"其他不涉及两用物项管制的，75KW<输出功率≤375KW的直流电动机,发电机","i":"3990","d":"E","e":"3002"},{"c":"8501340090","n":"用于“无人驾驶航空器” 或“ 无人驾驶飞艇”的发动机：最大持续功率超过16 kW 的航空发动机","i":"3101","d":"E","m":"9A012.b.2"},{"c":"8501340090","n":"其他不涉及两用物项管制的，输出功率＞375KW的直流电动机、发电机","i":"3990","d":"E","e":"3002"},{"c":"8501400090","n":"用于“无人驾驶航空器” 或“ 无人驾驶飞艇”的发动机：最大持续功率超过16 kW 的航空发动机","i":"3101","d":"E","m":"9A012.b.2"},{"c":"8501400090","n":"其他不涉及两用物项管制的单相交流电动机","i":"3990","d":"E","e":"3002"},{"c":"8501520090","n":"用于“无人驾驶航空器” 或“ 无人驾驶飞艇”的发动机：最大持续功率超过16 kW 的航空发动机","i":"3101","d":"E","m":"9A012.b.2"},{"c":"8501520090","n":"其他不涉及两用物项管制的，750W<输出功率≤75KW的多相交流电动机","i":"3990","d":"E","e":"3002"},{"c":"8501530090","n":"用于“无人驾驶航空器” 或“ 无人驾驶飞艇”的发动机：最大持续功率超过16 kW 的航空发动机","i":"3101","d":"E","m":"9A012.b.2"},{"c":"8501530090","n":"其他不涉及两用物项管制的，功率＞75KW多相交流电动机","i":"3990","d":"E","e":"3002"},{"c":"8517629990","n":"专门用于出口管制码9A012.a.1 对应的无人驾驶航空器或无人驾驶飞艇，且具有以下任一特性的无线电通信设备：1.“无线电视距”传输距离大于50km;2.一站控多机能力大于10 架","i":"3101","d":"E","m":"9A012.e"},{"c":"8517629990","n":"其他不涉及两用物项管制的接收、转换并发送或再生音像或其他数据用的设备","i":"3990","d":"E","e":"3002"},{"c":"8517691099","n":"专门用于出口管制码9A012.a.1 对应的无人驾驶航空器或无人驾驶飞艇，且具有以下任一特性的无线电通信设备：1.“无线电视距”传输距离大于50km;2.一站控多机能力大于10 架","i":"3101","d":"E","m":"9A012.e"},{"c":"8517691099","n":"其他不涉及两用物项管制的无线通信设备","i":"3990","d":"E","e":"3002"},{"c":"8525891190","n":"具有以下两种特性的专用于出口管制码9A012.a项所管制的无人驾驶航空器或无人驾驶飞艇的红外成像设备：1.波长范围780～30000 nm；\n2.“瞬时视场角”（ IFOV ） 小于2.5mrad；","i":"3101","d":"E","m":"9A012.c.1"},{"c":"8525891190","n":"其他不涉及两用物项管制的特种用途电视摄像机","i":"3990","d":"E","e":"3002"},{"c":"8525892190","n":"具有以下两种特性的专用于出口管制码9A012.a项所管制的无人驾驶航空器或无人驾驶飞艇的红外成像设备：1.波长范围780～30000 nm；\n2.“瞬时视场角”（ IFOV ） 小于2.5mrad；","i":"3101","d":"E","m":"9A012.c.1"},{"c":"8525892190","n":"其他不涉及两用物项管制的特种用途数字照相机","i":"3990","d":"E","e":"3002"},{"c":"8525893190","n":"具有以下两种特性的专用于出口管制码9A012.a项所管制的无人驾驶航空器或无人驾驶飞艇的红外成像设备：1.波长范围780～30000 nm；\n2.“瞬时视场角”（ IFOV ） 小于2.5mrad；","i":"3101","d":"E","m":"9A012.c.1"},{"c":"8525893190","n":"其他不涉及两用物项管制的特种用途视频摄录一体机","i":"3990","d":"E","e":"3002"},{"c":"8526109019","n":"作用距离大于5 km且具有以下两种特性，专用于出口管制码9A012.a项所管制的无人驾驶航空器或无人驾驶飞艇的合成孔径雷达：1.“条带模式”分辨率优于0.3m；2.“聚束模式”分辨率优于0.1m","i":"3101","d":"E","m":"9A012.c.2"},{"c":"8526109019","n":"其他不涉及两用物项管制的飞机机载雷达","i":"3990","d":"E","e":"3002"},{"c":"8526109090","n":"作用距离大于5 km且具有以下两种特性，专用于出口管制码9A012.a项所管制的无人驾驶航空器或无人驾驶飞艇的合成孔径雷达：1.“条带模式”分辨率优于0.3m；2.“聚束模式”分辨率优于0.1m","i":"3101","d":"E","m":"9A012.c.2"},{"c":"8526109090","n":"其他不涉及两用物项管制的雷达设备","i":"3990","d":"E","e":"3002"},{"c":"8526920090","n":"专门用于出口管制码9A012.a.1 对应的无人驾驶航空器或无人驾驶飞艇，且具有以下任一特性的无线电通信设备：1.“无线电视距”传输距离大于50km;2.一站控多机能力大于10 架","i":"3101","d":"E","m":"9A012.e"},{"c":"8526920090","n":"其他不涉及两用物项管制的无线电遥控设备","i":"3990","d":"E","e":"3002"},{"c":"8543709990","n":"在-54～125℃的温度范围内连续工作;专门设计以符合加固设备的军用技术规范;专门设计或改进成军用，或设计成抗辐射的,且具备两用物项管制目录中列明特性的模/数转换器","i":"3101","d":"E","m":"3A101"},{"c":"8543709990","n":"能够测量不少于230 u 的离子、分辨率高于 2/230的质谱仪及其离子源(电感耦合等离子体质谱仪、辉光放电质谱仪、热电离质谱仪、电子轰击质谱仪或配备微量氟离子源的质谱仪）","i":"3102","d":"E","m":"3A233.d"},{"c":"8543709990","n":"具备两用物项管制目录中列明特性的密码机、密码卡","i":"3103","d":"E","m":"5A002.b"},{"c":"8543709990","n":"民用反无人驾驶航空器系统:干扰范围大于 5 km 的反无人机电子干扰设备","i":"3104","d":"E","m":"0A903.a"},{"c":"8543709990","n":"其他不涉及两用物项管制的，未列名的具有独立功能的电气设备及装置","i":"3990","d":"E","e":"3005"},{"c":"8801009010","n":"最大续航时间≥30 分钟<1h，以及在≥46.3 km/h（25节）的阵风特性下，具有起飞能力和稳定可控飞行能力的无人驾驶航空器或无人驾驶飞艇","i":"3101","d":"E","m":"9A012.a.1"},{"c":"8801009010","n":"最大续航时间≥1h的无人驾驶航空器或无人驾驶飞艇","i":"3102","d":"E","m":"9A012.a.2"},{"c":"8801009090","n":"操作人员自然视距以外可控飞行，最大续航时间≥30 分钟<1h，以及在≥46.3 km/h（25节）的阵风特性下，具有起飞能力和稳定可控飞行能力的无人驾驶航空器或无人驾驶飞艇","i":"3101","d":"E","m":"9A012.a.1"},{"c":"8801009090","n":"操作人员自然视距以外可控飞行，最大续航时间≥1h的无人驾驶航空器或无人驾驶飞艇","i":"3102","d":"E","m":"9A012.a.2"},{"c":"8801009090","n":"其他不涉及两用物项管制的气球、飞艇及无动力航空器","i":"3990","d":"E","e":"3001"},{"c":"8806229010","n":"操作人员自然视距以外可控飞行，最大续航时间≥30 分钟<1h，以及在≥46.3 km/h（25节）的阵风特性下，具有起飞能力和稳定可控飞行能力的无人驾驶航空器或无人驾驶飞艇","i":"3101","d":"E","m":"9A012.a.1"},{"c":"8806229010","n":"操作人员自然视距以外可控飞行，最大续航时间≥1h的无人驾驶航空器或无人驾驶飞艇","i":"3102","d":"E","m":"9A012.a.2"},{"c":"8806229090","n":"操作人员自然视距以外可控飞行，最大续航时间≥30 分钟<1h，以及在≥46.3 km/h（25节）的阵风特性下，具有起飞能力和稳定可控飞行能力的无人驾驶航空器或无人驾驶飞艇","i":"3101","d":"E","m":"9A012.a.1"},{"c":"8806229090","n":"操作人员自然视距以外可控飞行，最大续航时间≥1h的无人驾驶航空器或无人驾驶飞艇","i":"3102","d":"E","m":"9A012.a.2"},{"c":"8806229090","n":"其他不涉及两用物项管制的，仅使用遥控飞行的250g＜最大起飞重量≤7千克的无人驾驶航空器","i":"3990","d":"E","e":"3001"},{"c":"8806239010","n":"操作人员自然视距以外可控飞行，最大续航时间≥30 分钟<1h，以及在≥46.3 km/h（25节）的阵风特性下，具有起飞能力和稳定可控飞行能力的无人驾驶航空器或无人驾驶飞艇","i":"3101","d":"E","m":"9A012.a.1"},{"c":"8806239010","n":"操作人员自然视距以外可控飞行，最大续航时间≥1h的无人驾驶航空器或无人驾驶飞艇","i":"3102","d":"E","m":"9A012.a.2"},{"c":"8806239010","n":"射/航程≥300 km的无人驾驶航空器","i":"3103","d":"E","m":"9A501.a"},{"c":"8806239010","n":"具备自主飞行控制和导航能力的无人驾驶航空器,包含容量为20L以上的气雾剂布撒系统/装置","i":"3104","d":"E","m":"9A501.b.1"},{"c":"8806239010","n":"具备自主飞行控制和导航能力的无人驾驶航空器,经设计或改进后能够配备容量20L以上的气雾剂布撒系统/装置","i":"3105","d":"E","m":"9A501.b.2"},{"c":"8806239010","n":"具备操作员从视距外控制飞行能力的无人驾驶航空器,包含容量为20L以上的气雾剂布撒系统/装置","i":"3106","d":"E","m":"9A501.c.1"},{"c":"8806239010","n":"具备操作员从视距外控制飞行能力的无人驾驶航空器,经设计或改进后能够配备容量20L以上的气雾剂布撒系统/装置","i":"3107","d":"E","m":"9A501.c.2"},{"c":"8806239090","n":"操作人员自然视距以外可控飞行，最大续航时间≥30 分钟<1h，以及在≥46.3 km/h（25节）的阵风特性下，具有起飞能力和稳定可控飞行能力的无人驾驶航空器或无人驾驶飞艇","i":"3101","d":"E","m":"9A012.a.1"},{"c":"8806239090","n":"操作人员自然视距以外可控飞行，最大续航时间≥1h的无人驾驶航空器或无人驾驶飞艇","i":"3102","d":"E","m":"9A012.a.2"},{"c":"8806239090","n":"射/航程≥300 km的无人驾驶航空器","i":"3103","d":"E","m":"9A501.a"},{"c":"8806239090","n":"具备自主飞行控制和导航能力的无人驾驶航空器,包含容量为20L以上的气雾剂布撒系统/装置","i":"3104","d":"E","m":"9A501.b.1"},{"c":"8806239090","n":"具备自主飞行控制和导航能力的无人驾驶航空器,经设计或改进后能够配备容量20L以上的气雾剂布撒系统/装置","i":"3105","d":"E","m":"9A501.b.2"},{"c":"8806239090","n":"具备操作员从视距外控制飞行能力的无人驾驶航空器,包含容量为20L以上的气雾剂布撒系统/装置","i":"3106","d":"E","m":"9A501.c.1"},{"c":"8806239090","n":"具备操作员从视距外控制飞行能力的无人驾驶航空器,经设计或改进后能够配备容量20L以上的气雾剂布撒系统/装置","i":"3107","d":"E","m":"9A501.c.2"},{"c":"8806239090","n":"其他不涉及两用物项管制的，仅使用遥控飞行的7千克＜最大起飞重量≤25千克的无人驾驶航空器","i":"3990","d":"E","e":"3001"},{"c":"8806249010","n":"操作人员自然视距以外可控飞行，最大续航时间≥30 分钟<1h，以及在≥46.3 km/h（25节）的阵风特性下，具有起飞能力和稳定可控飞行能力的无人驾驶航空器或无人驾驶飞艇","i":"3101","d":"E","m":"9A012.a.1"},{"c":"8806249010","n":"操作人员自然视距以外可控飞行，最大续航时间≥1h的无人驾驶航空器或无人驾驶飞艇","i":"3102","d":"E","m":"9A012.a.2"},{"c":"8806249010","n":"射/航程≥300 km的无人驾驶航空器","i":"3103","d":"E","m":"9A501.a"},{"c":"8806249010","n":"具备自主飞行控制和导航能力的无人驾驶航空器,包含容量为20L以上的气雾剂布撒系统/装置","i":"3104","d":"E","m":"9A501.b.1"},{"c":"8806249010","n":"具备自主飞行控制和导航能力的无人驾驶航空器,经设计或改进后能够配备容量20L以上的气雾剂布撒系统/装置","i":"3105","d":"E","m":"9A501.b.2"},{"c":"8806249010","n":"具备操作员从视距外控制飞行能力的无人驾驶航空器,包含容量为20L以上的气雾剂布撒系统/装置","i":"3106","d":"E","m":"9A501.c.1"},{"c":"8806249010","n":"具备操作员从视距外控制飞行能力的无人驾驶航空器,经设计或改进后能够配备容量20L以上的气雾剂布撒系统/装置","i":"3107","d":"E","m":"9A501.c.2"},{"c":"8806249090","n":"操作人员自然视距以外可控飞行，最大续航时间≥30 分钟<1h，以及在≥46.3 km/h（25节）的阵风特性下，具有起飞能力和稳定可控飞行能力的无人驾驶航空器或无人驾驶飞艇","i":"3101","d":"E","m":"9A012.a.1"},{"c":"8806249090","n":"操作人员自然视距以外可控飞行，最大续航时间≥1h的无人驾驶航空器或无人驾驶飞艇","i":"3102","d":"E","m":"9A012.a.2"},{"c":"8806249090","n":"射/航程≥300 km的无人驾驶航空器","i":"3103","d":"E","m":"9A501.a"},{"c":"8806249090","n":"具备自主飞行控制和导航能力的无人驾驶航空器,包含容量为20L以上的气雾剂布撒系统/装置","i":"3104","d":"E","m":"9A501.b.1"},{"c":"8806249090","n":"具备自主飞行控制和导航能力的无人驾驶航空器,经设计或改进后能够配备容量20L以上的气雾剂布撒系统/装置","i":"3105","d":"E","m":"9A501.b.2"},{"c":"8806249090","n":"具备操作员从视距外控制飞行能力的无人驾驶航空器,包含容量为20L以上的气雾剂布撒系统/装置","i":"3106","d":"E","m":"9A501.c.1"},{"c":"8806249090","n":"具备操作员从视距外控制飞行能力的无人驾驶航空器,经设计或改进后能够配备容量20L以上的气雾剂布撒系统/装置","i":"3107","d":"E","m":"9A501.c.2"},{"c":"8806249090","n":"其他不涉及两用物项管制的，仅使用遥控飞行的7千克＜最大起飞重量≤25千克的无人驾驶航空器","i":"3990","d":"E","e":"3001"},{"c":"8806299010","n":"操作人员自然视距以外可控飞行，最大续航时间≥30 分钟<1h，以及在≥46.3 km/h（25节）的阵风特性下，具有起飞能力和稳定可控飞行能力的无人驾驶航空器或无人驾驶飞艇","i":"3101","d":"E","m":"9A012.a.1"},{"c":"8806299010","n":"操作人员自然视距以外可控飞行，最大续航时间≥1h的无人驾驶航空器或无人驾驶飞艇","i":"3102","d":"E","m":"9A012.a.2"},{"c":"8806299010","n":"射/航程≥300 km的无人驾驶航空器","i":"3103","d":"E","m":"9A501.a"},{"c":"8806299010","n":"具备自主飞行控制和导航能力的无人驾驶航空器,包含容量为20L以上的气雾剂布撒系统/装置","i":"3104","d":"E","m":"9A501.b.1"},{"c":"8806299010","n":"具备自主飞行控制和导航能力的无人驾驶航空器,经设计或改进后能够配备容量20L以上的气雾剂布撒系统/装置","i":"3105","d":"E","m":"9A501.b.2"},{"c":"8806299010","n":"具备操作员从视距外控制飞行能力的无人驾驶航空器,包含容量为20L以上的气雾剂布撒系统/装置","i":"3106","d":"E","m":"9A501.c.1"},{"c":"8806299010","n":"具备操作员从视距外控制飞行能力的无人驾驶航空器,经设计或改进后能够配备容量20L以上的气雾剂布撒系统/装置","i":"3107","d":"E","m":"9A501.c.2"},{"c":"8806299090","n":"操作人员自然视距以外可控飞行，最大续航时间≥30 分钟<1h，以及在≥46.3 km/h（25节）的阵风特性下，具有起飞能力和稳定可控飞行能力的无人驾驶航空器或无人驾驶飞艇","i":"3101","d":"E","m":"9A012.a.1"},{"c":"8806299090","n":"操作人员自然视距以外可控飞行，最大续航时间≥1h的无人驾驶航空器或无人驾驶飞艇","i":"3102","d":"E","m":"9A012.a.2"},{"c":"8806299090","n":"射/航程≥300 km的无人驾驶航空器","i":"3103","d":"E","m":"9A501.a"},{"c":"8806299090","n":"具备自主飞行控制和导航能力的无人驾驶航空器,包含容量为20L以上的气雾剂布撒系统/装置","i":"3104","d":"E","m":"9A501.b.1"},{"c":"8806299090","n":"具备自主飞行控制和导航能力的无人驾驶航空器,经设计或改进后能够配备容量20L以上的气雾剂布撒系统/装置","i":"3105","d":"E","m":"9A501.b.2"},{"c":"8806299090","n":"具备操作员从视距外控制飞行能力的无人驾驶航空器,包含容量为20L以上的气雾剂布撒系统/装置","i":"3106","d":"E","m":"9A501.c.1"},{"c":"8806299090","n":"具备操作员从视距外控制飞行能力的无人驾驶航空器,经设计或改进后能够配备容量20L以上的气雾剂布撒系统/装置","i":"3107","d":"E","m":"9A501.c.2"},{"c":"8806299090","n":"其他不涉及两用物项管制的，仅使用遥控飞行的7千克＜最大起飞重量≤25千克的无人驾驶航空器","i":"3990","d":"E","e":"3001"},{"c":"8806929010","n":"操作人员自然视距以外可控飞行，最大续航时间≥30 分钟<1h，以及在≥46.3 km/h（25节）的阵风特性下，具有起飞能力和稳定可控飞行能力的无人驾驶航空器或无人驾驶飞艇","i":"3101","d":"E","m":"9A012.a.1"},{"c":"8806929010","n":"操作人员自然视距以外可控飞行，最大续航时间≥1h的无人驾驶航空器或无人驾驶飞艇","i":"3102","d":"E","m":"9A012.a.2"},{"c":"8806929090","n":"操作人员自然视距以外可控飞行，最大续航时间≥30 分钟<1h，以及在≥46.3 km/h（25节）的阵风特性下，具有起飞能力和稳定可控飞行能力的无人驾驶航空器或无人驾驶飞艇","i":"3101","d":"E","m":"9A012.a.1"},{"c":"8806929090","n":"操作人员自然视距以外可控飞行，最大续航时间≥1h的无人驾驶航空器或无人驾驶飞艇","i":"3102","d":"E","m":"9A012.a.2"},{"c":"8806929090","n":"其他不涉及两用物项管制的，250g＜最大起飞重量≤7千克的无人驾驶航空器","i":"3990","d":"E","e":"3001"},{"c":"8806939010","n":"操作人员自然视距以外可控飞行，最大续航时间≥30 分钟<1h，以及在≥46.3 km/h（25节）的阵风特性下，具有起飞能力和稳定可控飞行能力的无人驾驶航空器或无人驾驶飞艇","i":"3101","d":"E","m":"9A012.a.1"},{"c":"8806939010","n":"操作人员自然视距以外可控飞行，最大续航时间≥1h的无人驾驶航空器或无人驾驶飞艇","i":"3102","d":"E","m":"9A012.a.2"},{"c":"8806939010","n":"射/航程≥300 km的无人驾驶航空器","i":"3103","d":"E","m":"9A501.a"},{"c":"8806939010","n":"具备自主飞行控制和导航能力的无人驾驶航空器,包含容量为20L以上的气雾剂布撒系统/装置","i":"3104","d":"E","m":"9A501.b.1"},{"c":"8806939010","n":"具备自主飞行控制和导航能力的无人驾驶航空器,经设计或改进后能够配备容量20L以上的气雾剂布撒系统/装置","i":"3105","d":"E","m":"9A501.b.2"},{"c":"8806939010","n":"具备操作员从视距外控制飞行能力的无人驾驶航空器,包含容量为20L以上的气雾剂布撒系统/装置","i":"3106","d":"E","m":"9A501.c.1"},{"c":"8806939010","n":"具备操作员从视距外控制飞行能力的无人驾驶航空器,经设计或改进后能够配备容量20L以上的气雾剂布撒系统/装置","i":"3107","d":"E","m":"9A501.c.2"},{"c":"8806939090","n":"操作人员自然视距以外可控飞行，最大续航时间≥30 分钟<1h，以及在≥46.3 km/h（25节）的阵风特性下，具有起飞能力和稳定可控飞行能力的无人驾驶航空器或无人驾驶飞艇","i":"3101","d":"E","m":"9A012.a.1"},{"c":"8806939090","n":"操作人员自然视距以外可控飞行，最大续航时间≥1h的无人驾驶航空器或无人驾驶飞艇","i":"3102","d":"E","m":"9A012.a.2"},{"c":"8806939090","n":"射/航程≥300 km的无人驾驶航空器","i":"3103","d":"E","m":"9A501.a"},{"c":"8806939090","n":"具备自主飞行控制和导航能力的无人驾驶航空器,包含容量为20L以上的气雾剂布撒系统/装置","i":"3104","d":"E","m":"9A501.b.1"},{"c":"8806939090","n":"具备自主飞行控制和导航能力的无人驾驶航空器,经设计或改进后能够配备容量20L以上的气雾剂布撒系统/装置","i":"3105","d":"E","m":"9A501.b.2"},{"c":"8806939090","n":"具备操作员从视距外控制飞行能力的无人驾驶航空器,包含容量为20L以上的气雾剂布撒系统/装置","i":"3106","d":"E","m":"9A501.c.1"},{"c":"8806939090","n":"具备操作员从视距外控制飞行能力的无人驾驶航空器,经设计或改进后能够配备容量20L以上的气雾剂布撒系统/装置","i":"3107","d":"E","m":"9A501.c.2"},{"c":"8806939090","n":"其他不涉及两用物项管制的，仅使用遥控飞行的7千克＜最大起飞重量≤25千克的无人驾驶航空器","i":"3990","d":"E","e":"3001"},{"c":"8806949010","n":"操作人员自然视距以外可控飞行，最大续航时间≥30 分钟<1h，以及在≥46.3 km/h（25节）的阵风特性下，具有起飞能力和稳定可控飞行能力的无人驾驶航空器或无人驾驶飞艇","i":"3101","d":"E","m":"9A012.a.1"},{"c":"8806949010","n":"操作人员自然视距以外可控飞行，最大续航时间≥1h的无人驾驶航空器或无人驾驶飞艇","i":"3102","d":"E","m":"9A012.a.2"},{"c":"8806949010","n":"射/航程≥300 km的无人驾驶航空器","i":"3103","d":"E","m":"9A501.a"},{"c":"8806949010","n":"具备自主飞行控制和导航能力的无人驾驶航空器,包含容量为20L以上的气雾剂布撒系统/装置","i":"3104","d":"E","m":"9A501.b.1"},{"c":"8806949010","n":"具备自主飞行控制和导航能力的无人驾驶航空器,经设计或改进后能够配备容量20L以上的气雾剂布撒系统/装置","i":"3105","d":"E","m":"9A501.b.2"},{"c":"8806949010","n":"具备操作员从视距外控制飞行能力的无人驾驶航空器,包含容量为20L以上的气雾剂布撒系统/装置","i":"3106","d":"E","m":"9A501.c.1"},{"c":"8806949010","n":"具备操作员从视距外控制飞行能力的无人驾驶航空器,经设计或改进后能够配备容量20L以上的气雾剂布撒系统/装置","i":"3107","d":"E","m":"9A501.c.2"},{"c":"8806949090","n":"操作人员自然视距以外可控飞行，最大续航时间≥30 分钟<1h，以及在≥46.3 km/h（25节）的阵风特性下，具有起飞能力和稳定可控飞行能力的无人驾驶航空器或无人驾驶飞艇","i":"3101","d":"E","m":"9A012.a.1"},{"c":"8806949090","n":"操作人员自然视距以外可控飞行，最大续航时间≥1h的无人驾驶航空器或无人驾驶飞艇","i":"3102","d":"E","m":"9A012.a.2"},{"c":"8806949090","n":"射/航程≥300 km的无人驾驶航空器","i":"3103","d":"E","m":"9A501.a"},{"c":"8806949090","n":"具备自主飞行控制和导航能力的无人驾驶航空器,包含容量为20L以上的气雾剂布撒系统/装置","i":"3104","d":"E","m":"9A501.b.1"},{"c":"8806949090","n":"具备自主飞行控制和导航能力的无人驾驶航空器,经设计或改进后能够配备容量20L以上的气雾剂布撒系统/装置","i":"3105","d":"E","m":"9A501.b.2"},{"c":"8806949090","n":"具备操作员从视距外控制飞行能力的无人驾驶航空器,包含容量为20L以上的气雾剂布撒系统/装置","i":"3106","d":"E","m":"9A501.c.1"},{"c":"8806949090","n":"具备操作员从视距外控制飞行能力的无人驾驶航空器,经设计或改进后能够配备容量20L以上的气雾剂布撒系统/装置","i":"3107","d":"E","m":"9A501.c.2"},{"c":"8806949090","n":"其他不涉及两用物项管制的，仅使用遥控飞行的7千克＜最大起飞重量≤25千克的无人驾驶航空器","i":"3990","d":"E","e":"3001"},{"c":"8806990010","n":"操作人员自然视距以外可控飞行，最大续航时间≥30 分钟<1h，以及在≥46.3 km/h（25节）的阵风特性下，具有起飞能力和稳定可控飞行能力的无人驾驶航空器或无人驾驶飞艇","i":"3101","d":"E","m":"9A012.a.1"},{"c":"8806990010","n":"操作人员自然视距以外可控飞行，最大续航时间≥1h的无人驾驶航空器或无人驾驶飞艇","i":"3102","d":"E","m":"9A012.a.2"},{"c":"8806990010","n":"射/航程≥300 km的无人驾驶航空器","i":"3103","d":"E","m":"9A501.a"},{"c":"8806990010","n":"具备自主飞行控制和导航能力的无人驾驶航空器,包含容量为20L以上的气雾剂布撒系统/装置","i":"3104","d":"E","m":"9A501.b.1"},{"c":"8806990010","n":"具备自主飞行控制和导航能力的无人驾驶航空器,经设计或改进后能够配备容量20L以上的气雾剂布撒系统/装置","i":"3105","d":"E","m":"9A501.b.2"},{"c":"8806990010","n":"具备操作员从视距外控制飞行能力的无人驾驶航空器,包含容量为20L以上的气雾剂布撒系统/装置","i":"3106","d":"E","m":"9A501.c.1"},{"c":"8806990010","n":"具备操作员从视距外控制飞行能力的无人驾驶航空器,经设计或改进后能够配备容量20L以上的气雾剂布撒系统/装置","i":"3107","d":"E","m":"9A501.c.2"},{"c":"8806990090","n":"操作人员自然视距以外可控飞行，最大续航时间≥30 分钟<1h，以及在≥46.3 km/h（25节）的阵风特性下，具有起飞能力和稳定可控飞行能力的无人驾驶航空器或无人驾驶飞艇","i":"3101","d":"E","m":"9A012.a.1"},{"c":"8806990090","n":"操作人员自然视距以外可控飞行，最大续航时间≥1h的无人驾驶航空器或无人驾驶飞艇","i":"3102","d":"E","m":"9A012.a.2"},{"c":"8806990090","n":"射/航程≥300 km的无人驾驶航空器","i":"3103","d":"E","m":"9A501.a"},{"c":"8806990090","n":"具备自主飞行控制和导航能力的无人驾驶航空器,包含容量为20L以上的气雾剂布撒系统/装置","i":"3104","d":"E","m":"9A501.b.1"},{"c":"8806990090","n":"具备自主飞行控制和导航能力的无人驾驶航空器,经设计或改进后能够配备容量20L以上的气雾剂布撒系统/装置","i":"3105","d":"E","m":"9A501.b.2"},{"c":"8806990090","n":"具备操作员从视距外控制飞行能力的无人驾驶航空器,包含容量为20L以上的气雾剂布撒系统/装置","i":"3106","d":"E","m":"9A501.c.1"},{"c":"8806990090","n":"具备操作员从视距外控制飞行能力的无人驾驶航空器,经设计或改进后能够配备容量20L以上的气雾剂布撒系统/装置","i":"3107","d":"E","m":"9A501.c.2"},{"c":"8806990090","n":"其他不涉及两用物项管制的，仅使用遥控飞行的7千克＜最大起飞重量≤25千克的无人驾驶航空器","i":"3990","d":"E","e":"3001"},{"c":"9013200093","n":"专门用于出口管制码9A012.a项所管制的“无人驾驶航空器”或“无人驾驶飞艇”的，可在高于55℃环境中稳定工作，且具有以下所有特性的“ 目标指示激光器”：\na．免温控型；\nb．能量大于80 mJ；\nc．稳定度优于15%；\nd．“光束发散角”小于0.3 mrad；","i":"3101","d":"E","m":"9A012.c.3"},{"c":"9013200093","n":"专门用于反无人驾驶航空器系统，输出功率大于 1.5 kW 的高功率激光器","i":"3102","d":"E","m":"0A903.b"},{"c":"9013200099","n":"为铀同位素分离专门设计或制造的激\n光器或激光系统","i":"3101","d":"E"},{"c":"9013200099","n":"具有以下两种特性的氩离子激光器:工作波长 400～515 nm;“平均输出功率”大于等于 40 W","i":"3102","d":"E","m":"6A205.b"},{"c":"9013200099","n":"具有以下所有特性的紫翠玉激光\n器：工作波长 720～800 nm;带宽大于等于 0.005 nm;重复率超过 125 Hz;“平均输出功率”超过 30 W","i":"3103","d":"E","m":"6A205.f"},{"c":"9013200099","n":"具有以下所有特性的脉冲二氧化碳\n激光器：工作波长 9000～11000 nm;重复率超过 250 Hz;“平均输出功率”超过 500 W;脉冲宽度小于 200 ns","i":"3104","d":"E","m":"6A205.g"},{"c":"9013200099","n":"具有以下所有特性的脉冲受激准分\n子激光器（氟化氙、氯化氙和氟化氪）:工作波长 240～360 nm;重复率超过 250 Hz;“平均输出功率”超过 500 W","i":"3105","d":"E","m":"6A205.h"},{"c":"9013200099","n":"具有以下两种特性的铜蒸气激光\n器:工作波长 500～600 nm;“平均输出功率”大于等于 30 W","i":"3106","d":"E","m":"6A205.a"},{"c":"9013200099","n":"具有以下任一特性，输出波长1000～1100nm的掺钕的激光器(非玻璃激光器):1.采用脉冲激发和Q-开关,脉冲宽度大于等于1ns，单横模平均输出功率>40 W或者多横模平均输出功率>50 W；2.倍频后，输出波长500～550 nm，倍频（新波长）平均输出功率超过 40W","i":"3107","d":"E","m":"6A205.c"},{"c":"9013200099","n":"专门用于出口管制码9A012.a项所管制的“无人驾驶航空器”或“无人驾驶飞艇”的，可在高于55℃环境中稳定工作，且具有以下所有特性的“ 目标指示激光器”：\na．免温控型；\nb．能量大于80 mJ；\nc．稳定度优于15%；\nd．“光束发散角”小于0.3 mrad；","i":"3108","d":"E","m":"9A012.c.3"},{"c":"9013200099","n":"专门用于反无人驾驶航空器系统，输出功率大于 1.5 kW 的高功率激光器","i":"3109","d":"E","m":"0A903.b"},{"c":"9013200099","n":"其他不涉及两用物项管制的激光器","i":"3990","d":"E","e":"3002"},{"c":"9014201090","n":"无人驾驶航空器的自动驾驶仪","i":"3101","d":"E","m":"7A102"},{"c":"9014201090","n":"其他不涉及两用物项管制的自动驾驶仪","i":"3990","d":"E","e":"3004"},{"c":"9014209090","n":"天文陀螺罗盘及其他利用天体或人造卫星进行导航的装置","i":"3101","d":"E","m":"7A104"},{"c":"9014209090","n":"制导、控制系统设备、部件：陀螺稳定平台","i":"3102","d":"E","m":"7A103.a"},{"c":"9014209090","n":"专用于出口管制码9A012.a对应的无人驾驶航空器或无人驾驶飞艇，具有以下所有特性的惯性测量设备:航向精度小于2°;姿态精度小于0.5°;分辨率小于0.1°","i":"3103","d":"E","m":"9A012.c.4"},{"c":"9014209090","n":"额定“漂移率”小于 0.5 º/h 的陀螺仪","i":"3104","d":"E","m":"7A102"},{"c":"9014209090","n":"专门设计的导航信息处理机","i":"3105","d":"E","m":"7A105"},{"c":"9014209090","n":"目标探测电子装置和部件：地形等高线绘制设备","i":"3106","d":"E","m":"6A108.b"},{"c":"9014209090","n":"场景绘图及相关设备（包括数字和模拟设备）","i":"3107","d":"E","m":"6A108.c"},{"c":"9014209090","n":"其他不涉及两用物项管制的航空或航天导航仪器及装置","i":"3990","d":"E","e":"3004"},{"c":"9014800010","n":"比例误差小于 0.25%的加速度计","i":"3101","d":"E","m":"7A101"},{"c":"9014800010","n":"用于目标探测的高度表(集成到民用飞机、通用航空器等民用航空器上的除外）","i":"3102","d":"E","m":"7A106"},{"c":"9014800090","n":"比例误差小于 0.25%的加速度计(集成到民用飞机、通用航空器等民用航空器上的除外）","i":"3101","d":"E","m":"7A101"},{"c":"9014800090","n":"用于目标探测的高度表(集成到民用飞机、通用航空器等民用航空器上的除外）","i":"3102","d":"E","m":"7A106"},{"c":"9014800090","n":"其他不涉及两用物项管制的导航仪器及装置","i":"3990","d":"E","e":"3004"}],"d":{"3001":{"c":"无人机、无人驾驶航空器","e":[{"n":0,"t":"是否能够在操作人员自然视距以外可控飞行；如是请填写最大续航时间；请填写在最大≥多少千米/小时的阵风条件下，具有起飞能力和稳定可控飞行能力"},{"n":1,"t":"是否为最大射/航程≥300KM的无人驾驶航空器，如是请填写具体射/航程"},{"n":2,"t":"是否具备自主飞行控制和导航能力；如是请填写是否包含或者经设计或改进后能够配备容量20L以上的气雾剂布撒系统/装置，并填写具体容量"},{"n":3,"t":"是否能够在操作人员自然视距以外可控飞行；如是请填写是否包含或者经设计或改进后能够配备容量20L以上的气雾剂布撒系统/装置，并填写具体容量"},{"n":4,"t":"是否属于或用于模型飞机或飞艇"},{"n":5,"t":"是否为其他物项，如是请填写申报货物的关键性能指标、用途等简要描述"}]},"3002":{"c":"无人机物项","e":[{"n":0,"t":"是否用于无人驾驶航空器或无人驾驶飞艇的发动机；如是请填写设计或改进后用于在最大多少m以上高空飞行的吸气活塞式或转子式内燃发动机；或者最大持续功率多少kW的航空发动机"},{"n":1,"t":"是否专门用于特定无人驾驶航空器或无人驾驶飞艇的红外成像设备；如是请填写波长范围多少nm；瞬时视场角（IFOV）为多少mrad（填报最小mrad值）"},{"n":2,"t":"是否专门用于特定无人驾驶航空器或无人驾驶飞艇的合成孔径雷达；如是请填写最大作用距离为多少km；条带模式分辨率多少m（填报最小分辨率）；聚束模式分辨率多少m（填报最小分辨率）。"},{"n":3,"t":"是否专用于特定无人驾驶航空器或无人驾驶飞艇的目标指示激光器;如是请填写最高可在多少℃环境稳定工作;是否属于免温控型;最大能量多少mJ;最高稳定度多少%;最小光束发散角多少mrad"},{"n":4,"t":"是否专门用于特定无人驾驶航空器或无人驾驶飞艇的惯性测量设备；如是请填写最小航向精度...°；最小姿态精度…°；最小分辨率……°"},{"n":5,"t":"是否为专门设计用于将有人飞行器、有人驾驶飞艇改装为《管制清单》9A012.a.1项所管制的“无人驾驶航空器”“无人驾驶飞艇”的设备或部件。"},{"n":6,"t":"是否专门用于特定无人驾驶航空器或无人驾驶飞艇的无线电通信设备；如是请填写无线电视距传输距离为……km（填报最大传输距离）；一站控多机能力最大……架（填报最大架数）。"},{"n":7,"t":"是否为其他物项，如是请填写申报货物的关键性能指标、用途等简要描述"}]},"3003":{"c":"无人机相关喷雾系统和组件","e":[{"n":0,"t":"是否专门设计或改进后可安装在轻于航空器的飞行器或“无人驾驶航空器”上的全套喷雾或雾化系统；是否能够将干粉颗粒以每分钟大于2L的流量播散为体积中值直径（VMD）小于50μm的初始液滴"},{"n":1,"t":"是否专门设计或改进后可安装在2B352.h.1项所管制飞行器上的气溶胶发生器喷头或多头喷雾组件；是否能够将干粉颗粒以每分钟大于2L 的流量播散为体积中值直径（VMD）小于 50 μm 的初始液滴。"},{"n":2,"t":"是否专门设计用于安装在符合2B352.h.1、2B352.h.2 项所述标准设备上的气溶胶发生器。"},{"n":3,"t":"是否为其他物项，如是请填写申报货物的关键性能指标、用途等简要描述"}]},"3004":{"c":"无人机相关电子设备和部件","e":[{"n":0,"t":"是否为加速度计，如是请填写最大比例误差"},{"n":1,"t":"是否为陀螺仪，如是请填写最大额定“漂移率”（º/h）"},{"n":2,"t":"是否为陀螺稳定平台。"},{"n":3,"t":"是否为“无人驾驶航空器”的自动驾驶仪。"},{"n":4,"t":"是否为天文陀螺罗盘及其他利用天体或人造卫星进行导航的装置。"},{"n":5,"t":"是否为专门设计的导航信息处理机。"},{"n":6,"t":"是否为用于目标探测的高度表。"},{"n":7,"t":"是否为其他物项，如是请填写申报货物的关键性能指标、用途等简要描述"}]},"3005":{"c":"反无人机系统","e":[{"n":0,"t":"是否为反无人驾驶航空器电子干扰设备，如是请填写最大干扰范围（km）"},{"n":1,"t":"是否为专门用于反无人驾驶航空器系统的高功率激光器，如是请填写输出功率"},{"n":2,"t":"是否为其他物项，如是请填写申报货物的关键性能指标、用途等简要描述"}]},"3006":{"c":"车床","e":[{"n":0,"t":"是否用于切削或切割金属、陶瓷或复合材料且可配备沿2个或多个轴同时成形控制电子装置的车床，如是填写加工件最大直径mm，填写采取补偿手段后沿任一直线坐标最小定位精度µm"},{"n":1,"t":"是否属于仅加工贯穿进给的棒料，棒料最大直径小于等于 42mm，并且无法安装卡盘能力的棒料车床"},{"n":2,"t":"是否可对直径小于 42 mm 的加工零件进行钻、铣加工"},{"n":3,"t":"是否属于仅限于加工齿轮、曲轴或凸轮轴、工具或刀具、挤压机螺杆等部件的专用机床"},{"n":4,"t":"是否为其他物项，如是请填写申报货物的关键性能指标、用途等简要描述"}]},"3007":{"c":"铣床","e":[{"n":0,"t":"是否用于切削或切割金属、陶瓷或复合材料且可配备沿2个或多个轴同时成形控制电子装置的铣床，如是填写定位精度在采取所有补偿手段后沿任一直线坐标可达到的最小值（µm）"},{"n":1,"t":"是否用于切削或切割金属、陶瓷或复合材料且可配备沿2个或多个轴同时成形控制电子装置的铣床，如是请填写有多少成形旋转轴"},{"n":2,"t":"是否用于切削或切割金属、陶瓷或复合材料且可配备沿2个或多个轴同时成形控制电子装置的铣床，如是请填写具有可以同时协调进行“成形控制”的多少个轴"},{"n":3,"t":"是否具有以下两种特性：X轴行程大于2m，同时沿X轴的总“定位精度”大于30µm，并请填写两者的具体指标"},{"n":4,"t":"是否属于仅限于加工齿轮、曲轴或凸轮轴、工具或刀具、挤压机螺杆等部件的专用机床"},{"n":5,"t":"是否为其他物项，如是请填写申报货物的关键性能指标、用途等简要描述"}]},"3008":{"c":"磨床","e":[{"n":0,"t":"是否用于切削或切割金属、陶瓷或复合材料且可配备沿2个或多个轴同时成形控制电子装置的磨床，如是填写定位精度在采取所有补偿手段后沿任一直线坐标可达到的最小值（µm）"},{"n":1,"t":"是否用于切削或切割金属、陶瓷或复合材料且可配备沿2个或多个轴同时成形控制电子装置的磨床，如是请填写有多少成形旋转轴"},{"n":2,"t":"是否用于切削或切割金属、陶瓷或复合材料且可配备沿2个或多个轴同时成形控制电子装置的磨床，如是请填写具有可以同时协调进行“成形控制”的多少个轴"},{"n":3,"t":"是否为具有以下特性的外圆、内圆和内-外圆磨床：限于加工最大外径或长度为150mm的工件，同时限于X Z和C轴。并请填写可加工的最大外径或长度为多少mm"},{"n":4,"t":"是否具有总定位精度”小于（优于）4µm的Z轴或W轴的坐标磨"},{"n":5,"t":"是否为其他物项，如是请填写申报货物的关键性能指标、用途等简要描述"}]},"9999":{"c":"其他","e":[{"n":0,"t":"请填写申报货物的关键性能指标、用途等简要描述"}]}}};
+
+// ============ 风险分级 ============
+function getRiskLevel(controlId, mofcomCode) {
+  // 31xx 系列(两用物项)+ 含商务部代码 = 高风险
+  if (mofcomCode || /^31\d{2}$/.test(controlId)) {
+    if (/^310[1-9]$/.test(controlId) || mofcomCode) return 'high';
+    return 'mid';
+  }
+  // 39xx 系列 = 中等
+  if (/^39\d{2}$/.test(controlId)) return 'low';
+  return 'low';
+}
+function getRiskLabel(level) {
+  return { high: '严格管控', mid: '加强审核', low: '常规申报' }[level] || '常规申报';
+}
+
+// ============ 搜索逻辑 ============
+const searchInput = document.getElementById('searchInput');
+const searchClear = document.getElementById('searchClear');
+const resultsArea = document.getElementById('resultsArea');
+const emptyState = document.getElementById('emptyState');
+
+let searchTimer = null;
+
+function doSearch(q) {
+  q = q.trim();
+  if (!q) {
+    resultsArea.innerHTML = '';
+    resultsArea.appendChild(emptyState);
+    emptyState.style.display = 'block';
+    return;
+  }
+
+  const qLower = q.toLowerCase();
+  const isCode = /^\d+$/.test(q);
+  const matches = [];
+
+  for (const item of HS_DATA.i) {
+    let matched = false;
+    let priority = 99;
+
+    if (isCode) {
+      // 数字: 编码前缀匹配
+      if (item.c.startsWith(q)) { matched = true; priority = item.c === q ? 0 : 1; }
+      else if (item.m && item.m.includes(q)) { matched = true; priority = 2; }
+    } else {
+      // 文字: 品名 + 商务部代码 + 类别名
+      if (item.n.toLowerCase().includes(qLower)) { matched = true; priority = 0; }
+      else if (item.m && item.m.toLowerCase().includes(qLower)) { matched = true; priority = 1; }
+      else if (item.e && HS_DATA.d[item.e] && HS_DATA.d[item.e].c.includes(q)) { matched = true; priority = 2; }
+    }
+
+    if (matched) {
+      matches.push({ item, priority });
+    }
+  }
+
+  matches.sort((a, b) => a.priority - b.priority);
+  renderResults(matches.slice(0, 100), q, matches.length);
+}
+
+function renderResults(items, query, total) {
+  if (items.length === 0) {
+    resultsArea.innerHTML = `
+      <div class="empty-state">
+        <div class="empty-state-icon">🎯</div>
+        <h3>未在禁限管制清单中找到 "${escapeHtml(query)}"</h3>
+        <p>这通常意味着该商品<strong style="color:var(--risk-safe)">不在海关重点管控范围内</strong>,可按常规商品申报</p>
+        <p style="margin-top:12px">如需进一步确认,请联系保凯达客服或访问海关官网</p>
+      </div>
+    `;
+    return;
+  }
+
+  let html = `
+    <div class="results-meta">
+      <div>共找到 <strong>${total}</strong> 条匹配结果${total > 100 ? `,显示前 100 条(请缩小搜索范围)` : ''}</div>
+      <div style="font-size:12px;color:var(--text-muted)">点击条目查看申报要素 · 点击"生成方案"获取 AI 物流建议</div>
+    </div>
+  `;
+
+  for (const { item } of items) {
+    const risk = getRiskLevel(item.i, item.m);
+    const riskLabel = getRiskLabel(risk);
+    const direction = item.d === 'E' ? '出口' : item.d === 'I' ? '进口' : item.d;
+
+    html += `
+      <div class="result-item" data-code="${item.c}">
+        <div class="result-header" onclick="toggleDetail(this)">
+          <div class="result-code">${item.c}</div>
+          <div class="result-body">
+            <div class="result-name">${highlightMatch(escapeHtml(item.n), query)}</div>
+            <div class="result-tags">
+              <span class="tag tag-risk-${risk}">● ${riskLabel}</span>
+              <span class="tag tag-direction">${direction}向 · 识别码 ${item.i}</span>
+              ${item.m ? `<span class="tag tag-mofcom">商务部 ${escapeHtml(item.m)}</span>` : ''}
+              ${item.e && HS_DATA.d[item.e] ? `<span class="tag tag-direction">${escapeHtml(HS_DATA.d[item.e].c)}</span>` : ''}
+            </div>
+          </div>
+          <button class="result-action gold" onclick="event.stopPropagation(); generatePlan('${item.c}', ${HS_DATA.i.indexOf(item)})">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>
+            生成方案
+          </button>
+        </div>
+        <div class="result-detail">
+          ${renderDetail(item)}
+        </div>
+      </div>
+    `;
+  }
+
+  resultsArea.innerHTML = html;
+}
+
+function renderDetail(item) {
+  const elements = item.e && HS_DATA.d[item.e] ? HS_DATA.d[item.e].e : null;
+  let html = `
+    <div class="detail-section">
+      <div class="detail-label">完整描述</div>
+      <div class="detail-content">${escapeHtml(item.n)}</div>
+    </div>
+  `;
+  if (item.m) {
+    html += `
+      <div class="detail-section">
+        <div class="detail-label">商务部管制代码</div>
+        <div class="detail-content"><strong>${escapeHtml(item.m)}</strong> — 涉及两用物项管制,通常需要办理出口许可证</div>
+      </div>
+    `;
+  }
+  if (elements && elements.length) {
+    html += `
+      <div class="detail-section">
+        <div class="detail-label">规范申报要素 (${HS_DATA.d[item.e].c})</div>
+        <div class="detail-content"><ol>
+          ${elements.map(el => `<li>${escapeHtml(el.t)}</li>`).join('')}
+        </ol></div>
+      </div>
+    `;
+  }
+  return html;
+}
+
+function highlightMatch(text, query) {
+  if (!query) return text;
+  const re = new RegExp(escapeRegExp(query), 'gi');
+  return text.replace(re, m => `<mark style="background:#fff3cd;color:#7a5a1a;padding:0 2px;border-radius:2px">${m}</mark>`);
+}
+function escapeRegExp(s) { return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); }
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+function toggleDetail(headerEl) {
+  const detail = headerEl.nextElementSibling;
+  detail.classList.toggle('open');
+}
+
+searchInput.addEventListener('input', e => {
+  const v = e.target.value;
+  searchClear.classList.toggle('visible', v.length > 0);
+  clearTimeout(searchTimer);
+  searchTimer = setTimeout(() => doSearch(v), 200);
+});
+searchClear.addEventListener('click', () => {
+  searchInput.value = '';
+  searchClear.classList.remove('visible');
+  doSearch('');
+  searchInput.focus();
+});
+document.querySelectorAll('.quick-tag').forEach(tag => {
+  tag.addEventListener('click', () => {
+    searchInput.value = tag.dataset.q;
+    searchClear.classList.add('visible');
+    doSearch(tag.dataset.q);
+    searchInput.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  });
+});
+
+// ============ AI 方案生成 ============
+const planModal = document.getElementById('planModal');
+const modalContent = document.getElementById('modalContent');
+const modalClose = document.getElementById('modalClose');
+const btnDownload = document.getElementById('btnDownload');
+
+modalClose.addEventListener('click', () => planModal.classList.remove('active'));
+planModal.addEventListener('click', e => {
+  if (e.target === planModal) planModal.classList.remove('active');
+});
+
+// 端口数据(预设,可手动调整)
+const PORT_DATA = [
+  { code: 'PVG', name: '上海浦东国际机场', score: 3, rate: '12% ~ 18%', strict: '中等', trend: '↗ 略有上升', note: '涉及E类及敏感商品查验增强' },
+  { code: 'SHA', name: '上海外港海运口岸', score: 4, rate: '8% ~ 12%', strict: '中等偏低', trend: '→ 整体平稳', note: '海运相对稳定' },
+  { code: 'NGB', name: '宁波舟山港', score: 3, rate: '10% ~ 15%', strict: '中等', trend: '→ 整体平稳', note: '适合大宗货物' },
+  { code: 'SZX', name: '深圳宝安国际机场', score: 3, rate: '15% ~ 22%', strict: '中等偏高', trend: '↗ 小幅上升', note: '查验较严' }
+];
+
+let currentPlanItem = null;
+
+async function generatePlan(code, idx) {
+  const item = HS_DATA.i[idx];
+  currentPlanItem = item;
+
+  planModal.classList.add('active');
+  btnDownload.disabled = true;
+
+  // 显示加载状态
+  modalContent.innerHTML = `
+    <div class="loading-state">
+      <div class="loading-spinner"></div>
+      <h3>正在为 ${code} 生成专属物流方案</h3>
+      <p>AI 分析海关清单数据 + 口岸通关情况 + 专业建议</p>
+      <ul class="loading-progress">
+        <li class="active" id="step1">解析 HS 编码与申报要素</li>
+        <li id="step2">分析风险等级与监管要求</li>
+        <li id="step3">匹配口岸通关数据</li>
+        <li id="step4">生成 AI 物流建议</li>
+      </ul>
+    </div>
+  `;
+
+  // 模拟进度(实际AI调用会替换这里)
+  await sleep(400);
+  document.getElementById('step1').classList.remove('active');
+  document.getElementById('step1').classList.add('done');
+  document.getElementById('step2').classList.add('active');
+
+  await sleep(500);
+  document.getElementById('step2').classList.remove('active');
+  document.getElementById('step2').classList.add('done');
+  document.getElementById('step3').classList.add('active');
+
+  await sleep(400);
+  document.getElementById('step3').classList.remove('active');
+  document.getElementById('step3').classList.add('done');
+  document.getElementById('step4').classList.add('active');
+
+  // 调用 AI Worker(若失败回落到模板)
+  let aiSuggestions = null;
+  try {
+    aiSuggestions = await callAIWorker(item);
+  } catch (e) {
+    console.warn('AI 调用失败,使用模板方案:', e);
+  }
+
+  await sleep(300);
+  renderPlan(item, aiSuggestions);
+  btnDownload.disabled = false;
+}
+
+function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+async function callAIWorker(item) {
+  // TODO: 替换为实际的 Cloudflare Worker URL
+  const WORKER_URL = 'https://bkd-ai-suggest.bkd-666.workers.dev';
+
+  const ctrl = new AbortController();
+  setTimeout(() => ctrl.abort(), 12000); // 12秒超时
+
+  const resp = await fetch(WORKER_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      code: item.c,
+      name: item.n,
+      controlId: item.i,
+      mofcomCode: item.m || '',
+      direction: item.d,
+      declareCategory: item.e ? HS_DATA.d[item.e]?.c : ''
+    }),
+    signal: ctrl.signal
+  });
+  if (!resp.ok) throw new Error('Worker error: ' + resp.status);
+  return await resp.json();
+}
+
+function renderPlan(item, ai) {
+  const risk = getRiskLevel(item.i, item.m);
+  const riskLabel = getRiskLabel(risk);
+  const direction = item.d === 'E' ? '出口' : '进口';
+  const today = new Date().toISOString().slice(0, 10);
+  const elements = item.e && HS_DATA.d[item.e] ? HS_DATA.d[item.e] : null;
+
+  // AI 内容回落到模板
+  const tips = ai?.complianceTips || [
+    '确认产品技术参数与申报一致(功率、电压、频率等)',
+    '准备完整资料:合同、发票、装箱单、产品说明书',
+    item.m ? `涉及商务部代码 ${item.m},确保出口许可证及时办理` : '关注监管要求,提前准备相关资质文件',
+    '关注不同口岸查验趋势,合理安排出货计划'
+  ];
+  const backups = ai?.backupPlans || [
+    '可考虑更换至其他主流快递 / 空运 / 海运渠道',
+    '如查验变严,可提前准备完整资料或考虑降查验风险方案',
+    '多一个备用方案,提升供应链灵活性'
+  ];
+  const focusPoints = ai?.officialFocus || [
+    `产品是否涉及${getProductFeatures(item.n)}等技术特征`,
+    '用途说明是否清晰,是否涉及敏感行业或功能'
+  ];
+  const logisticsNote = ai?.logisticsNote || '国际物流审查趋严,部分渠道对该类产品加强内部审核,可能出现暂扣、要求补充资料等情况。';
+  const summary = ai?.summary || `${getCategoryShort(item.c)}申报需注意产品用途与技术参数,提前准备合规资料,有助于降低查验及延误风险。`;
+
+  modalContent.innerHTML = `
+    <div class="plan-canvas" id="planCanvas">
+      <div class="plan-header">
+        <div class="plan-logo">
+          <div class="plan-logo-mark">BK</div>
+          <div class="plan-logo-text">
+            BKDLL
+            <small>INTERNATIONAL LOGISTICS</small>
+          </div>
+        </div>
+        <div class="plan-title">HS ${item.c.slice(0,4)} 申报建议与口岸情况参考</div>
+        <div class="plan-date">查询日期 ${today}</div>
+      </div>
+
+      <div class="plan-grid">
+        <div class="plan-section">
+          <div class="plan-section-title"><span class="plan-section-num">1</span>HS CODE 基础归类参考</div>
+          <table class="plan-table">
+            <tr><td>HS CODE</td><td><strong>${item.c}</strong></td></tr>
+            <tr><td>归类描述</td><td>${escapeHtml(item.n.length > 80 ? item.n.slice(0, 80) + '...' : item.n)}</td></tr>
+            <tr><td>识别码</td><td>${item.i} (${riskLabel})</td></tr>
+            ${item.m ? `<tr><td>商务部代码</td><td><strong style="color:var(--risk-high)">${escapeHtml(item.m)}</strong></td></tr>` : ''}
+            <tr><td>进出口方向</td><td>${direction}</td></tr>
+            <tr><td>监管条件</td><td>${item.m ? 'O(出口许可证)+ 申报要素' : '需规范申报相关要素'}</td></tr>
+          </table>
+        </div>
+
+        <div class="plan-section">
+          <div class="plan-section-title"><span class="plan-section-num">2</span>官方物流环境提醒</div>
+          <div style="font-size:12px;line-height:1.7;color:var(--text-secondary);margin-bottom:10px">
+            <strong style="color:var(--brand-deep);display:block;margin-bottom:4px">物流渠道动态</strong>
+            ${escapeHtml(logisticsNote)}
+          </div>
+          <div style="font-size:12px;line-height:1.7;color:var(--text-secondary);margin-bottom:10px">
+            <strong style="color:var(--brand-deep);display:block;margin-bottom:4px">官方重点关注点</strong>
+            <ul class="plan-tip-list plan-info-list">
+              ${focusPoints.map(p => `<li>${escapeHtml(p)}</li>`).join('')}
+            </ul>
+          </div>
+          <div style="font-size:12px;line-height:1.7;color:var(--text-secondary)">
+            <strong style="color:var(--brand-deep);display:block;margin-bottom:4px">官方建议</strong>
+            ${escapeHtml(summary)}
+          </div>
+        </div>
+
+        <div class="plan-section plan-section-full">
+          <div class="plan-section-title"><span class="plan-section-num">3</span>主要口岸通关情况参考(${today.slice(0,7)} 最新)</div>
+          <table class="plan-port-table">
+            <thead><tr>
+              <th>口岸代码</th><th>口岸名称</th><th>通关效率</th><th>查验率(参考)</th><th>查验严格度</th><th>近期趋势</th><th>备注</th>
+            </tr></thead>
+            <tbody>
+              ${PORT_DATA.map(p => `
+                <tr>
+                  <td><strong>${p.code}</strong></td>
+                  <td>${p.name}</td>
+                  <td>${'★'.repeat(p.score)}${'☆'.repeat(5-p.score)}</td>
+                  <td>${p.rate}</td>
+                  <td>${p.strict}</td>
+                  <td>${p.trend}</td>
+                  <td style="color:var(--text-secondary)">${p.note}</td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+          <div style="margin-top:8px;font-size:10px;color:var(--text-muted)">* 数据来源:行业公开信息,仅供参考</div>
+        </div>
+
+        <div class="plan-section">
+          <div class="plan-section-title"><span class="plan-section-num">4</span>合规建议</div>
+          <ul class="plan-tip-list">
+            ${tips.map(t => `<li>${escapeHtml(t)}</li>`).join('')}
+          </ul>
+        </div>
+
+        <div class="plan-section">
+          <div class="plan-section-title"><span class="plan-section-num">5</span>备用方案建议</div>
+          <ul class="plan-tip-list plan-info-list">
+            ${backups.map(b => `<li>${escapeHtml(b)}</li>`).join('')}
+          </ul>
+        </div>
+      </div>
+
+      <div class="plan-disclaimer">
+        <strong>免责声明:</strong>本方案基于海关公开数据(版本 20260418)及历史经验生成,仅供物流参考。具体商品归类、申报要素、查验情况以海关现场为准。如需专业报关服务,请联系保凯达·霖霖国际物流。
+      </div>
+
+      <div class="plan-footer">
+        <span>保凯达·霖霖国际物流 · 申报合规中心</span>
+        <span class="plan-footer-brand">专业 · 合规 · 高效 · 可靠</span>
+      </div>
+    </div>
+  `;
+}
+
+function getProductFeatures(name) {
+  const features = [];
+  if (/无人|UAV|drone/i.test(name)) features.push('无人驾驶');
+  if (/加密|cryptograph/i.test(name)) features.push('加密技术');
+  if (/激光|laser/i.test(name)) features.push('激光技术');
+  if (/高功率|high.?power|>.?\d+.?kW/i.test(name)) features.push('高功率');
+  if (/伺服|servo/i.test(name)) features.push('伺服控制');
+  if (/变频|inverter|VFD/i.test(name)) features.push('变频驱动');
+  return features.length ? features.join('、') : '高功率、变频、伺服、电机驱动';
+}
+
+function getCategoryShort(code) {
+  const prefix = code.slice(0, 4);
+  const map = {
+    '8407': '内燃机', '8411': '涡轮发动机', '8412': '其他发动机',
+    '8457': '加工中心', '8458': '车床', '8459': '钻床',
+    '8460': '磨床', '8501': '电动机及发电机', '8517': '通信设备',
+    '8525': '雷达发射设备', '8526': '雷达接收设备', '8543': '电气机械',
+    '8801': '气球及飞艇', '8806': '无人驾驶航空器',
+    '9013': '激光器', '9014': '导航仪器'
+  };
+  return map[prefix] || `${prefix} 类商品`;
+}
+
+// ============ 下载 PNG ============
+btnDownload.addEventListener('click', async () => {
+  const canvas = document.getElementById('planCanvas');
+  if (!canvas) return;
+  btnDownload.disabled = true;
+  btnDownload.innerHTML = '生成图片中...';
+  try {
+    const c = await html2canvas(canvas, {
+      scale: 2,
+      backgroundColor: '#ffffff',
+      useCORS: true,
+      logging: false
+    });
+    const link = document.createElement('a');
+    link.download = `BKDLL_物流方案_${currentPlanItem.c}_${new Date().toISOString().slice(0,10)}.png`;
+    link.href = c.toDataURL('image/png');
+    link.click();
+  } catch (e) {
+    alert('图片生成失败,请稍后重试: ' + e.message);
+  } finally {
+    btnDownload.disabled = false;
+    btnDownload.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg> 下载方案图`;
+  }
+});
+
+// 初始化
+console.log(`HS Code 数据加载完成: ${HS_DATA.i.length} 条 (版本 ${HS_DATA.v})`);
+</script>
+
+</body>
+</html>
