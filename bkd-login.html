@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>BKD 保凯达 | 客户登录</title>
+<style>
+:root{--navy:#0a1628;--blue:#1a56db;--teal:#0d9488;}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:system-ui,-apple-system,sans-serif;background:var(--navy);min-height:100vh;display:flex;align-items:center;justify-content:center;}
+.box{background:#111f3a;border:1px solid #1e3a5f;border-radius:16px;padding:40px 36px;width:min(92vw,380px);}
+.logo-wrap{text-align:center;margin-bottom:28px;}
+.logo-wrap img{height:48px;border-radius:8px;}
+.logo-wrap h1{color:#fff;font-size:18px;font-weight:700;margin-top:12px;}
+.logo-wrap p{color:#64748b;font-size:12px;margin-top:4px;}
+.field{margin-bottom:14px;}
+.field label{display:block;font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.05em;margin-bottom:5px;}
+.field input{width:100%;padding:11px 14px;background:#0d1e38;border:1.5px solid #1e3a5f;border-radius:9px;color:#fff;font-size:14px;outline:none;font-family:inherit;}
+.field input:focus{border-color:var(--blue);}
+.field input::placeholder{color:#475569;}
+.btn{width:100%;padding:12px;background:linear-gradient(135deg,var(--blue),#1d4ed8);color:#fff;border:none;border-radius:9px;font-size:14px;font-weight:700;cursor:pointer;margin-top:4px;}
+.btn:hover{opacity:.9;}
+.btn:disabled{opacity:.55;cursor:not-allowed;}
+.err{color:#f87171;font-size:12px;margin-top:8px;text-align:center;display:none;}
+.ok{color:#86efac;font-size:12px;margin-top:8px;text-align:center;display:none;}
+.forgot{text-align:center;margin-top:14px;}
+.forgot a{color:#64748b;font-size:12px;cursor:pointer;}
+.forgot a:hover{color:var(--blue);}
+.contact-note{text-align:center;margin-top:22px;padding-top:18px;border-top:1px solid #1e3a5f;color:#475569;font-size:12px;line-height:1.6;}
+.contact-note strong{color:#94a3b8;}
+</style>
+</head>
+<body>
+<div class="box">
+  <div class="logo-wrap">
+    <img src="logo.png" onerror="this.style.display='none'">
+    <h1>保凯达·霖霖 国际物流</h1>
+    <p>客户门户 Customer Portal</p>
+  </div>
+
+  <div id="loginForm">
+    <div class="field">
+      <label>邮箱</label>
+      <input type="email" id="loginEmail" placeholder="your@email.com" autocomplete="email">
+    </div>
+    <div class="field">
+      <label>密码</label>
+      <input type="password" id="loginPass" placeholder="••••••••" autocomplete="current-password">
+    </div>
+    <button class="btn" id="loginBtn">登 录</button>
+    <div class="err" id="loginErr"></div>
+    <div class="forgot"><a onclick="showReset()">忘记密码？</a></div>
+
+    <div class="contact-note">
+      <strong>账号开通</strong><br>
+      如需开通账号，请联系您的对接客服
+    </div>
+  </div>
+
+  <div id="resetForm" style="display:none;">
+    <div class="field">
+      <label>注册邮箱</label>
+      <input type="email" id="resetEmail" placeholder="your@email.com">
+    </div>
+    <button class="btn" id="resetBtn">发送重置邮件</button>
+    <div class="err" id="resetErr"></div>
+    <div class="ok" id="resetOk"></div>
+    <div class="forgot"><a onclick="backToLogin()">← 返回登录</a></div>
+  </div>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getAuth, signInWithEmailAndPassword, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+
+const app = initializeApp({
+  apiKey: "AIzaSyA71fC4aW55bUx2UyLONCOJq27IC4OxGEs",
+  authDomain: "bkdll-8323a.firebaseapp.com",
+  projectId: "bkdll-8323a"
+});
+const auth = getAuth(app);
+
+function G(id){ return document.getElementById(id); }
+
+window.showReset = function(){
+  G('loginForm').style.display='none';
+  G('resetForm').style.display='block';
+};
+window.backToLogin = function(){
+  G('resetForm').style.display='none';
+  G('loginForm').style.display='block';
+};
+
+// 登录 — 登录成功跳转到 Dashboard
+G('loginBtn').addEventListener('click', async ()=>{
+  var email = G('loginEmail').value.trim();
+  var pass = G('loginPass').value;
+  if(!email||!pass){ showErr('loginErr','请填写邮箱和密码'); return; }
+  G('loginBtn').disabled=true; G('loginBtn').textContent='登录中…';
+  try {
+    await signInWithEmailAndPassword(auth, email, pass);
+    window.location.href = 'bkd-dashboard.html';
+  } catch(e){
+    var msg = e.code==='auth/wrong-password'||e.code==='auth/invalid-credential' ? '邮箱或密码错误' : e.code==='auth/user-not-found' ? '邮箱或密码错误' : e.message;
+    showErr('loginErr', msg);
+  }
+  G('loginBtn').disabled=false; G('loginBtn').textContent='登 录';
+});
+G('loginPass').addEventListener('keydown', e=>{ if(e.key==='Enter') G('loginBtn').click(); });
+
+// 重置密码
+G('resetBtn').addEventListener('click', async ()=>{
+  var email = G('resetEmail').value.trim();
+  if(!email){ showErr('resetErr','请填写邮箱'); return; }
+  G('resetBtn').disabled=true; G('resetBtn').textContent='发送中…';
+  try {
+    await sendPasswordResetEmail(auth, email);
+    G('resetErr').style.display='none';
+    G('resetOk').textContent='重置邮件已发送，请查收邮箱';
+    G('resetOk').style.display='block';
+  } catch(e){
+    G('resetErr').style.display='none';
+    G('resetOk').textContent='如该邮箱已注册，重置邮件已发出，请查收';
+    G('resetOk').style.display='block';
+  }
+  G('resetBtn').disabled=false; G('resetBtn').textContent='发送重置邮件';
+});
+G('resetEmail').addEventListener('keydown', e=>{ if(e.key==='Enter') G('resetBtn').click(); });
+
+function showErr(id, msg){
+  var el = G(id);
+  el.textContent = msg;
+  el.style.display = 'block';
+  setTimeout(()=>el.style.display='none', 4000);
+}
+</script>
+</body>
+</html>
