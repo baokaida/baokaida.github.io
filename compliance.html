@@ -3,34 +3,44 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>HS Code 合规查询 - 保凯达·霖霖国际物流</title>
-<meta name="description" content="HS Code 合规查询 · 海关禁限管制清单 · 商务部两用物项官方定义 - BKDLL 保凯达国际物流">
+<title>HS Code 合规查询 - BKDLL 香港国际物流</title>
+<meta name="description" content="HS Code 合规查询 · 海关禁限管制清单 · 商务部两用物项官方定义 - BKDLL 香港国际物流">
 <link rel="icon" type="image/png" href="logo.png">
 <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
 <style>
   :root {
-    --brand-deep: #0F2C5C;
-    --brand-deep-light: #1a3d75;
-    --brand-gold: #C9A24A;
-    --brand-gold-light: #d8b86a;
-    --bg-page: #f5f7fb;
-    --bg-card: #ffffff;
-    --text-primary: #0F2C5C;
-    --text-secondary: #4a5878;
-    --text-muted: #8a94a8;
-    --border: #e1e6ef;
-    --border-strong: #c8d0dd;
+    /* 主站统一蓝色板 (B套) */
+    --white:#FFFFFF;--bg:#F5F9FF;--sky:#EAF4FE;--sky2:#D4EBFD;
+    --blue:#0A6EBD;--blue2:#0D85E0;--blue3:#1BA3F5;
+    --navy:#0D2D4A;--navy2:#163A5C;
+    --text-default:#0D2D4A;--text2:#3A5A7A;--muted:#6B8BAA;
+    
+    /* compliance 业务变量映射到主站色 */
+    --brand-deep: #0A6EBD;        /* 主蓝 */
+    --brand-deep-light: #0D85E0;  /* 亮蓝 */
+    --brand-gold: #0BB8C8;        /* 青色取代金色,跟主站协调 */
+    --brand-gold-light: #2DC9D8;
+    --bg-page: #F5F9FF;
+    --bg-card: #FFFFFF;
+    --text-primary: #0D2D4A;
+    --text-secondary: #3A5A7A;
+    --text-muted: #6B8BAA;
+    --border: #D6E8F5;
+    --border-strong: #B8D5EC;
+    
+    /* 风险标签色保留(语义色) */
     --risk-high: #c0392b;
     --risk-high-bg: #fdecec;
     --risk-mid: #d4881a;
     --risk-mid-bg: #fdf4e3;
-    --risk-low: #2c7be5;
-    --risk-low-bg: #e7f0fc;
-    --risk-safe: #1a8a4f;
-    --risk-safe-bg: #e3f5ec;
-    --shadow-sm: 0 1px 3px rgba(15, 44, 92, 0.06);
-    --shadow-md: 0 4px 16px rgba(15, 44, 92, 0.08);
-    --shadow-lg: 0 8px 32px rgba(15, 44, 92, 0.12);
+    --risk-low: #0A6EBD;
+    --risk-low-bg: #EAF4FE;
+    --risk-safe: #0E9E6E;
+    --risk-safe-bg: #E5F7F1;
+    
+    --shadow-sm: 0 1px 3px rgba(10, 110, 189, 0.06);
+    --shadow-md: 0 4px 16px rgba(10, 110, 189, 0.08);
+    --shadow-lg: 0 8px 32px rgba(10, 110, 189, 0.12);
   }
 
   * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -756,6 +766,21 @@
     .card-header { flex-direction: column; gap: 12px; align-items: flex-start; }
     .card-title-block { text-align: left; padding: 0; }
   }
+
+/* 移动端响应式优化 */
+@media (max-width: 768px) {
+  body { font-size: 13px; }
+  .container, .main, main { padding: 12px !important; }
+  .nav-brand-text-zh { font-size: 14px !important; }
+  .nav-brand-text-en { font-size: 10px !important; }
+  table { font-size: 12px !important; }
+  th, td { padding: 6px 8px !important; }
+  h1 { font-size: 18px !important; }
+  h2 { font-size: 16px !important; }
+}
+@media (max-width: 480px) {
+  .hide-mobile, .desktop-only { display: none !important; }
+}
 </style>
 </head>
 <body>
@@ -763,9 +788,9 @@
 <nav class="nav">
   <div class="nav-inner">
     <a href="index.html" class="nav-brand">
-      <img src="logo.png" alt="BKDLL 保凯达·霖霖国际物流" onerror="this.style.display='none'">
+      <img src="logo.png" alt="BKDLL BKDLL 香港国际物流" onerror="this.style.display='none'">
       <div class="nav-brand-text">
-        <span class="nav-brand-text-zh">保凯达·霖霖</span>
+        <span class="nav-brand-text-zh">BKDLL</span>
         <span class="nav-brand-text-en">国际物流</span>
       </div>
     </a>
@@ -994,7 +1019,7 @@ function renderResults(items, query, total) {
         <div class="empty-state-icon">🎯</div>
         <h3>未在监管清单中找到 "${escapeHtml(query)}"</h3>
         <p>该商品<strong style="color:var(--risk-safe)">不在禁限管制清单和出口许可证目录中</strong>,可按常规商品申报</p>
-        <p style="margin-top:12px">如需进一步确认,请联系保凯达专员或访问海关官网</p>
+        <p style="margin-top:12px">如需进一步确认,请联系BKDLL 客服专员或访问海关官网</p>
       </div>
     `;
     return;
@@ -1259,7 +1284,7 @@ function renderLicenseCard(hsCode, seq, category) {
         <strong>⚠️ 重要提示</strong>
         本商品出口须凭《出口许可证》办理报关手续。如未办理出口许可证擅自出口,将构成违规出口行为。
         <br><br>
-        申请出口许可证通常需要提供:出口合同、发票、装箱单、产品技术资料、最终用户与最终用途说明等。具体所需材料请咨询商务主管部门或保凯达专员。
+        申请出口许可证通常需要提供:出口合同、发票、装箱单、产品技术资料、最终用户与最终用途说明等。具体所需材料请咨询商务主管部门或BKDLL 客服专员。
       </div>
 
       <div class="card-disclaimer">
@@ -1267,7 +1292,7 @@ function renderLicenseCard(hsCode, seq, category) {
       </div>
 
       <div class="card-footer">
-        <span>保凯达·霖霖国际物流 · HS Code 合规查询</span>
+        <span>BKDLL 香港国际物流 · HS Code 合规查询</span>
         <span class="card-footer-brand">专业 · 合规 · 高效 · 可靠</span>
       </div>
     </div>
@@ -1298,13 +1323,13 @@ function renderCard(item) {
   let tipClass = 'low';
   if (risk === 'high') {
     tipClass = '';
-    tipText = `<strong>⚠️ 严格管控提示</strong>本商品涉及商务部两用物项管制代码 <strong>${escapeHtml(item.m)}</strong>,${direction}需办理<strong>两用物项${direction}许可证</strong>。涉及军民两用、敏感技术参数,请务必准确申报、完整提供资质材料。${lic ? `同时属于出口许可证管理货物目录第 ${lic.seq} 类(${escapeHtml(lic.category)}),需双重办证。` : ''}如需进一步咨询,请联系保凯达专员。`;
+    tipText = `<strong>⚠️ 严格管控提示</strong>本商品涉及商务部两用物项管制代码 <strong>${escapeHtml(item.m)}</strong>,${direction}需办理<strong>两用物项${direction}许可证</strong>。涉及军民两用、敏感技术参数,请务必准确申报、完整提供资质材料。${lic ? `同时属于出口许可证管理货物目录第 ${lic.seq} 类(${escapeHtml(lic.category)}),需双重办证。` : ''}如需进一步咨询,请联系BKDLL 客服专员。`;
   } else if (risk === 'mid') {
     tipClass = 'mid';
-    tipText = `<strong>⚠️ 加强审核提示</strong>本商品识别码 <strong>${escapeHtml(item.i)}</strong> 属于受关注类目,建议按申报要素规范填报,准备齐全的产品技术参数资料。${lic ? `同时属于出口许可证管理货物目录第 ${lic.seq} 类(${escapeHtml(lic.category)}),需办理出口许可证。` : ''}如有疑问,请联系保凯达专员。`;
+    tipText = `<strong>⚠️ 加强审核提示</strong>本商品识别码 <strong>${escapeHtml(item.i)}</strong> 属于受关注类目,建议按申报要素规范填报,准备齐全的产品技术参数资料。${lic ? `同时属于出口许可证管理货物目录第 ${lic.seq} 类(${escapeHtml(lic.category)}),需办理出口许可证。` : ''}如有疑问,请联系BKDLL 客服专员。`;
   } else {
     tipClass = 'low';
-    tipText = `<strong>常规申报提示</strong>本商品按常规规范申报即可,请按申报要素如实填报相关参数与用途。${lic ? `请注意:本商品属于出口许可证管理货物目录第 ${lic.seq} 类(${escapeHtml(lic.category)}),出口需办理出口许可证。` : ''}如需进一步咨询,请联系保凯达专员。`;
+    tipText = `<strong>常规申报提示</strong>本商品按常规规范申报即可,请按申报要素如实填报相关参数与用途。${lic ? `请注意:本商品属于出口许可证管理货物目录第 ${lic.seq} 类(${escapeHtml(lic.category)}),出口需办理出口许可证。` : ''}如需进一步咨询,请联系BKDLL 客服专员。`;
   }
 
   modalContent.innerHTML = `
@@ -1361,7 +1386,7 @@ function renderCard(item) {
       </div>
 
       <div class="card-footer">
-        <span>保凯达·霖霖国际物流 · HS Code 合规查询</span>
+        <span>BKDLL 香港国际物流 · HS Code 合规查询</span>
         <span class="card-footer-brand">专业 · 合规 · 高效 · 可靠</span>
       </div>
     </div>

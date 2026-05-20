@@ -4,37 +4,117 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>BKDLL | 客户登录</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Noto+Sans+SC:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
-:root{--navy:#0a1628;--blue:#1a56db;--teal:#0d9488;}
+:root{
+  --white:#FFFFFF;--bg:#F5F9FF;--sky:#EAF4FE;--sky2:#D4EBFD;
+  --blue:#0A6EBD;--blue2:#0D85E0;--blue3:#1BA3F5;
+  --navy:#0D2D4A;--navy2:#163A5C;
+  --text:#0D2D4A;--text2:#3A5A7A;--muted:#6B8BAA;--border:#D6E8F5;
+  --red:#dc2626;--red-bg:#FEE2E2;--green:#0E9E6E;--green-bg:#E5F7F1;
+}
 *{box-sizing:border-box;margin:0;padding:0;}
-body{font-family:system-ui,-apple-system,sans-serif;background:var(--navy);min-height:100vh;display:flex;align-items:center;justify-content:center;}
-.box{background:#111f3a;border:1px solid #1e3a5f;border-radius:16px;padding:40px 36px;width:min(92vw,380px);}
-.logo-wrap{text-align:center;margin-bottom:28px;}
-.logo-wrap img{height:48px;border-radius:8px;}
-.logo-wrap h1{color:#fff;font-size:18px;font-weight:700;margin-top:12px;}
-.logo-wrap p{color:#64748b;font-size:12px;margin-top:4px;}
-.field{margin-bottom:14px;}
-.field label{display:block;font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.05em;margin-bottom:5px;}
-.field input{width:100%;padding:11px 14px;background:#0d1e38;border:1.5px solid #1e3a5f;border-radius:9px;color:#fff;font-size:14px;outline:none;font-family:inherit;}
-.field input:focus{border-color:var(--blue);}
-.field input::placeholder{color:#475569;}
-.btn{width:100%;padding:12px;background:linear-gradient(135deg,var(--blue),#1d4ed8);color:#fff;border:none;border-radius:9px;font-size:14px;font-weight:700;cursor:pointer;margin-top:4px;}
-.btn:hover{opacity:.9;}
-.btn:disabled{opacity:.55;cursor:not-allowed;}
-.err{color:#f87171;font-size:12px;margin-top:8px;text-align:center;display:none;}
-.ok{color:#86efac;font-size:12px;margin-top:8px;text-align:center;display:none;}
-.forgot{text-align:center;margin-top:14px;}
-.forgot a{color:#64748b;font-size:12px;cursor:pointer;}
-.forgot a:hover{color:var(--blue);}
-.contact-note{text-align:center;margin-top:22px;padding-top:18px;border-top:1px solid #1e3a5f;color:#475569;font-size:12px;line-height:1.6;}
-.contact-note strong{color:#94a3b8;}
+body{
+  font-family:'DM Sans','Noto Sans SC',sans-serif;
+  background:var(--bg);
+  min-height:100vh;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:20px;
+  color:var(--text);
+}
+/* 顶部蓝条装饰 */
+body::before{
+  content:'';
+  position:fixed;
+  top:0;left:0;right:0;
+  height:4px;
+  background:linear-gradient(90deg,var(--blue),var(--blue3));
+  z-index:100;
+}
+.box{
+  background:var(--white);
+  border:1px solid var(--border);
+  border-radius:16px;
+  padding:44px 36px;
+  width:min(92vw,400px);
+  box-shadow:0 4px 24px rgba(10,110,189,0.08);
+}
+.logo-wrap{text-align:center;margin-bottom:30px;}
+.logo-wrap img{height:56px;border-radius:10px;}
+.logo-wrap h1{color:var(--navy);font-size:18px;font-weight:700;margin-top:14px;}
+.logo-wrap p{color:var(--muted);font-size:12px;margin-top:4px;}
+.field{margin-bottom:16px;}
+.field label{
+  display:block;
+  font-size:11px;
+  font-weight:700;
+  color:var(--muted);
+  text-transform:uppercase;
+  letter-spacing:.05em;
+  margin-bottom:6px;
+}
+.field input{
+  width:100%;
+  padding:12px 14px;
+  background:var(--bg);
+  border:1.5px solid var(--border);
+  border-radius:9px;
+  color:var(--text);
+  font-size:14px;
+  outline:none;
+  font-family:inherit;
+  transition:all .15s;
+}
+.field input:focus{border-color:var(--blue);background:#fff;box-shadow:0 0 0 3px rgba(10,110,189,0.08);}
+.field input::placeholder{color:var(--muted);}
+.btn{
+  width:100%;
+  padding:13px;
+  background:linear-gradient(135deg,var(--blue2),var(--blue));
+  color:#fff;
+  border:none;
+  border-radius:9px;
+  font-size:14px;
+  font-weight:700;
+  cursor:pointer;
+  margin-top:6px;
+  font-family:inherit;
+  transition:all .15s;
+  letter-spacing:0.05em;
+}
+.btn:hover{opacity:.92;transform:translateY(-1px);box-shadow:0 4px 12px rgba(10,110,189,0.25);}
+.btn:disabled{opacity:.55;cursor:not-allowed;transform:none;box-shadow:none;}
+.err{color:var(--red);background:var(--red-bg);font-size:12px;margin-top:10px;text-align:center;padding:8px 12px;border-radius:6px;display:none;}
+.ok{color:var(--green);background:var(--green-bg);font-size:12px;margin-top:10px;text-align:center;padding:8px 12px;border-radius:6px;display:none;}
+.forgot{text-align:center;margin-top:16px;}
+.forgot a{color:var(--muted);font-size:12px;cursor:pointer;font-weight:500;}
+.forgot a:hover{color:var(--blue);text-decoration:underline;}
+.contact-note{
+  text-align:center;
+  margin-top:24px;
+  padding-top:20px;
+  border-top:1px solid var(--border);
+  color:var(--muted);
+  font-size:12px;
+  line-height:1.7;
+}
+.contact-note strong{color:var(--navy);display:inline-block;margin-bottom:4px;}
+/* 移动端优化 */
+@media (max-width:480px){
+  .box{padding:32px 24px;}
+  .logo-wrap img{height:48px;}
+  .logo-wrap h1{font-size:16px;}
+  .field input{font-size:16px;} /* iOS 防 zoom */
+}
 </style>
 </head>
 <body>
 <div class="box">
   <div class="logo-wrap">
     <img src="logo.png" onerror="this.style.display='none'">
-    <h1>BKDLL · 霖霖 国际物流</h1>
+    <h1>BKDLL 香港国际物流</h1>
     <p>客户门户 Customer Portal</p>
   </div>
 
