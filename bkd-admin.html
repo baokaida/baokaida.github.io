@@ -514,7 +514,7 @@ td.td-doc{white-space:nowrap;min-width:80px;}
     </div>
     <div class="cred-row" style="border-top:1px dashed #bbf7d0;padding-top:7px;margin-top:3px;">
      <span class="cred-label">登录地址</span>
-     <span><span class="cred-val" id="cred-url">https:///bkd-login.html</span><button class="cred-copy-btn" data-copy="all">复制全部</button></span>
+     <span><span class="cred-val" id="cred-url">https://baokaida.github.io/bkd-login.html</span><button class="cred-copy-btn" data-copy="all">复制全部</button></span>
     </div>
     <div class="cred-tip">💡 此信息仅本次显示，关闭后无法再次查看，请立即复制告知客户。</div>
    </div>
@@ -1558,7 +1558,7 @@ function initCustomerModal(){
    if(what==='email')text=G('cred-email').textContent;
    else if(what==='password')text=G('cred-password').textContent;
    else if(what==='all'){
-    text='BKDLL·霖霖 客户登录信息\n邮箱：'+G('cred-email').textContent+'\n密码：'+G('cred-password').textContent+'\n登录地址：'+G('cred-url').textContent;
+    text='BKDLL 香港国际物流 客户登录信息\n邮箱：'+G('cred-email').textContent+'\n密码：'+G('cred-password').textContent+'\n登录地址：'+G('cred-url').textContent;
    }
    navigator.clipboard.writeText(text).then(()=>{
     var orig=btn.textContent;btn.textContent='✓ 已复制';
