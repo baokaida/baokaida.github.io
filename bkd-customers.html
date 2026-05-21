@@ -103,6 +103,7 @@ th.th-idx{text-align:center;width:32px;padding:8px 4px;}
 .markup-pill.tier-vhigh{background:#fce7f3;color:#9d174d;border-color:#f9a8d4;}      /* 10+ 极高 */
 .markup-pill.tier-unset{background:#fef3c7;color:#92400e;border-color:#fde68a;}      /* 未设 fallback */
 .markup-edit-hint{font-size:9px;opacity:.6;}
+.markup-source-tag{font-size:9px;font-weight:700;padding:1px 5px;border-radius:3px;background:rgba(180,83,9,.15);color:#92400e;border:1px solid rgba(180,83,9,.3);margin-left:1px;}
 
 /* 最近登录 */
 .login-time{font-size:11px;color:var(--text);}
@@ -225,18 +226,18 @@ th.th-idx{text-align:center;width:32px;padding:8px 4px;}
     <div class="stat-card"><div class="stat-label">总客户</div><div class="stat-val" id="s-total">—</div><div class="stat-sub">已开通账号</div></div>
     <div class="stat-card"><div class="stat-label">从未登录</div><div class="stat-val" id="s-never" style="color:#dc2626;">—</div><div class="stat-sub">⚠ 账号未激活</div></div>
     <div class="stat-card"><div class="stat-label">本月活跃</div><div class="stat-val" id="s-active" style="color:#166534;">—</div><div class="stat-sub">近 30 天登录过</div></div>
-    <div class="stat-card"><div class="stat-label">平均倍数</div><div class="stat-val" id="s-avg" style="font-family:monospace;">—</div><div class="stat-sub">所有已设客户</div></div>
+    <div class="stat-card"><div class="stat-label">平均倍数</div><div class="stat-val" id="s-avg" style="font-family:monospace;">—</div><div class="stat-sub">含兜底·所有客户</div></div>
    </div>
 
    <!-- 说明卡 -->
    <div class="help-card">
-    <strong>📌 倍数说明</strong>:倍数 = 易抵达底价 × N。在「Firestore 没设」的客户走 Worker 兜底规则(<code>chenlihong=3.5 / ametek=6.0 / iris=1.0</code> 等)。
+    <strong>📌 倍数说明</strong>:倍数 = 易抵达底价 × N。带<span class="markup-source-tag" style="margin:0 2px;">兜底</span>的客户 Firestore 还没焊死值,现在由 Worker 硬编码规则提供;点「改倍数」一次性写入 Firestore,以后改就直接在这里改、不再碰代码。
     <span class="legend">
      <span class="legend-item"><span class="legend-dot" style="background:#86efac;"></span>0.5–1.0 内部</span>
      <span class="legend-item"><span class="legend-dot" style="background:#93c5fd;"></span>1.0–3.0 优惠</span>
      <span class="legend-item"><span class="legend-dot" style="background:#a5b4fc;"></span>3.0–5.0 标准</span>
      <span class="legend-item"><span class="legend-dot" style="background:#c4b5fd;"></span>5.0–10 高利润</span>
-     <span class="legend-item"><span class="legend-dot" style="background:#fde68a;"></span>未设·走兜底</span>
+     <span class="legend-item"><span class="legend-dot" style="background:#f9a8d4;"></span>10+ 极高</span>
     </span>
    </div>
 
@@ -597,18 +598,52 @@ function updateStats(){
   u.lastSignIn && (now - new Date(u.lastSignIn).getTime() < month30)
  ).length;
  G('s-active').textContent = active;
- var setMarkups = allCustomers.filter(u => u.markup !== null && u.markup !== undefined).map(u => u.markup);
- if(setMarkups.length){
-  var avg = setMarkups.reduce((a,b) => a+b, 0) / setMarkups.length;
+ var effectiveMarkups = allCustomers.map(u => {
+  if(u.markup !== null && u.markup !== undefined) return u.markup;
+  return workerFallbackMarkup(u.email);
+ });
+ if(effectiveMarkups.length){
+  var avg = effectiveMarkups.reduce((a,b) => a+b, 0) / effectiveMarkups.length;
   G('s-avg').textContent = avg.toFixed(2) + 'x';
  } else {
   G('s-avg').textContent = '—';
  }
 }
 
-/* ── 倍数胶囊样式分级 ── */
+/* ── Worker 兜底规则镜像(必须与 bkd-itdida-proxy.js MARKUP_RULES 同步)──
+ * Firestore 没设 markup 的客户,Worker 会走这套规则。前端在此复刻一份,
+ * 让 admin 能"看到"每个客户实际生效的倍数,而不是只看到"未设"。
+ * ⚠️ 每次改 Worker 源码,这里也要同步改;最终目标是所有客户都焊到
+ * Firestore,这套规则只剩"防新客户漏设"的兜底作用。
+ */
+var WORKER_MARKUP_RULES = [
+ { match: 'bkd@baokaida.com',           rate: 1.0 },
+ { match: 'iris9102@126.com',           rate: 1.0 },
+ { match: '@ametek.com',                rate: 6.0 },
+ { match: 'chenlihong@notioni.com',     rate: 3.5 },
+ { match: 'gaohongju@chemexpress.co',   rate: 2.5 },
+];
+var WORKER_MARKUP_DEFAULT = 3.5;
+
+/* 推断某个邮箱在 Firestore 没设时,Worker 会用多少倍数 */
+function workerFallbackMarkup(email){
+ if(!email) return WORKER_MARKUP_DEFAULT;
+ var e = String(email).trim().toLowerCase();
+ for(var i=0; i<WORKER_MARKUP_RULES.length; i++){
+  var r = WORKER_MARKUP_RULES[i];
+  var m = String(r.match).toLowerCase();
+  if(m.charAt(0) === '@'){
+   if(e.indexOf(m, e.length - m.length) !== -1) return r.rate;
+  } else {
+   if(e === m) return r.rate;
+  }
+ }
+ return WORKER_MARKUP_DEFAULT;
+}
+
+/* 倍数胶囊样式分级 — 现在按"实际生效的倍数"分级,不再有 unset 一档 */
 function markupTier(m){
- if(m === null || m === undefined) return 'unset';
+ if(m === null || m === undefined) return 'mid';
  if(m <= 1.0) return 'internal';
  if(m < 3.0) return 'low';
  if(m < 5.0) return 'mid';
@@ -637,13 +672,16 @@ function renderTable(){
  }
 
  var rows = list.map((u, idx) => {
-  /* 倍数胶囊 */
-  var tier = markupTier(u.markup);
-  var markupText = (u.markup === null || u.markup === undefined)
-   ? '未设·走兜底'
-   : Number(u.markup).toFixed(u.markup % 1 === 0 ? 1 : 2) + 'x';
+  /* 倍数胶囊 — 优先用 Firestore 的值,没有就推断 Worker 兜底 */
+  var fromFirestore = (u.markup !== null && u.markup !== undefined);
+  var effective = fromFirestore ? u.markup : workerFallbackMarkup(u.email);
+  var tier = markupTier(effective);
+  var numText = Number(effective).toFixed(effective % 1 === 0 ? 1 : 2) + 'x';
+  var sourceTag = fromFirestore
+   ? '<span class="markup-edit-hint">✏</span>'
+   : '<span class="markup-source-tag" title="Firestore 未设,当前由 Worker 硬编码规则兜底。建议点「改倍数」焊到 Firestore。">兜底</span>';
   var markupPill = '<span class="markup-pill tier-' + tier + '" data-edit-markup="' + esc(u.uid) +
-   '" title="点击修改">' + esc(markupText) + ' <span class="markup-edit-hint">✏</span></span>';
+   '" title="点击修改">' + esc(numText) + ' ' + sourceTag + '</span>';
 
   /* 最近登录 */
   var lastLogin;
@@ -867,13 +905,14 @@ function openMarkupModal(u){
  editingCustomer = u;
  G('mu-email').textContent = u.email || '';
  G('mu-name').textContent = u.displayName || '—';
- var cur = (u.markup === null || u.markup === undefined)
-  ? '未设 · Worker 兜底'
-  : Number(u.markup).toFixed(u.markup % 1 === 0 ? 1 : 2) + 'x';
+ var fromFirestore = (u.markup !== null && u.markup !== undefined);
+ var effective = fromFirestore ? u.markup : workerFallbackMarkup(u.email);
+ var cur = Number(effective).toFixed(effective % 1 === 0 ? 1 : 2) + 'x' +
+           (fromFirestore ? ' (已焊到 Firestore)' : ' (Worker 兜底,建议焊死)');
  G('mu-current').textContent = cur;
- G('mu-new').value = (u.markup !== null && u.markup !== undefined) ? u.markup : '3.5';
+ G('mu-new').value = effective;
  G('muPresets').querySelectorAll('.markup-preset').forEach(b => {
-  b.classList.toggle('on', b.dataset.val === String(u.markup));
+  b.classList.toggle('on', b.dataset.val === String(effective));
  });
  G('markupModalAlert').style.display = 'none';
  G('markupModalSave').disabled = false;
