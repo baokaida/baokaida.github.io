@@ -1,0 +1,993 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>客户管理 — BKD Admin</title>
+<style>
+:root {
+ --blue:#1a56db;--teal:#0d9488;--red:#dc2626;--amber:#d97706;--purple:#7c3aed;
+ --bg:#e8f1fb;--card:#ffffff;--border:#cfe0f5;--text:#0f172a;--muted:#64748b;
+ --sb-bg:#e8f0fe;--sb-border:#c5d8f8;--sb-text:#1e3a6e;--sb-muted:#5a7bbf;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:-apple-system,'SF Pro Display',system-ui,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;}
+
+/* LOGIN */
+#loginScreen{display:flex;align-items:center;justify-content:center;min-height:100vh;background:linear-gradient(135deg,#0f2057 0%,#1a56db 100%);position:fixed;inset:0;z-index:100;}
+.login-box{background:#fff;border-radius:18px;padding:36px 32px;width:340px;text-align:center;box-shadow:0 24px 60px rgba(15,32,87,.3);}
+.login-logo{width:52px;height:52px;background:linear-gradient(135deg,var(--blue),var(--teal));border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:900;color:#fff;margin:0 auto 16px;}
+.login-box h2{color:#0f172a;font-size:18px;font-weight:700;margin-bottom:3px;}
+.login-box p{color:#94a3b8;font-size:11px;margin-bottom:22px;}
+.login-box input{width:100%;padding:11px 14px;background:#f8faff;border:1.5px solid #dce6f5;border-radius:9px;color:#0f172a;font-size:13px;outline:none;margin-bottom:10px;font-family:inherit;}
+.login-box input:focus{border-color:var(--blue);background:#fff;}
+.login-box input::placeholder{color:#94a3b8;}
+.btn-login{width:100%;padding:12px;background:linear-gradient(135deg,var(--blue),#1d4ed8);color:#fff;border:none;border-radius:9px;font-size:13px;font-weight:700;cursor:pointer;margin-top:4px;}
+.btn-login:hover{opacity:.9;}
+.btn-login:disabled{opacity:.55;cursor:not-allowed;}
+.login-err{color:#dc2626;font-size:11px;margin-top:8px;display:none;line-height:1.5;}
+
+/* LAYOUT */
+#app{display:none;}
+.sidebar{width:208px;background:var(--sb-bg);border-right:1px solid var(--sb-border);position:fixed;top:0;left:0;bottom:0;display:flex;flex-direction:column;z-index:50;}
+.sb-logo{padding:15px 15px 12px;display:flex;align-items:center;gap:9px;border-bottom:1px solid var(--sb-border);}
+.sb-logo img{height:30px;border-radius:6px;}
+.sb-logo .lt{color:var(--sb-text);font-size:13px;font-weight:700;line-height:1.2;}
+.sb-logo .ls{color:var(--sb-muted);font-size:9px;margin-top:1px;}
+.sb-nav{flex:1;padding:7px 0;}
+.nav-item{display:flex;align-items:center;gap:9px;padding:8px 15px;color:var(--sb-text);font-size:12px;font-weight:500;cursor:pointer;border-left:3px solid transparent;transition:all .12s;margin:1px 0;text-decoration:none;}
+.nav-item:hover{background:#d4e4fc;color:var(--blue);}
+.nav-item.active{color:#fff;background:var(--blue);border-left-color:#fff;border-radius:0 8px 8px 0;margin-right:8px;}
+.nav-icon{font-size:14px;width:17px;text-align:center;flex-shrink:0;}
+.sb-footer{padding:10px 15px;border-top:1px solid var(--sb-border);}
+.sb-footer button{background:none;border:none;color:var(--sb-muted);font-size:11px;cursor:pointer;}
+.sb-footer button:hover{color:var(--sb-text);}
+
+.main{margin-left:208px;min-height:100vh;}
+.topbar{background:var(--card);border-bottom:1px solid var(--border);padding:0 22px;height:50px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:40;box-shadow:0 1px 4px rgba(26,86,219,.06);}
+.topbar-title{font-size:14px;font-weight:700;color:#0f172a;}
+.topbar-right{display:flex;align-items:center;gap:10px;}
+.admin-email{font-size:11px;color:var(--muted);font-family:monospace;}
+.badge-admin{background:#dbeafe;color:#1e40af;font-size:10px;font-weight:700;padding:2px 9px;border-radius:20px;}
+.refresh-btn{background:none;border:1.5px solid var(--border);border-radius:7px;padding:5px 11px;font-size:11px;cursor:pointer;color:var(--muted);}
+.refresh-btn:hover{border-color:var(--blue);color:var(--blue);}
+
+.content{padding:16px 20px;}
+
+/* STATS */
+.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px;}
+.stat-card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:12px 15px;}
+.stat-label{font-size:10px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px;}
+.stat-val{font-size:24px;font-weight:700;color:#0f172a;}
+.stat-sub{font-size:10px;color:var(--muted);margin-top:2px;}
+
+/* TABLE CARD */
+.table-card{background:var(--card);border:1px solid var(--border);border-radius:10px;overflow:hidden;}
+.table-header{padding:10px 15px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;}
+.table-header h3{font-size:13px;font-weight:700;color:#0f172a;}
+.search-bar{display:flex;align-items:center;gap:6px;flex-wrap:wrap;}
+.search-bar input{padding:5px 10px;border:1.5px solid var(--border);border-radius:7px;font-size:12px;outline:none;width:200px;}
+.search-bar input:focus{border-color:var(--blue);}
+
+/* BUTTONS */
+.btn{padding:5px 12px;border-radius:7px;font-size:11px;font-weight:700;cursor:pointer;border:none;transition:opacity .12s;line-height:1.5;}
+.btn:hover{opacity:.85;}
+.btn-primary{background:var(--blue);color:#fff;}
+.btn-teal{background:var(--teal);color:#fff;}
+.btn-outline{background:#fff;border:1.5px solid var(--border);color:var(--text);}
+.btn-sm{padding:3px 8px;font-size:11px;}
+.btn-danger{background:var(--red);color:#fff;}
+.btn-del{background:none;border:1.5px solid #fca5a5;color:#fca5a5;padding:3px 7px;font-size:10px;border-radius:5px;cursor:pointer;transition:all .12s;font-weight:700;line-height:1;}
+.btn-del:hover{background:var(--red);border-color:var(--red);color:#fff;}
+
+/* TABLE */
+table{width:100%;border-collapse:collapse;}
+th{background:#deeaf8;padding:8px 11px;text-align:left;font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;border-bottom:1px solid var(--border);}
+td{padding:9px 11px;font-size:12px;border-bottom:1px solid #f1f5f9;vertical-align:middle;}
+tr:last-child td{border-bottom:none;}
+tr:hover td{background:#fafbff;}
+td.td-idx{color:var(--muted);font-size:10px;font-weight:600;text-align:center;width:32px;padding:9px 4px;}
+th.th-idx{text-align:center;width:32px;padding:8px 4px;}
+
+/* 邮箱列 */
+.col-email{font-family:monospace;font-weight:600;color:var(--text);font-size:12px;}
+.col-displayname{color:var(--muted);font-size:11px;}
+
+/* 倍数胶囊 — 颜色按区间分级 */
+.markup-pill{display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;font-family:monospace;cursor:pointer;border:1.5px solid transparent;transition:all .12s;}
+.markup-pill:hover{transform:translateY(-1px);box-shadow:0 2px 6px rgba(0,0,0,.08);}
+.markup-pill.tier-internal{background:#dcfce7;color:#166534;border-color:#86efac;}   /* 0.5–1.0 内部 */
+.markup-pill.tier-low{background:#dbeafe;color:#1e40af;border-color:#93c5fd;}        /* 1.0–3.0 优惠 */
+.markup-pill.tier-mid{background:#e0e7ff;color:#3730a3;border-color:#a5b4fc;}        /* 3.0–5.0 标准 */
+.markup-pill.tier-high{background:#f3e8ff;color:#6d28d9;border-color:#c4b5fd;}       /* 5.0–10 高利润 */
+.markup-pill.tier-vhigh{background:#fce7f3;color:#9d174d;border-color:#f9a8d4;}      /* 10+ 极高 */
+.markup-pill.tier-unset{background:#fef3c7;color:#92400e;border-color:#fde68a;}      /* 未设 fallback */
+.markup-edit-hint{font-size:9px;opacity:.6;}
+
+/* 最近登录 */
+.login-time{font-size:11px;color:var(--text);}
+.login-time-sub{font-size:9px;color:var(--muted);margin-top:1px;}
+.login-never{display:inline-flex;align-items:center;gap:4px;color:#dc2626;font-size:11px;font-weight:700;background:#fef2f2;border:1px solid #fca5a5;padding:2px 8px;border-radius:20px;}
+.login-stale{color:var(--amber);font-weight:600;}
+
+/* 状态 */
+.badge-active{display:inline-block;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:700;background:#f0fdf4;color:#166534;}
+.badge-disabled{display:inline-block;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:700;background:#fef2f2;color:#dc2626;}
+
+/* MODAL */
+.overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:200;align-items:center;justify-content:center;}
+.overlay.on{display:flex;}
+.modal{background:#fff;border-radius:12px;width:min(94vw,510px);box-shadow:0 20px 60px rgba(0,0,0,.16);}
+.modal-head{padding:13px 17px 10px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+.modal-head h3{font-size:13px;font-weight:700;}
+.modal-close{background:none;border:none;font-size:17px;cursor:pointer;color:var(--muted);padding:2px 6px;}
+.modal-body{padding:14px 17px;}
+.field{margin-bottom:10px;}
+.field label{display:block;font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:3px;}
+.field input,.field select,.field textarea{width:100%;padding:7px 10px;border:1.5px solid var(--border);border-radius:7px;font-size:12px;color:var(--text);outline:none;font-family:inherit;}
+.field input:focus,.field select:focus{border-color:var(--blue);}
+.field-hint{font-size:10px;color:var(--muted);margin-top:3px;line-height:1.5;}
+.modal-foot{padding:10px 17px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:6px;}
+
+/* MARKUP 预设按钮组 */
+.markup-presets{display:flex;gap:5px;flex-wrap:wrap;margin-top:5px;}
+.markup-preset{padding:3px 9px;font-size:10px;font-weight:700;font-family:monospace;border:1.5px solid var(--border);border-radius:5px;background:#fff;color:var(--text);cursor:pointer;}
+.markup-preset:hover{border-color:var(--blue);color:var(--blue);}
+.markup-preset.on{background:var(--blue);color:#fff;border-color:var(--blue);}
+
+/* 凭证 */
+.cred-display{background:#f0fdf4;border:1px solid #86efac;border-radius:8px;padding:12px 14px;margin-top:10px;display:none;}
+.cred-display.show{display:block;}
+.cred-display .cred-title{font-size:11px;font-weight:700;color:#166534;margin-bottom:8px;}
+.cred-display .cred-row{display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px dashed #bbf7d0;font-size:12px;}
+.cred-display .cred-row:last-child{border-bottom:none;}
+.cred-display .cred-label{color:var(--muted);font-size:11px;}
+.cred-display .cred-val{font-family:monospace;font-weight:600;color:#166534;}
+.cred-copy-btn{background:#fff;border:1px solid #86efac;color:#166534;padding:2px 8px;font-size:10px;border-radius:5px;cursor:pointer;margin-left:6px;font-weight:600;}
+.cred-copy-btn:hover{background:#bbf7d0;}
+.cred-tip{font-size:10px;color:#16a34a;margin-top:8px;line-height:1.5;}
+.gen-pwd-btn{background:#fff;border:1px solid var(--border);color:var(--blue);padding:5px 9px;font-size:10px;border-radius:6px;cursor:pointer;font-weight:600;margin-left:4px;}
+.gen-pwd-btn:hover{background:#f4f8ff;}
+
+/* MISC */
+.loading{text-align:center;padding:30px;color:var(--muted);font-size:12px;}
+.spin{display:inline-block;width:13px;height:13px;border:2px solid #e2e8f0;border-top-color:var(--blue);border-radius:50%;animation:sp .6s linear infinite;vertical-align:middle;margin-right:5px;}
+@keyframes sp{to{transform:rotate(360deg);}}
+.empty{text-align:center;padding:36px 0;color:var(--muted);}
+.empty-icon{font-size:28px;margin-bottom:8px;}
+.empty p{font-size:12px;}
+.alert{padding:7px 11px;border-radius:7px;font-size:11px;margin-bottom:10px;display:none;}
+.alert-ok{background:#f0fdf4;border:1px solid #86efac;color:#166534;}
+.alert-err{background:#fef2f2;border:1px solid #fca5a5;color:#dc2626;}
+
+/* 顶部说明 */
+.help-card{background:#f4f9ff;border:1px solid var(--border);border-radius:8px;padding:10px 14px;margin-bottom:14px;font-size:11px;color:var(--muted);line-height:1.7;}
+.help-card strong{color:var(--text);}
+.help-card .legend{display:inline-flex;gap:12px;flex-wrap:wrap;margin-top:6px;}
+.help-card .legend-item{display:inline-flex;align-items:center;gap:4px;}
+.help-card .legend-dot{width:10px;height:10px;border-radius:50%;display:inline-block;}
+
+@media(max-width:768px){
+ .sidebar{transform:translateX(-100%);transition:transform .2s;}
+ .main{margin-left:0;}
+ .stats-grid{grid-template-columns:1fr 1fr;}
+ .content{padding:12px;}
+ .search-bar input{width:140px;}
+ input,select{font-size:16px !important;} /* iOS 防 zoom */
+}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="loginScreen">
+ <div class="login-box">
+  <div class="login-logo">B</div>
+  <h2>BKD 客户管理</h2>
+  <p>BKDLL 香港国际物流 Admin</p>
+  <input type="email" id="emailInput" placeholder="管理员邮箱" autocomplete="email">
+  <input type="password" id="pwInput" placeholder="管理员密码" autocomplete="current-password">
+  <button class="btn-login" id="loginBtn">登 录</button>
+  <div class="login-err" id="loginErr"></div>
+ </div>
+</div>
+
+<!-- APP -->
+<div id="app">
+ <div class="sidebar">
+  <div class="sb-logo">
+   <img src="logo.png" onerror="this.style.display='none'">
+   <div><div class="lt">BKD Admin</div><div class="ls">BKDLL·霖霖</div></div>
+  </div>
+  <nav class="sb-nav">
+   <a class="nav-item" href="bkd-admin.html"><span class="nav-icon">📦</span>订单管理</a>
+   <a class="nav-item" href="bkd-admin.html"><span class="nav-icon">🔍</span>物流查询</a>
+   <a class="nav-item" href="bkd-admin.html"><span class="nav-icon">📊</span>数据统计</a>
+   <div class="nav-item active"><span class="nav-icon">👥</span>客户管理</div>
+  </nav>
+  <div class="sb-footer"><button id="logoutBtn">⬅ 退出登录</button></div>
+ </div>
+
+ <div class="main">
+  <div class="topbar">
+   <div class="topbar-title">客户管理</div>
+   <div class="topbar-right">
+    <span class="admin-email" id="adminEmail">—</span>
+    <span class="badge-admin">管理员</span>
+    <button class="refresh-btn" id="refreshBtn">↻ 刷新</button>
+   </div>
+  </div>
+
+  <div class="content">
+
+   <!-- 统计卡 -->
+   <div class="stats-grid">
+    <div class="stat-card"><div class="stat-label">总客户</div><div class="stat-val" id="s-total">—</div><div class="stat-sub">已开通账号</div></div>
+    <div class="stat-card"><div class="stat-label">从未登录</div><div class="stat-val" id="s-never" style="color:#dc2626;">—</div><div class="stat-sub">⚠ 账号未激活</div></div>
+    <div class="stat-card"><div class="stat-label">本月活跃</div><div class="stat-val" id="s-active" style="color:#166534;">—</div><div class="stat-sub">近 30 天登录过</div></div>
+    <div class="stat-card"><div class="stat-label">平均倍数</div><div class="stat-val" id="s-avg" style="font-family:monospace;">—</div><div class="stat-sub">所有已设客户</div></div>
+   </div>
+
+   <!-- 说明卡 -->
+   <div class="help-card">
+    <strong>📌 倍数说明</strong>:倍数 = 易抵达底价 × N。在「Firestore 没设」的客户走 Worker 兜底规则(<code>chenlihong=3.5 / ametek=6.0 / iris=1.0</code> 等)。
+    <span class="legend">
+     <span class="legend-item"><span class="legend-dot" style="background:#86efac;"></span>0.5–1.0 内部</span>
+     <span class="legend-item"><span class="legend-dot" style="background:#93c5fd;"></span>1.0–3.0 优惠</span>
+     <span class="legend-item"><span class="legend-dot" style="background:#a5b4fc;"></span>3.0–5.0 标准</span>
+     <span class="legend-item"><span class="legend-dot" style="background:#c4b5fd;"></span>5.0–10 高利润</span>
+     <span class="legend-item"><span class="legend-dot" style="background:#fde68a;"></span>未设·走兜底</span>
+    </span>
+   </div>
+
+   <!-- 客户表 -->
+   <div class="table-card">
+    <div class="table-header">
+     <h3>客户列表</h3>
+     <div class="search-bar">
+      <input type="text" id="searchInput" placeholder="搜索邮箱 / 显示名…">
+      <button class="btn btn-primary" id="addCustomerBtn">+ 添加客户</button>
+     </div>
+    </div>
+    <div id="customersTableWrap"><div class="loading"><span class="spin"></span>加载中…</div></div>
+   </div>
+
+  </div>
+ </div>
+</div>
+
+<!-- 添加客户 Modal -->
+<div class="overlay" id="customerModal">
+ <div class="modal" style="width:min(94vw,500px);">
+  <div class="modal-head">
+   <h3>👥 添加客户账号</h3>
+   <button class="modal-close" id="customerModalClose">✕</button>
+  </div>
+  <div class="modal-body">
+   <div id="customerModalAlert" class="alert"></div>
+   <div class="field">
+    <label>客户邮箱 *</label>
+    <input type="email" id="cust-email" placeholder="customer@example.com" autocomplete="off">
+   </div>
+   <div class="field">
+    <label>公司名 / 客户名(选填)</label>
+    <input type="text" id="cust-name" placeholder="如:ABC Trading Co." autocomplete="off">
+   </div>
+   <div class="field">
+    <label>临时密码 *(至少 6 位)</label>
+    <div style="display:flex;gap:4px;">
+     <input type="text" id="cust-password" placeholder="客户首次登录用的密码" autocomplete="off" style="flex:1;font-family:monospace;">
+     <button class="gen-pwd-btn" id="genPwdBtn" type="button">🎲 生成</button>
+    </div>
+   </div>
+   <div class="field">
+    <label>加价倍数 *(0.5 – 20.0)</label>
+    <input type="number" id="cust-markup" value="3.5" min="0.5" max="20" step="0.1" style="font-family:monospace;font-weight:700;">
+    <div class="markup-presets" id="markupPresets">
+     <button class="markup-preset" data-val="1.0" type="button">1.0 内部</button>
+     <button class="markup-preset" data-val="2.5" type="button">2.5</button>
+     <button class="markup-preset on" data-val="3.5" type="button">3.5 标准</button>
+     <button class="markup-preset" data-val="5.0" type="button">5.0</button>
+     <button class="markup-preset" data-val="6.0" type="button">6.0 AMETEK</button>
+    </div>
+    <div class="field-hint">最终客户看到的价格 = 易抵达底价 × 倍数。可后续在列表里随时改。</div>
+   </div>
+   <div class="cred-display" id="credDisplay">
+    <div class="cred-title">✅ 客户账号已创建,请将以下信息告知客户:</div>
+    <div class="cred-row">
+     <span class="cred-label">邮箱</span>
+     <span><span class="cred-val" id="cred-email">—</span><button class="cred-copy-btn" data-copy="email">复制</button></span>
+    </div>
+    <div class="cred-row">
+     <span class="cred-label">密码</span>
+     <span><span class="cred-val" id="cred-password">—</span><button class="cred-copy-btn" data-copy="password">复制</button></span>
+    </div>
+    <div class="cred-row">
+     <span class="cred-label">加价倍数</span>
+     <span><span class="cred-val" id="cred-markup">—</span></span>
+    </div>
+    <div class="cred-row" style="border-top:1px dashed #bbf7d0;padding-top:7px;margin-top:3px;">
+     <span class="cred-label">登录地址</span>
+     <span><span class="cred-val" id="cred-url">https://baokaida.github.io/bkd-login.html</span><button class="cred-copy-btn" data-copy="all">复制全部</button></span>
+    </div>
+    <div class="cred-tip">💡 此信息仅本次显示,关闭后无法再次查看,请立即复制告知客户。</div>
+   </div>
+  </div>
+  <div class="modal-foot">
+   <button class="btn btn-outline" id="customerModalCancel">取消</button>
+   <button class="btn btn-primary" id="customerModalSave">创建账号</button>
+  </div>
+ </div>
+</div>
+
+<!-- 改倍数 Modal -->
+<div class="overlay" id="markupModal">
+ <div class="modal" style="width:min(92vw,420px);">
+  <div class="modal-head">
+   <h3>💰 修改加价倍数</h3>
+   <button class="modal-close" id="markupModalClose">✕</button>
+  </div>
+  <div class="modal-body">
+   <div id="markupModalAlert" class="alert"></div>
+   <div style="background:#f4f8ff;border:1px solid var(--border);border-radius:7px;padding:9px 12px;margin-bottom:12px;font-size:11px;line-height:1.9;">
+    <div><span style="color:var(--muted);">客户:</span><strong id="mu-email" style="font-family:monospace;"></strong></div>
+    <div><span style="color:var(--muted);">公司:</span><span id="mu-name"></span></div>
+    <div><span style="color:var(--muted);">当前倍数:</span><strong id="mu-current" style="font-family:monospace;color:var(--blue);"></strong></div>
+   </div>
+   <div class="field">
+    <label>新倍数(0.5 – 20.0)</label>
+    <input type="number" id="mu-new" min="0.5" max="20" step="0.1" style="font-family:monospace;font-weight:700;font-size:14px;">
+    <div class="markup-presets" id="muPresets">
+     <button class="markup-preset" data-val="1.0" type="button">1.0</button>
+     <button class="markup-preset" data-val="2.5" type="button">2.5</button>
+     <button class="markup-preset" data-val="3.5" type="button">3.5</button>
+     <button class="markup-preset" data-val="5.0" type="button">5.0</button>
+     <button class="markup-preset" data-val="6.0" type="button">6.0</button>
+    </div>
+    <div class="field-hint">改完即时生效,客户下次查价就用新倍数。</div>
+   </div>
+  </div>
+  <div class="modal-foot">
+   <button class="btn btn-outline" id="markupModalCancel">取消</button>
+   <button class="btn btn-teal" id="markupModalSave">保存</button>
+  </div>
+ </div>
+</div>
+
+<!-- 删除确认 Modal -->
+<div class="overlay" id="confirmModal">
+ <div class="modal" style="width:min(92vw,400px);">
+  <div class="modal-head">
+   <h3>确认删除客户</h3>
+   <button class="modal-close" id="confirmClose">✕</button>
+  </div>
+  <div class="modal-body">
+   <div style="font-size:28px;text-align:center;margin-bottom:8px;">⚠️</div>
+   <div style="font-size:12px;line-height:1.7;text-align:center;color:var(--text);">
+    确定要删除客户账号吗?
+   </div>
+   <div id="confirm-sub" style="font-size:11px;color:var(--muted);text-align:center;margin-top:6px;line-height:1.6;"></div>
+   <div style="background:#fef2f2;border:1px solid #fca5a5;border-radius:7px;padding:8px 11px;margin-top:10px;font-size:11px;color:#dc2626;line-height:1.6;">
+    <strong>⚠ 不可撤销</strong>:同时删除 Firebase Auth 账号和 Firestore 用户档案。
+    该客户的历史订单不受影响。
+   </div>
+   <div id="confirmAlert" class="alert" style="margin-top:9px;"></div>
+  </div>
+  <div class="modal-foot">
+   <button class="btn btn-outline" id="confirmCancel">取消</button>
+   <button class="btn btn-danger" id="confirmOk">确认删除</button>
+  </div>
+ </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════════
+  BKDLL 香港 API 兼容层(与 bkd-admin.html 完全相同的实现,
+  保证两边登录态共享 — admin 登录后过来这边自动登入)
+══════════════════════════════════════════════════════════════ -->
+<script>
+(function(){
+var BKDLL_API = 'https://api.bkdll.com';
+function tokenHeader(){
+ var t = localStorage.getItem('bkdll_token');
+ return t ? {'Authorization':'Bearer ' + t} : {};
+}
+async function api(method, path, body){
+ var headers = Object.assign({'Content-Type':'application/json'}, tokenHeader());
+ var opts = {method: method, headers: headers};
+ if(body !== undefined) opts.body = JSON.stringify(body);
+ var resp = await fetch(BKDLL_API + path, opts);
+ var d = await resp.json().catch(function(){ return {ok:false,error:'parse_error'}; });
+ if(!d.ok){
+  if(d.error === 'invalid_token' || d.error === 'no_token'){
+   localStorage.removeItem('bkdll_token');
+   localStorage.removeItem('bkdll_user');
+   window.location.href = 'bkd-login.html';
+   throw new Error('auth_expired');
+  }
+  throw new Error(d.error || 'api_error');
+ }
+ return d;
+}
+
+var fakeAuth = { currentUser: null };
+
+(function restoreUser(){
+ try{
+  var u = JSON.parse(localStorage.getItem('bkdll_user') || 'null');
+  var t = localStorage.getItem('bkdll_token');
+  if(u && t){
+   fakeAuth.currentUser = {
+    uid: u.uid, email: u.email, displayName: u.displayName || null,
+    getIdToken: function(){ return Promise.resolve(t); },
+    getIdTokenResult: function(){ return Promise.resolve({ token: t, claims: { admin: true } }); }
+   };
+  }
+ }catch(e){}
+})();
+
+var onAuthListeners = [];
+
+var authFns = {
+ signInWithEmailAndPassword: async function(auth, email, password){
+  var d = await api('POST', '/api/auth/login', {email: email, password: password});
+  localStorage.setItem('bkdll_token', d.token);
+  localStorage.setItem('bkdll_user', JSON.stringify(d.user));
+  fakeAuth.currentUser = {
+   uid: d.user.uid, email: d.user.email, displayName: d.user.displayName || null,
+   getIdToken: function(){ return Promise.resolve(d.token); },
+   getIdTokenResult: function(){ return Promise.resolve({ token: d.token, claims: { admin: true } }); }
+  };
+  onAuthListeners.forEach(function(cb){ try{cb(fakeAuth.currentUser);}catch(e){} });
+  return { user: fakeAuth.currentUser };
+ },
+ signOut: async function(){
+  localStorage.removeItem('bkdll_token');
+  localStorage.removeItem('bkdll_user');
+  fakeAuth.currentUser = null;
+  onAuthListeners.forEach(function(cb){ try{cb(null);}catch(e){} });
+ },
+ onAuthStateChanged: function(auth, callback){
+  onAuthListeners.push(callback);
+  setTimeout(function(){ try{ callback(fakeAuth.currentUser); }catch(e){} }, 0);
+ }
+};
+
+window._bkdAuth = fakeAuth;
+window._bkdAuthFns = authFns;
+window._bkdApi = api;  /* 客户管理特有:暴露 api 调用器 */
+
+setTimeout(function(){ window.dispatchEvent(new Event('firebaseReady')); }, 0);
+})();
+</script>
+
+<!-- ════════════════════════════════════════════════════════════
+  客户管理页业务逻辑
+══════════════════════════════════════════════════════════════ -->
+<script>
+(function(){
+'use strict';
+
+var G = id => document.getElementById(id);
+var allCustomers = [];
+var appInited = false;
+var pendingDelete = null;
+var editingCustomer = null;
+
+/* ── 登录态 ── */
+function waitFirebase(cb){
+ if(window._bkdAuth) cb();
+ else window.addEventListener('firebaseReady', cb, {once:true});
+}
+
+/* ── 管理员白名单(P1 安全修复 2026-05-21) ──
+ * 前端校验:只有此名单内的邮箱能看到 App 内容。
+ * 注意:这是前端兜底,真正的权限边界应该在后端 API 里加
+ * (待办:后端 admin 路由加管理员邮箱中间件)。
+ */
+var ADMIN_WHITELIST = ['bkd@baokaida.com'];
+function isAdmin(email){
+ if(!email) return false;
+ return ADMIN_WHITELIST.indexOf(String(email).trim().toLowerCase()) >= 0;
+}
+
+waitFirebase(() => {
+ window._bkdAuthFns.onAuthStateChanged(window._bkdAuth, async user => {
+  if(!user){ showLoginScreen(); return; }
+  if(!isAdmin(user.email)){
+   /* 非管理员 — 立刻清登录态 + 踢出 */
+   try{ await window._bkdAuthFns.signOut(); }catch(e){}
+   showLoginScreen('此账号无管理员权限,无法访问客户管理。');
+   return;
+  }
+  G('adminEmail').textContent = user.email;
+  G('loginScreen').style.display = 'none';
+  G('app').style.display = 'block';
+  initApp();
+ });
+});
+
+function showLoginScreen(errMsg){
+ G('loginScreen').style.display = 'flex';
+ G('app').style.display = 'none';
+ G('emailInput').value = '';
+ G('pwInput').value = '';
+ if(errMsg){ G('loginErr').textContent = errMsg; G('loginErr').style.display = 'block'; }
+ else { G('loginErr').style.display = 'none'; }
+}
+
+G('emailInput').addEventListener('keydown', e => { if(e.key==='Enter') G('pwInput').focus(); });
+G('pwInput').addEventListener('keydown', e => { if(e.key==='Enter') doLogin(); });
+G('loginBtn').addEventListener('click', doLogin);
+
+async function doLogin(){
+ var email = (G('emailInput').value || '').trim();
+ var pass = G('pwInput').value;
+ if(!email || !pass){
+  G('loginErr').textContent = '请填写邮箱和密码';
+  G('loginErr').style.display = 'block';
+  return;
+ }
+ G('loginBtn').disabled = true;
+ G('loginBtn').textContent = '登录中…';
+ G('loginErr').style.display = 'none';
+ try{
+  await window._bkdAuthFns.signInWithEmailAndPassword(window._bkdAuth, email, pass);
+ } catch(e){
+  var msg = '登录失败';
+  if(e.message && e.message.indexOf('invalid')>=0) msg = '邮箱或密码错误';
+  else if(e.message) msg = e.message;
+  G('loginErr').textContent = msg;
+  G('loginErr').style.display = 'block';
+ }
+ G('loginBtn').disabled = false;
+ G('loginBtn').textContent = '登 录';
+}
+
+G('logoutBtn').addEventListener('click', async () => {
+ try{ await window._bkdAuthFns.signOut(); }catch(e){}
+ showLoginScreen();
+});
+
+/* ── 初始化 ── */
+function initApp(){
+ if(appInited){ loadCustomers(); return; }
+ appInited = true;
+ loadCustomers();
+ G('refreshBtn').addEventListener('click', loadCustomers);
+ G('searchInput').addEventListener('input', renderTable);
+ G('addCustomerBtn').addEventListener('click', openAddCustomerModal);
+ initAddModal();
+ initMarkupModal();
+ initConfirmModal();
+}
+
+/* ── 加载客户列表 ── */
+async function loadCustomers(){
+ G('customersTableWrap').innerHTML = '<div class="loading"><span class="spin"></span>加载中…</div>';
+ try{
+  var d = await window._bkdApi('GET', '/api/admin/list-users');
+  /* 响应格式: { ok: true, users: [{ uid, email, displayName, disabled,
+       createdAt, lastSignIn, markup, note }, ...] } */
+  allCustomers = (d.users || []).slice();
+  /* 按最近登录倒序;从未登录的放最后 */
+  allCustomers.sort((a, b) => {
+   var ta = a.lastSignIn ? new Date(a.lastSignIn).getTime() : 0;
+   var tb = b.lastSignIn ? new Date(b.lastSignIn).getTime() : 0;
+   if(ta === 0 && tb === 0) return (a.email || '').localeCompare(b.email || '');
+   if(ta === 0) return 1;
+   if(tb === 0) return -1;
+   return tb - ta;
+  });
+  renderTable();
+  updateStats();
+ } catch(e){
+  G('customersTableWrap').innerHTML =
+   '<div class="loading" style="color:var(--red);">加载失败:' + esc(e.message) +
+   '<br><br><button class="btn btn-outline btn-sm" onclick="location.reload()">重试</button></div>';
+ }
+}
+
+function updateStats(){
+ G('s-total').textContent = allCustomers.length;
+ var never = allCustomers.filter(u => !u.lastSignIn).length;
+ G('s-never').textContent = never;
+ var now = Date.now();
+ var month30 = 30 * 24 * 3600 * 1000;
+ var active = allCustomers.filter(u =>
+  u.lastSignIn && (now - new Date(u.lastSignIn).getTime() < month30)
+ ).length;
+ G('s-active').textContent = active;
+ var setMarkups = allCustomers.filter(u => u.markup !== null && u.markup !== undefined).map(u => u.markup);
+ if(setMarkups.length){
+  var avg = setMarkups.reduce((a,b) => a+b, 0) / setMarkups.length;
+  G('s-avg').textContent = avg.toFixed(2) + 'x';
+ } else {
+  G('s-avg').textContent = '—';
+ }
+}
+
+/* ── 倍数胶囊样式分级 ── */
+function markupTier(m){
+ if(m === null || m === undefined) return 'unset';
+ if(m <= 1.0) return 'internal';
+ if(m < 3.0) return 'low';
+ if(m < 5.0) return 'mid';
+ if(m < 10.0) return 'high';
+ return 'vhigh';
+}
+
+/* ── 渲染表格 ── */
+function renderTable(){
+ var kw = (G('searchInput').value || '').toLowerCase().trim();
+ var list = allCustomers.filter(u => {
+  if(!kw) return true;
+  return (u.email || '').toLowerCase().includes(kw) ||
+         (u.displayName || '').toLowerCase().includes(kw);
+ });
+
+ if(!list.length){
+  if(kw){
+   G('customersTableWrap').innerHTML =
+    '<div class="empty"><div class="empty-icon">🔍</div><p>没有匹配「' + esc(kw) + '」的客户</p></div>';
+  } else {
+   G('customersTableWrap').innerHTML =
+    '<div class="empty"><div class="empty-icon">👥</div><p>还没有客户。点右上「+ 添加客户」开始</p></div>';
+  }
+  return;
+ }
+
+ var rows = list.map((u, idx) => {
+  /* 倍数胶囊 */
+  var tier = markupTier(u.markup);
+  var markupText = (u.markup === null || u.markup === undefined)
+   ? '未设·走兜底'
+   : Number(u.markup).toFixed(u.markup % 1 === 0 ? 1 : 2) + 'x';
+  var markupPill = '<span class="markup-pill tier-' + tier + '" data-edit-markup="' + esc(u.uid) +
+   '" title="点击修改">' + esc(markupText) + ' <span class="markup-edit-hint">✏</span></span>';
+
+  /* 最近登录 */
+  var lastLogin;
+  if(!u.lastSignIn){
+   lastLogin = '<span class="login-never">⚠ 从未登录</span>';
+  } else {
+   var t = new Date(u.lastSignIn);
+   var diffDays = (Date.now() - t.getTime()) / (24*3600*1000);
+   var dateStr = t.toLocaleDateString('zh-CN', {year:'2-digit', month:'2-digit', day:'2-digit'});
+   var timeStr = t.toLocaleTimeString('zh-CN', {hour:'2-digit', minute:'2-digit'});
+   var relText;
+   if(diffDays < 1) relText = '今天';
+   else if(diffDays < 2) relText = '昨天';
+   else if(diffDays < 7) relText = Math.floor(diffDays) + ' 天前';
+   else if(diffDays < 30) relText = Math.floor(diffDays/7) + ' 周前';
+   else if(diffDays < 90) relText = Math.floor(diffDays/30) + ' 月前';
+   else relText = '<span class="login-stale">' + Math.floor(diffDays/30) + ' 月前</span>';
+   lastLogin = '<div class="login-time">' + dateStr + ' ' + timeStr + '</div>' +
+               '<div class="login-time-sub">' + relText + '</div>';
+  }
+
+  /* 创建时间 */
+  var createdStr = '—';
+  if(u.createdAt){
+   var ct = new Date(u.createdAt);
+   createdStr = ct.toLocaleDateString('zh-CN', {year:'2-digit', month:'2-digit', day:'2-digit'});
+  }
+
+  /* 状态 */
+  var statusBadge = u.disabled
+   ? '<span class="badge-disabled">已禁用</span>'
+   : '<span class="badge-active">启用</span>';
+
+  return '<tr>' +
+   '<td class="td-idx">' + (idx + 1) + '</td>' +
+   '<td><div class="col-email">' + esc(u.email || '') + '</div>' +
+        (u.displayName ? '<div class="col-displayname">' + esc(u.displayName) + '</div>' : '') +
+        '</td>' +
+   '<td>' + markupPill + '</td>' +
+   '<td style="font-size:11px;color:var(--muted);">' + createdStr + '</td>' +
+   '<td>' + lastLogin + '</td>' +
+   '<td>' + statusBadge + '</td>' +
+   '<td style="white-space:nowrap;">' +
+    '<button class="btn btn-teal btn-sm" data-edit-markup="' + esc(u.uid) + '">改倍数</button> ' +
+    '<button class="btn-del" data-delete-uid="' + esc(u.uid) + '" title="删除">🗑</button>' +
+   '</td>' +
+  '</tr>';
+ }).join('');
+
+ G('customersTableWrap').innerHTML =
+  '<div style="overflow-x:auto;"><table>' +
+   '<thead><tr>' +
+    '<th class="th-idx">#</th>' +
+    '<th>邮箱 / 显示名</th>' +
+    '<th>加价倍数</th>' +
+    '<th>创建时间</th>' +
+    '<th>最近登录</th>' +
+    '<th>状态</th>' +
+    '<th>操作</th>' +
+   '</tr></thead><tbody>' + rows + '</tbody></table></div>';
+
+ /* 绑定事件 */
+ G('customersTableWrap').querySelectorAll('[data-edit-markup]').forEach(el => {
+  el.addEventListener('click', () => {
+   var uid = el.dataset.editMarkup;
+   var u = allCustomers.find(x => x.uid === uid);
+   if(u) openMarkupModal(u);
+  });
+ });
+ G('customersTableWrap').querySelectorAll('[data-delete-uid]').forEach(el => {
+  el.addEventListener('click', () => {
+   var uid = el.dataset.deleteUid;
+   var u = allCustomers.find(x => x.uid === uid);
+   if(u) openDeleteConfirm(u);
+  });
+ });
+}
+
+/* ────────────────────────────────────────
+  添加客户 Modal
+──────────────────────────────────────── */
+function initAddModal(){
+ G('customerModalClose').addEventListener('click', closeAddModal);
+ G('customerModalCancel').addEventListener('click', closeAddModal);
+ G('customerModal').addEventListener('click', e => { if(e.target === G('customerModal')) closeAddModal(); });
+ G('customerModalSave').addEventListener('click', createCustomer);
+ G('genPwdBtn').addEventListener('click', () => {
+  G('cust-password').value = generatePassword();
+ });
+
+ /* 倍数预设 */
+ G('markupPresets').querySelectorAll('.markup-preset').forEach(btn => {
+  btn.addEventListener('click', () => {
+   G('cust-markup').value = btn.dataset.val;
+   G('markupPresets').querySelectorAll('.markup-preset').forEach(b => b.classList.remove('on'));
+   btn.classList.add('on');
+  });
+ });
+ G('cust-markup').addEventListener('input', () => {
+  var v = G('cust-markup').value;
+  G('markupPresets').querySelectorAll('.markup-preset').forEach(b => {
+   b.classList.toggle('on', b.dataset.val === v);
+  });
+ });
+
+ /* 复制按钮 */
+ G('customerModal').querySelectorAll('.cred-copy-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+   var what = btn.dataset.copy;
+   var text = '';
+   if(what === 'email') text = G('cred-email').textContent;
+   else if(what === 'password') text = G('cred-password').textContent;
+   else if(what === 'all'){
+    text = 'BKDLL 香港国际物流 客户登录信息\n' +
+           '邮箱:' + G('cred-email').textContent + '\n' +
+           '密码:' + G('cred-password').textContent + '\n' +
+           '登录地址:' + G('cred-url').textContent;
+   }
+   copyToClipboard(text, btn);
+  });
+ });
+}
+
+function openAddCustomerModal(){
+ G('cust-email').value = '';
+ G('cust-name').value = '';
+ G('cust-password').value = '';
+ G('cust-markup').value = '3.5';
+ G('markupPresets').querySelectorAll('.markup-preset').forEach(b => {
+  b.classList.toggle('on', b.dataset.val === '3.5');
+ });
+ G('credDisplay').classList.remove('show');
+ G('customerModalAlert').style.display = 'none';
+ G('customerModalSave').style.display = 'inline-block';
+ G('customerModalSave').disabled = false;
+ G('customerModalSave').textContent = '创建账号';
+ G('customerModalCancel').textContent = '取消';
+ openModal('customerModal');
+ setTimeout(() => G('cust-email').focus(), 100);
+}
+function closeAddModal(){
+ closeModal('customerModal');
+ /* 如果创建成功了,刷新列表 */
+ if(G('credDisplay').classList.contains('show')) loadCustomers();
+}
+
+function generatePassword(len){
+ len = len || 10;
+ var chars = 'abcdefghjkmnpqrstuvwxyzABCDEFGHJKMNPQRSTUVWXYZ23456789';
+ var pwd = '';
+ var arr = new Uint32Array(len);
+ crypto.getRandomValues(arr);
+ for(var i=0; i<len; i++) pwd += chars[arr[i] % chars.length];
+ return pwd;
+}
+
+async function createCustomer(){
+ var email = (G('cust-email').value || '').trim().toLowerCase();
+ var name = (G('cust-name').value || '').trim();
+ var password = G('cust-password').value;
+ var markup = parseFloat(G('cust-markup').value);
+
+ if(!email){ showAlert('customerModalAlert','err','请填写客户邮箱'); return; }
+ if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){ showAlert('customerModalAlert','err','邮箱格式不正确'); return; }
+ if(!password){ showAlert('customerModalAlert','err','请填写或生成临时密码'); return; }
+ if(password.length < 6){ showAlert('customerModalAlert','err','密码至少 6 位'); return; }
+ if(isNaN(markup) || markup < 0.5 || markup > 20){
+  showAlert('customerModalAlert','err','加价倍数必须在 0.5–20.0 之间'); return;
+ }
+
+ var btn = G('customerModalSave');
+ btn.disabled = true; btn.textContent = '创建中…';
+ G('customerModalAlert').style.display = 'none';
+
+ try{
+  await window._bkdApi('POST', '/api/admin/create-user', {
+   email: email,
+   password: password,
+   displayName: name,
+   markup: markup
+  });
+  G('cred-email').textContent = email;
+  G('cred-password').textContent = password;
+  G('cred-markup').textContent = markup.toFixed(markup % 1 === 0 ? 1 : 2) + 'x';
+  G('credDisplay').classList.add('show');
+  showAlert('customerModalAlert', 'ok', '✅ 客户账号已创建');
+  btn.style.display = 'none';
+  G('customerModalCancel').textContent = '完成';
+ } catch(e){
+  showAlert('customerModalAlert', 'err', '创建失败:' + e.message);
+  btn.disabled = false;
+  btn.textContent = '创建账号';
+ }
+}
+
+/* ────────────────────────────────────────
+  改倍数 Modal
+──────────────────────────────────────── */
+function initMarkupModal(){
+ G('markupModalClose').addEventListener('click', () => closeModal('markupModal'));
+ G('markupModalCancel').addEventListener('click', () => closeModal('markupModal'));
+ G('markupModal').addEventListener('click', e => { if(e.target === G('markupModal')) closeModal('markupModal'); });
+ G('markupModalSave').addEventListener('click', saveMarkup);
+
+ G('muPresets').querySelectorAll('.markup-preset').forEach(btn => {
+  btn.addEventListener('click', () => {
+   G('mu-new').value = btn.dataset.val;
+   G('muPresets').querySelectorAll('.markup-preset').forEach(b => b.classList.remove('on'));
+   btn.classList.add('on');
+  });
+ });
+ G('mu-new').addEventListener('input', () => {
+  var v = G('mu-new').value;
+  G('muPresets').querySelectorAll('.markup-preset').forEach(b => {
+   b.classList.toggle('on', b.dataset.val === v);
+  });
+ });
+}
+
+function openMarkupModal(u){
+ editingCustomer = u;
+ G('mu-email').textContent = u.email || '';
+ G('mu-name').textContent = u.displayName || '—';
+ var cur = (u.markup === null || u.markup === undefined)
+  ? '未设 · Worker 兜底'
+  : Number(u.markup).toFixed(u.markup % 1 === 0 ? 1 : 2) + 'x';
+ G('mu-current').textContent = cur;
+ G('mu-new').value = (u.markup !== null && u.markup !== undefined) ? u.markup : '3.5';
+ G('muPresets').querySelectorAll('.markup-preset').forEach(b => {
+  b.classList.toggle('on', b.dataset.val === String(u.markup));
+ });
+ G('markupModalAlert').style.display = 'none';
+ G('markupModalSave').disabled = false;
+ G('markupModalSave').textContent = '保存';
+ openModal('markupModal');
+ setTimeout(() => { G('mu-new').focus(); G('mu-new').select(); }, 100);
+}
+
+async function saveMarkup(){
+ if(!editingCustomer) return;
+ var newMarkup = parseFloat(G('mu-new').value);
+ if(isNaN(newMarkup) || newMarkup < 0.5 || newMarkup > 20){
+  showAlert('markupModalAlert', 'err', '倍数必须在 0.5–20.0 之间'); return;
+ }
+ var btn = G('markupModalSave');
+ btn.disabled = true; btn.textContent = '保存中…';
+ try{
+  await window._bkdApi('PATCH', '/api/admin/user/' + encodeURIComponent(editingCustomer.uid) + '/markup', {
+   markup: newMarkup
+  });
+  /* 同步本地缓存 */
+  var ix = allCustomers.findIndex(x => x.uid === editingCustomer.uid);
+  if(ix >= 0) allCustomers[ix].markup = newMarkup;
+  renderTable();
+  updateStats();
+  closeModal('markupModal');
+ } catch(e){
+  showAlert('markupModalAlert', 'err', '保存失败:' + e.message);
+  btn.disabled = false;
+  btn.textContent = '保存';
+ }
+}
+
+/* ────────────────────────────────────────
+  删除确认 Modal
+──────────────────────────────────────── */
+function initConfirmModal(){
+ G('confirmClose').addEventListener('click', () => { pendingDelete = null; closeModal('confirmModal'); });
+ G('confirmCancel').addEventListener('click', () => { pendingDelete = null; closeModal('confirmModal'); });
+ G('confirmModal').addEventListener('click', e => {
+  if(e.target === G('confirmModal')){ pendingDelete = null; closeModal('confirmModal'); }
+ });
+ G('confirmOk').addEventListener('click', doDelete);
+}
+
+function openDeleteConfirm(u){
+ pendingDelete = u;
+ G('confirm-sub').innerHTML =
+  '邮箱:<strong>' + esc(u.email || '') + '</strong>' +
+  (u.displayName ? '<br>显示名:' + esc(u.displayName) : '');
+ G('confirmAlert').style.display = 'none';
+ G('confirmOk').disabled = false;
+ G('confirmOk').textContent = '确认删除';
+ openModal('confirmModal');
+}
+
+async function doDelete(){
+ if(!pendingDelete) return;
+ var btn = G('confirmOk');
+ btn.disabled = true; btn.textContent = '删除中…';
+ try{
+  await window._bkdApi('DELETE', '/api/admin/user/' + encodeURIComponent(pendingDelete.uid));
+  /* 本地移除 */
+  allCustomers = allCustomers.filter(x => x.uid !== pendingDelete.uid);
+  pendingDelete = null;
+  renderTable();
+  updateStats();
+  closeModal('confirmModal');
+ } catch(e){
+  showAlert('confirmAlert', 'err', '删除失败:' + e.message);
+  btn.disabled = false;
+  btn.textContent = '确认删除';
+ }
+}
+
+/* ────────────────────────────────────────
+  工具函数
+──────────────────────────────────────── */
+function openModal(id){ G(id).classList.add('on'); document.body.style.overflow = 'hidden'; }
+function closeModal(id){ G(id).classList.remove('on'); document.body.style.overflow = ''; }
+function showAlert(id, tp, msg){
+ var el = G(id);
+ el.className = 'alert alert-' + (tp === 'err' ? 'err' : 'ok');
+ el.textContent = msg;
+ el.style.display = 'block';
+ if(tp === 'ok') setTimeout(() => el.style.display = 'none', 4000);
+}
+function esc(s){
+ return String(s == null ? '' : s)
+  .replace(/&/g, '&amp;')
+  .replace(/</g, '&lt;')
+  .replace(/>/g, '&gt;')
+  .replace(/"/g, '&quot;')
+  .replace(/'/g, '&#39;');
+}
+function copyToClipboard(text, btn){
+ var orig = btn.textContent;
+ var done = () => { btn.textContent = '✓ 已复制'; setTimeout(() => btn.textContent = orig, 1500); };
+ if(navigator.clipboard && navigator.clipboard.writeText){
+  navigator.clipboard.writeText(text).then(done).catch(() => fallback(text, done));
+ } else {
+  fallback(text, done);
+ }
+}
+function fallback(text, done){
+ var ta = document.createElement('textarea');
+ ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
+ document.body.appendChild(ta); ta.select();
+ try{ document.execCommand('copy'); }catch(e){}
+ document.body.removeChild(ta);
+ done();
+}
+})();
+</script>
+
+</body>
+</html>
