@@ -692,12 +692,15 @@ async function doQuote(){
  try{
   var r=await fetch(ITDIDA_WORKER+'/quote',{
    method:'POST',
-   headers:{'Content-Type':'application/json'},
+   headers:{
+    'Content-Type':'application/json',
+    'Authorization':'Bearer '+bkdllToken  // ⚡ FIX 2026-05-21:传 token 让后端能读 Firestore markup
+   },
    body:JSON.stringify({
     countryCode:code,
     weight:weight,
     pieceCount:pieces,
-    email:currentUserEmail  // ⚡ 带上当前登录邮箱，Worker 按邮箱算 markup
+    email:currentUserEmail  // 同时也传 email 作为兜底(后端两个都用)
    })
   });
   var d=await r.json();
