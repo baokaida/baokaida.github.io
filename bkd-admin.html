@@ -801,6 +801,17 @@ setTimeout(function(){
 <script>
 (function(){
 'use strict';
+/* ── 管理员白名单(P1 安全修复 2026-05-21) ──
+ * 前端校验:只有此名单内的邮箱能进入 App。
+ * 历史问题:旧代码靠 getIdTokenResult 假对象的 admin claim,
+ * 但兼容层永远返回 admin=true,导致客户账号也能看全部订单。
+ * 真正的权限边界应该在后端 API 加管理员中间件,前端这里先兜住。
+ */
+const ADMIN_WHITELIST=['bkd@baokaida.com'];
+function isAdmin(email){
+ if(!email)return false;
+ return ADMIN_WHITELIST.indexOf(String(email).trim().toLowerCase())>=0;
+}
 const WORKER='https://api.bkdll.com/api/track';
 const ITDIDA='https://api.bkdll.com/api/itdida';
 const ADMIN_API='https://api.bkdll.com/api/admin';
@@ -816,31 +827,12 @@ waitFirebase(()=>{
    showLoginScreen();
    return;
   }
-  // 检查 admin claim
-  // 注意：getIdTokenResult(false) 用本地缓存，不强制刷新。
-  // Firebase 会在 token 真过期时（默认 1 小时）自动续期，
-  // 我们不需要每次监听器触发都向服务器要新 token——那样会因为
-  // 偶发的网络抖动/瞬态错误把 admin 踢出登录页。
-  //
-  // 如果第一次拿 token 失败，重试一次（强制刷新）再决定踢不踢。
-  var token;
-  try{
-   token=await user.getIdTokenResult(false);
-  }catch(e1){
-   // 第一次失败，重试（强制刷新）
-   try{
-    token=await user.getIdTokenResult(true);
-   }catch(e2){
-    // 两次都失败：可能是网络问题，不要踢出，保持当前页面，
-    // 让用户继续操作；下次监听器触发时再试。
-    console.warn('[Admin] 鉴权检查失败（已忽略）：',e2.message);
-    return;
-   }
-  }
-  if(token.claims.admin!==true){
-   // 不是管理员 — 立刻踢出
-   await window._bkdAuthFns.signOut(window._bkdAuth);
-   showLoginScreen('此账号无管理员权限，已自动登出');
+  // 管理员白名单校验(P1 安全修复 2026-05-21)
+  // 旧代码靠 token.claims.admin 但兼容层永远返回 true,无效;
+  // 改成显式邮箱白名单,不在名单的账号一律踢出。
+  if(!isAdmin(user.email)){
+   try{ await window._bkdAuthFns.signOut(window._bkdAuth); }catch(e){}
+   showLoginScreen('此账号无管理员权限,无法访问后台。');
    return;
   }
   // 是管理员 — 进入 App
