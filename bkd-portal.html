@@ -174,50 +174,109 @@ tr:hover td{background:var(--sky);}
 .pdf-loading-step.done{color:var(--green);}
 .pdf-loading-step .step-icon{width:18px;flex-shrink:0;text-align:center;}
 
-/* 报价单模板(隐藏渲染) */
-#quotePdfTemplate{position:fixed;left:-9999px;top:0;width:794px;background:#fff;padding:40px 48px;font-family:'Noto Sans SC','PingFang SC','Microsoft YaHei',sans-serif;color:#0D2D4A;box-sizing:border-box;}
-#quotePdfTemplate .pdf-head{display:flex;align-items:center;gap:14px;border-bottom:3px solid #0A6EBD;padding-bottom:14px;margin-bottom:18px;}
-#quotePdfTemplate .pdf-logo{width:54px;height:54px;background:linear-gradient(135deg,#0A6EBD,#0BB8C8);border-radius:10px;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:900;font-size:18px;letter-spacing:1px;font-family:'IBM Plex Mono',monospace;}
-#quotePdfTemplate .pdf-title-cn{font-size:18px;font-weight:700;color:#0D2D4A;line-height:1.3;}
-#quotePdfTemplate .pdf-title-en{font-size:11px;color:#6B8BAA;letter-spacing:.5px;margin-top:2px;}
-#quotePdfTemplate .pdf-sectit{font-size:22px;font-weight:700;color:#0A6EBD;letter-spacing:.5px;margin-bottom:14px;}
-#quotePdfTemplate .pdf-sectit-sub{font-size:11px;color:#6B8BAA;font-weight:500;letter-spacing:1.5px;text-transform:uppercase;margin-left:8px;}
-#quotePdfTemplate .pdf-meta-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px 24px;background:#F5F9FF;border:1px solid #D6E8F5;border-radius:10px;padding:16px 20px;margin-bottom:20px;}
-#quotePdfTemplate .pdf-meta-row{display:flex;align-items:baseline;font-size:12px;}
-#quotePdfTemplate .pdf-meta-label{color:#6B8BAA;min-width:78px;font-weight:600;}
-#quotePdfTemplate .pdf-meta-val{color:#0D2D4A;font-weight:600;flex:1;word-break:break-all;}
-#quotePdfTemplate .pdf-meta-val.highlight{color:#0A6EBD;font-weight:700;}
-#quotePdfTemplate .pdf-section-head{font-size:13px;font-weight:700;color:#0D2D4A;margin:18px 0 10px;padding-bottom:6px;border-bottom:1.5px solid #D6E8F5;display:flex;align-items:center;justify-content:space-between;}
-#quotePdfTemplate .pdf-section-head .pdf-section-hint{font-size:10px;color:#6B8BAA;font-weight:500;}
-#quotePdfTemplate .pdf-price-table{width:100%;border-collapse:collapse;font-size:12px;border:1px solid #D6E8F5;border-radius:8px;overflow:hidden;}
-#quotePdfTemplate .pdf-price-table th{background:#0A6EBD;color:#fff;padding:9px 8px;text-align:center;font-weight:700;font-size:11px;}
-#quotePdfTemplate .pdf-price-table th.col-channel{text-align:left;padding-left:14px;}
-#quotePdfTemplate .pdf-price-table td{padding:9px 8px;text-align:center;border-bottom:1px solid #ECF3FB;font-family:'IBM Plex Mono',monospace;color:#0D2D4A;}
-#quotePdfTemplate .pdf-price-table td.col-channel{text-align:left;padding-left:14px;font-family:'Noto Sans SC',sans-serif;font-weight:600;font-size:11px;}
-#quotePdfTemplate .pdf-price-table tr:nth-child(even) td{background:#FAFCFE;}
-#quotePdfTemplate .pdf-price-table th.highlight{background:#0BB8C8;}
-#quotePdfTemplate .pdf-price-table td.highlight{background:#E8F8F2;color:#0E9E6E;font-weight:700;}
-#quotePdfTemplate .pdf-price-note{font-size:10px;color:#6B8BAA;margin-top:6px;font-style:italic;}
-#quotePdfTemplate .pdf-flow{display:flex;align-items:stretch;justify-content:space-between;gap:0;margin:10px 0;background:#F5F9FF;border-radius:10px;padding:18px 14px;}
-#quotePdfTemplate .pdf-flow-step{flex:1;text-align:center;position:relative;padding:0 4px;}
-#quotePdfTemplate .pdf-flow-num{width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,#0A6EBD,#0BB8C8);color:#fff;font-weight:900;font-size:15px;display:inline-flex;align-items:center;justify-content:center;margin-bottom:8px;font-family:'IBM Plex Mono',monospace;}
-#quotePdfTemplate .pdf-flow-title{font-size:12px;font-weight:700;color:#0D2D4A;margin-bottom:3px;}
-#quotePdfTemplate .pdf-flow-desc{font-size:10px;color:#6B8BAA;line-height:1.5;}
-#quotePdfTemplate .pdf-flow-arrow{position:absolute;right:-8px;top:11px;color:#0BB8C8;font-size:18px;font-weight:900;}
-#quotePdfTemplate .pdf-flow-step:last-child .pdf-flow-arrow{display:none;}
-#quotePdfTemplate .pdf-notes{background:#FEF8E6;border:1px solid #F0D080;border-radius:8px;padding:12px 16px;margin-top:14px;}
-#quotePdfTemplate .pdf-notes-title{font-size:11px;font-weight:700;color:#7a5a00;margin-bottom:6px;letter-spacing:.5px;}
-#quotePdfTemplate .pdf-notes ul{margin:0;padding-left:18px;list-style-type:disc;}
-#quotePdfTemplate .pdf-notes li{font-size:10.5px;color:#7a5a00;line-height:1.7;}
-#quotePdfTemplate .pdf-footer{margin-top:18px;padding-top:14px;border-top:1.5px solid #D6E8F5;display:flex;align-items:flex-start;justify-content:space-between;gap:14px;}
-#quotePdfTemplate .pdf-footer-left{flex:1;font-size:11px;color:#3A5A7A;line-height:1.7;}
-#quotePdfTemplate .pdf-footer-left .pdf-brand{font-size:13px;font-weight:700;color:#0D2D4A;margin-bottom:4px;}
-#quotePdfTemplate .pdf-footer-left .pdf-contact-line{color:#6B8BAA;}
-#quotePdfTemplate .pdf-footer-left .pdf-contact-line strong{color:#0A6EBD;}
-#quotePdfTemplate .pdf-qr-box{text-align:center;}
-#quotePdfTemplate .pdf-qr-canvas{width:78px;height:78px;border:1px solid #D6E8F5;border-radius:6px;display:block;}
-#quotePdfTemplate .pdf-qr-text{font-size:9px;color:#6B8BAA;margin-top:4px;}
-#quotePdfTemplate .pdf-validity-stamp{position:absolute;top:38px;right:48px;border:2px solid #dc2626;border-radius:6px;padding:6px 12px;color:#dc2626;font-weight:700;font-size:11px;letter-spacing:1px;transform:rotate(-3deg);background:rgba(255,255,255,0.9);}
+/* 报价单模板 — 视觉风格匹配参考图(2026-05-22 v2)*/
+#quotePdfTemplate{position:fixed;left:-9999px;top:0;width:794px;background:#fff;font-family:'Noto Sans SC','PingFang SC','Microsoft YaHei',sans-serif;color:#0D2D4A;box-sizing:border-box;}
+
+/* 顶部蓝色 hero 带飞机背景 */
+.pdf-hero{position:relative;background:linear-gradient(135deg,#E8F1FA 0%,#F0F8FF 50%,#DDE8F5 100%);padding:24px 36px;display:flex;align-items:center;gap:18px;overflow:hidden;}
+.pdf-hero::before{content:'✈';position:absolute;right:30px;top:50%;transform:translateY(-50%) rotate(-20deg);font-size:140px;color:#0A6EBD;opacity:0.07;pointer-events:none;}
+.pdf-hero::after{content:'';position:absolute;right:80px;top:8px;width:90px;height:90px;border-radius:50%;background:radial-gradient(circle,#B8D5EE 0%,transparent 70%);opacity:0.5;pointer-events:none;}
+.pdf-hero-logo{height:50px;flex-shrink:0;position:relative;z-index:2;}
+.pdf-hero-titles{position:relative;z-index:2;}
+.pdf-hero-cn{font-size:22px;font-weight:700;color:#0D2D4A;letter-spacing:.5px;}
+.pdf-hero-en{font-size:11px;color:#6B8BAA;letter-spacing:1px;margin-top:3px;}
+
+/* 主体区(白底)*/
+.pdf-body{padding:24px 36px 0;}
+
+/* 标题 + 有效期徽章 */
+.pdf-title-row{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:18px;}
+.pdf-title-block .pdf-title-cn{font-size:24px;font-weight:700;color:#0D2D4A;letter-spacing:.5px;}
+.pdf-title-block .pdf-title-en{font-size:11px;color:#0BB8C8;letter-spacing:2px;margin-top:4px;font-weight:600;}
+.pdf-title-block .pdf-title-underline{width:50px;height:3px;background:linear-gradient(90deg,#0A6EBD,#0BB8C8);margin-top:6px;border-radius:2px;}
+.pdf-expire-badge{background:linear-gradient(135deg,#0E9E6E,#0BB8C8);color:#fff;padding:10px 16px;border-radius:10px;font-size:11px;font-weight:700;text-align:right;line-height:1.5;box-shadow:0 4px 12px rgba(11,184,200,0.25);}
+.pdf-expire-badge .pdf-expire-cn{font-size:13px;display:flex;align-items:center;gap:5px;}
+.pdf-expire-badge .pdf-expire-en{font-size:9px;opacity:0.85;letter-spacing:.5px;margin-top:2px;font-weight:500;}
+
+/* Meta 信息卡(报价编号/客户/邮箱 + 签发/有效期/目的地)*/
+.pdf-meta-card{background:#F5F9FF;border:1px solid #D6E8F5;border-radius:12px;padding:18px 22px;margin-bottom:20px;display:grid;grid-template-columns:1fr 1fr;gap:14px 28px;}
+.pdf-meta-item{display:flex;align-items:flex-start;gap:10px;}
+.pdf-meta-icon{width:30px;height:30px;background:#fff;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;box-shadow:0 1px 3px rgba(10,110,189,0.08);}
+.pdf-meta-text{flex:1;min-width:0;}
+.pdf-meta-text .pdf-meta-label-cn{font-size:11px;color:#3A5A7A;font-weight:600;}
+.pdf-meta-text .pdf-meta-label-en{font-size:9px;color:#A0B5CC;letter-spacing:.8px;margin-left:4px;}
+.pdf-meta-text .pdf-meta-val{font-size:13px;color:#0D2D4A;font-weight:700;margin-top:3px;word-break:break-all;line-height:1.4;}
+.pdf-meta-text .pdf-meta-val.mono{font-family:'IBM Plex Mono',monospace;letter-spacing:.5px;}
+
+/* 分节小标题 */
+.pdf-section{margin-bottom:18px;}
+.pdf-section-title{display:flex;align-items:center;gap:8px;margin-bottom:10px;}
+.pdf-section-title .pdf-section-icon{width:24px;height:24px;background:linear-gradient(135deg,#0A6EBD,#0BB8C8);border-radius:6px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:13px;}
+.pdf-section-title .pdf-section-cn{font-size:15px;font-weight:700;color:#0D2D4A;}
+.pdf-section-title .pdf-section-en{font-size:10px;color:#6B8BAA;letter-spacing:1.5px;font-weight:600;margin-left:2px;}
+.pdf-section-title .pdf-section-spacer{flex:1;}
+.pdf-section-title .pdf-section-hint{font-size:10px;color:#6B8BAA;}
+
+/* 价格表 */
+.pdf-price-table{width:100%;border-collapse:separate;border-spacing:0;font-size:13px;border:1px solid #D6E8F5;border-radius:10px;overflow:hidden;}
+.pdf-price-table th{background:#0D2D4A;color:#fff;padding:11px 8px;text-align:center;font-weight:700;font-size:12px;}
+.pdf-price-table th.col-channel{text-align:left;padding-left:18px;font-size:11px;letter-spacing:1px;}
+.pdf-price-table th.col-channel-en{font-size:9px;color:#A0B5CC;font-weight:500;display:block;margin-top:2px;letter-spacing:1.5px;}
+.pdf-price-table th.highlight{background:linear-gradient(135deg,#0E9E6E,#0BB8C8);position:relative;}
+.pdf-price-table th .col-sub{font-size:9px;font-weight:500;display:block;margin-top:2px;padding:1px 6px;background:rgba(255,255,255,0.2);border-radius:10px;display:inline-block;letter-spacing:.5px;}
+.pdf-price-table td{padding:14px 8px;text-align:center;border-bottom:1px solid #ECF3FB;font-family:'IBM Plex Mono',monospace;color:#0D2D4A;font-size:18px;font-weight:700;line-height:1.2;}
+.pdf-price-table td .td-unit{font-size:9px;color:#6B8BAA;font-weight:500;display:block;margin-top:3px;font-family:'Noto Sans SC',sans-serif;letter-spacing:.5px;}
+.pdf-price-table td.col-channel{text-align:left;padding-left:18px;font-family:'Noto Sans SC',sans-serif;font-weight:700;font-size:13px;color:#0D2D4A;}
+.pdf-price-table td.col-channel .col-channel-en{display:block;font-weight:500;font-size:10px;color:#6B8BAA;margin-top:2px;letter-spacing:.3px;}
+.pdf-price-table tr:last-child td{border-bottom:none;}
+.pdf-price-table td.highlight{background:linear-gradient(180deg,#E5F7F1 0%,#F5FBF9 100%);color:#0E9E6E;}
+.pdf-price-currency{font-size:10px;color:#6B8BAA;margin-top:8px;font-style:italic;line-height:1.5;}
+
+/* 服务流程图 */
+.pdf-flow{display:flex;align-items:flex-start;justify-content:space-between;gap:0;margin-top:6px;}
+.pdf-flow-step{flex:1;text-align:center;position:relative;padding:0 4px;}
+.pdf-flow-icon-circle{width:64px;height:64px;border-radius:50%;background:linear-gradient(135deg,#E0F0FC,#F5FBFF);border:2px solid #0A6EBD;display:inline-flex;align-items:center;justify-content:center;margin-bottom:10px;position:relative;}
+.pdf-flow-icon-circle .pdf-flow-icon-svg{font-size:30px;line-height:1;}
+.pdf-flow-num-badge{position:absolute;top:-4px;left:-4px;width:22px;height:22px;border-radius:50%;background:#0D2D4A;color:#fff;font-size:11px;font-weight:900;display:flex;align-items:center;justify-content:center;font-family:'IBM Plex Mono',monospace;}
+.pdf-flow-title-cn{font-size:13px;font-weight:700;color:#0D2D4A;margin-bottom:3px;}
+.pdf-flow-title-en{font-size:10px;color:#6B8BAA;font-weight:600;letter-spacing:.5px;margin-bottom:6px;}
+.pdf-flow-desc{font-size:10px;color:#6B8BAA;line-height:1.6;}
+.pdf-flow-desc .pdf-flow-desc-bold{color:#3A5A7A;font-weight:600;display:block;}
+.pdf-flow-arrow{position:absolute;right:-8px;top:24px;color:#0BB8C8;font-size:24px;font-weight:300;font-family:'IBM Plex Mono',monospace;}
+.pdf-flow-step:last-child .pdf-flow-arrow{display:none;}
+
+/* 注释卡(黄色)*/
+.pdf-notes{background:#FEF8E6;border:1px solid #F0D080;border-radius:10px;padding:14px 18px;margin-top:18px;}
+.pdf-notes-title{display:flex;align-items:center;gap:6px;font-size:12px;font-weight:700;color:#7a5a00;margin-bottom:8px;}
+.pdf-notes-title .pdf-notes-en{font-size:10px;color:#A07a00;letter-spacing:1px;font-weight:600;margin-left:3px;}
+.pdf-notes ul{margin:0;padding-left:0;list-style:none;}
+.pdf-notes li{position:relative;padding-left:18px;font-size:11px;color:#5a4400;line-height:1.7;margin:5px 0;}
+.pdf-notes li::before{content:'•';position:absolute;left:5px;color:#D4A020;font-weight:900;font-size:14px;line-height:1;top:3px;}
+.pdf-notes li .pdf-notes-en-row{display:block;color:#A07a00;font-size:10px;margin-top:1px;line-height:1.5;}
+.pdf-notes li strong{color:#7a3a00;}
+
+/* 底部 footer */
+.pdf-footer{margin-top:22px;padding:18px 36px;background:linear-gradient(135deg,#F5F9FF 0%,#EAF4FE 100%);border-top:2px solid #0BB8C8;display:flex;align-items:center;justify-content:space-between;gap:20px;}
+.pdf-footer-brand{display:flex;align-items:center;gap:14px;flex:1;}
+.pdf-footer-logo{height:44px;flex-shrink:0;}
+.pdf-footer-info-cn{font-size:14px;font-weight:700;color:#0D2D4A;}
+.pdf-footer-info-rows{margin-top:6px;}
+.pdf-footer-info-row{font-size:11px;color:#3A5A7A;line-height:1.7;display:flex;align-items:center;gap:5px;}
+.pdf-footer-info-row .pdf-footer-icon{color:#0A6EBD;font-size:11px;}
+.pdf-footer-info-row strong{color:#0A6EBD;}
+.pdf-footer-info-row.pdf-footer-services{color:#6B8BAA;font-size:10px;margin-top:2px;}
+.pdf-qr-block{text-align:center;background:#fff;padding:8px;border-radius:10px;border:2px solid #D6E8F5;box-shadow:0 2px 6px rgba(10,110,189,0.08);}
+.pdf-qr-canvas-wrap{width:92px;height:92px;display:flex;align-items:center;justify-content:center;}
+.pdf-qr-canvas{width:88px;height:88px;display:block;}
+.pdf-qr-label{font-size:11px;color:#0D2D4A;font-weight:700;margin-top:5px;}
+.pdf-qr-label-en{font-size:8px;color:#6B8BAA;letter-spacing:1px;font-weight:600;margin-top:1px;}
+
+/* 整页水印(覆盖全页对角线大字)*/
+.pdf-watermark{position:absolute;inset:0;pointer-events:none;overflow:hidden;z-index:1;}
+.pdf-watermark-row{position:absolute;white-space:nowrap;font-size:90px;font-weight:900;color:#0A6EBD;opacity:0.05;letter-spacing:25px;transform:rotate(-30deg);transform-origin:left top;font-family:'IBM Plex Mono',monospace;}
+
+/* 让模板内的实际内容在水印之上 */
+.pdf-content-layer{position:relative;z-index:2;}
 
 /* 附加费用 */
 .surcharge-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px;}
@@ -482,6 +541,9 @@ tr:hover td{background:var(--sky);}
 var BKDLL_API = 'https://api.bkdll.com';
 var TRACK_WORKER = BKDLL_API + '/api/track';
 var ITDIDA_WORKER = BKDLL_API + '/api/itdida';
+
+// BKDLL LOGO (base64 内嵌,用于 PDF 报价单)
+var BKDLL_LOGO_DATA_URL = 'data:image/png;base64,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';
 
 // 登录守卫(代替 onAuthStateChanged)
 var bkdllToken = localStorage.getItem('bkdll_token');
@@ -1079,108 +1141,288 @@ async function generateQuotationPDF(){
 async function renderPdfTemplate(o){
  /* o = {quoteNo, issuedAt, expireAt, user, weights, currentWeight, priceMatrix} */
  var tmpl=G('quotePdfTemplate');
-
- /* 二维码 */
  var qrCanvasId='qrCanvas_'+Date.now();
  var qrUrl='https://baokaida.github.io/bkd-portal.html#quotes';
-
- /* 渠道名(脱敏后)颜色化 */
- function colorChannel(name){
-  return esc(name);
- }
-
  var wt=o.weights;
  var ct=o.currentWeight;
 
+ /* 解析渠道名:【BKDLLXXX】 + 中文 部分,生成英文翻译 */
+ function parseChannelName(name){
+  /* 例如 【BKDLLO18】-HKDHL代理-全产品 */
+  var bracketMatch=name.match(/【(BKDLL[A-Z0-9]+)】[-\s]*(.+)/);
+  if(!bracketMatch)return {code:'',cn:esc(name),en:''};
+  var code=bracketMatch[1];
+  var rest=bracketMatch[2];
+  /* 极简的中→英映射 */
+  var en=rest
+   .replace(/HKDHL/gi,'HK·DHL')
+   .replace(/HKUPS/gi,'HK·UPS')
+   .replace(/HKFEDEX/gi,'HK·FedEx')
+   .replace(/红单/g,'Red')
+   .replace(/蓝单/g,'Blue')
+   .replace(/代理/g,'Agent')
+   .replace(/特惠/g,'Saver')
+   .replace(/经济/g,'Eco')
+   .replace(/纯电/g,'PureLiBattery')
+   .replace(/带电/g,'WithBattery')
+   .replace(/化工/g,'Chem')
+   .replace(/敏感/g,'Sensitive')
+   .replace(/普货/g,'Regular')
+   .replace(/全产品/g,'AllProducts')
+   .replace(/小货/g,'Small')
+   .replace(/大货/g,'Large')
+   .replace(/中货/g,'Medium')
+   .replace(/-/g,' – ');
+  return {code:code,cn:esc(rest),en:esc(en)};
+ }
+
+ /* 生成价格表行 */
  var rowsHtml=o.priceMatrix.map(row=>{
+  var parsed=parseChannelName(row.channelName);
+  var channelCell='<td class="col-channel">【'+parsed.code+'】'+parsed.cn+'<span class="col-channel-en">'+parsed.en+'</span></td>';
   var cells=wt.map(w=>{
    var p=row.prices[w];
    var isCur=(w===ct);
    var txt=(p===null||p===undefined)?'—':p.toFixed(2);
-   return '<td class="'+(isCur?'highlight':'')+'">'+txt+'</td>';
+   return '<td class="'+(isCur?'highlight':'')+'">'+txt+'<span class="td-unit">RMB</span></td>';
   }).join('');
-  return '<tr><td class="col-channel">'+colorChannel(row.channelName)+'</td>'+cells+'</tr>';
+  return '<tr>'+channelCell+cells+'</tr>';
  }).join('');
 
  var headCells=wt.map(w=>{
   var isCur=(w===ct);
-  return '<th class="'+(isCur?'highlight':'')+'">'+w+' KG'+(isCur?' ★':'')+'</th>';
+  return '<th class="'+(isCur?'highlight':'')+'">'+w+' KG'+(isCur?'<span class="col-sub">推荐 / RECOMMENDED</span>':'')+'</th>';
  }).join('');
 
- tmpl.innerHTML=
-  '<div style="position:relative;">'+
-   '<div class="pdf-validity-stamp">7日有效 · 至 '+fmtDateShort(o.expireAt)+'</div>'+
-
-   '<div class="pdf-head">'+
-    '<div class="pdf-logo">BKD</div>'+
-    '<div>'+
-     '<div class="pdf-title-cn">BKDLL 香港国际物流</div>'+
-     '<div class="pdf-title-en">BKDLL Cross-Border Logistics (HK)</div>'+
-    '</div>'+
-   '</div>'+
-
-   '<div class="pdf-sectit">专属运费报价单 <span class="pdf-sectit-sub">CUSTOMIZED QUOTATION</span></div>'+
-
-   '<div class="pdf-meta-grid">'+
-    '<div class="pdf-meta-row"><span class="pdf-meta-label">报价编号</span><span class="pdf-meta-val highlight">'+o.quoteNo+'</span></div>'+
-    '<div class="pdf-meta-row"><span class="pdf-meta-label">签发日期</span><span class="pdf-meta-val">'+fmtDate(o.issuedAt)+'</span></div>'+
-    '<div class="pdf-meta-row"><span class="pdf-meta-label">客户名称</span><span class="pdf-meta-val">'+esc(o.user.userDisplayName)+'</span></div>'+
-    '<div class="pdf-meta-row"><span class="pdf-meta-label">有效期至</span><span class="pdf-meta-val highlight">'+fmtDate(o.expireAt)+'</span></div>'+
-    '<div class="pdf-meta-row"><span class="pdf-meta-label">联系邮箱</span><span class="pdf-meta-val">'+esc(o.user.email)+'</span></div>'+
-    '<div class="pdf-meta-row"><span class="pdf-meta-label">目的地区</span><span class="pdf-meta-val">'+esc(o.user.countryCn)+' · '+esc(o.user.zoneLabel)+'</span></div>'+
-   '</div>'+
-
-   '<div class="pdf-section-head">价格明细 <span class="pdf-section-hint">★ = 您本次咨询重量</span></div>'+
-
-   '<table class="pdf-price-table">'+
-    '<thead><tr><th class="col-channel">渠道 · 承运商</th>'+headCells+'</tr></thead>'+
-    '<tbody>'+rowsHtml+'</tbody>'+
-   '</table>'+
-   '<div class="pdf-price-note">单位:人民币 RMB,含基础运费(不含燃油附加费及末端附加费)</div>'+
-
-   '<div class="pdf-section-head">服务流程 <span class="pdf-section-hint">SERVICE FLOW</span></div>'+
-   '<div class="pdf-flow">'+
-    '<div class="pdf-flow-step"><div class="pdf-flow-num">1</div><div class="pdf-flow-title">在线下单</div><div class="pdf-flow-desc">Portal 提交订单<br/>自动生成入仓编号</div><div class="pdf-flow-arrow">›</div></div>'+
-    '<div class="pdf-flow-step"><div class="pdf-flow-num">2</div><div class="pdf-flow-title">霖霖入仓</div><div class="pdf-flow-desc">深圳 / 香港<br/>仓库接收清点</div><div class="pdf-flow-arrow">›</div></div>'+
-    '<div class="pdf-flow-step"><div class="pdf-flow-num">3</div><div class="pdf-flow-title">清关出口</div><div class="pdf-flow-desc">DHL / UPS / FedEx<br/>口岸合规操作</div><div class="pdf-flow-arrow">›</div></div>'+
-    '<div class="pdf-flow-step"><div class="pdf-flow-num">4</div><div class="pdf-flow-title">末端派送</div><div class="pdf-flow-desc">本地签收<br/>预计 3-7 工作日</div></div>'+
-   '</div>'+
-
-   '<div class="pdf-notes">'+
-    '<div class="pdf-notes-title">⚠ 报价说明 / NOTES</div>'+
-    '<ul>'+
-     '<li>以上价格为基础运费,人民币结算,实际账单以入仓计费重量为准</li>'+
-     '<li>燃油附加费按当月费率另算,大货(>30kg)/敏感品/化工品请另询专属报价</li>'+
-     '<li>本报价单自签发日起 7 个自然日内有效,至 <strong>'+fmtDateShort(o.expireAt)+'</strong> 失效,逾期请重新查询</li>'+
-     '<li>报价基于易抵达实时数据,实际投保 / 派送条件以下单确认为准</li>'+
-    '</ul>'+
-   '</div>'+
-
-   '<div class="pdf-footer">'+
-    '<div class="pdf-footer-left">'+
-     '<div class="pdf-brand">BKDLL · 保凯达霖霖国际物流</div>'+
-     '<div class="pdf-contact-line">邮箱:<strong>bkd@baokaida.com</strong></div>'+
-     '<div class="pdf-contact-line">在线下单 · 实时查价 · 全程跟踪</div>'+
-     '<div class="pdf-contact-line" style="margin-top:4px;font-size:9px;">本报价单由 BKDLL 系统于 '+fmtDateShort(o.issuedAt)+' 自动生成,编号唯一可查</div>'+
-    '</div>'+
-    '<div class="pdf-qr-box">'+
-     '<canvas id="'+qrCanvasId+'" class="pdf-qr-canvas"></canvas>'+
-     '<div class="pdf-qr-text">扫码下单</div>'+
-    '</div>'+
-   '</div>'+
+ /* 水印 — 客户公司名 */
+ var watermarkText=(o.user.userDisplayName||'BKDLL').toUpperCase();
+ var watermarkRows='';
+ for(var i=0;i<14;i++){
+  watermarkRows+='<div class="pdf-watermark-row" style="top:'+(i*140-60)+'px;left:-60px;">'+
+   (watermarkText+' · ').repeat(8)+
   '</div>';
+ }
+
+ tmpl.innerHTML=
+  /* 水印层(铺满整页)*/
+  '<div class="pdf-watermark">'+watermarkRows+'</div>'+
+
+  /* 内容层 */
+  '<div class="pdf-content-layer">'+
+
+   /* 顶部蓝色 hero — 仅 LOGO */
+   '<div class="pdf-hero">'+
+    '<img class="pdf-hero-logo" src="'+BKDLL_LOGO_DATA_URL+'" alt="BKDLL">'+
+   '</div>'+
+
+   '<div class="pdf-body">'+
+
+    /* 标题 + 有效期徽章 */
+    '<div class="pdf-title-row">'+
+     '<div class="pdf-title-block">'+
+      '<div class="pdf-title-cn">专属运费报价单</div>'+
+      '<div class="pdf-title-en">CUSTOMIZED QUOTATION</div>'+
+      '<div class="pdf-title-underline"></div>'+
+     '</div>'+
+     '<div class="pdf-expire-badge">'+
+      '<div class="pdf-expire-cn">🛡 7日有效 · 至 '+fmtDateShort(o.expireAt)+'</div>'+
+      '<div class="pdf-expire-en">7 DAYS VALID · UNTIL '+fmtDateShort(o.expireAt)+'</div>'+
+     '</div>'+
+    '</div>'+
+
+    /* Meta 卡 */
+    '<div class="pdf-meta-card">'+
+     /* 报价编号 */
+     '<div class="pdf-meta-item">'+
+      '<div class="pdf-meta-icon">📋</div>'+
+      '<div class="pdf-meta-text">'+
+       '<div><span class="pdf-meta-label-cn">报价编号</span><span class="pdf-meta-label-en">QUOTATION NO.</span></div>'+
+       '<div class="pdf-meta-val mono">'+o.quoteNo+'</div>'+
+      '</div>'+
+     '</div>'+
+     /* 签发日期 */
+     '<div class="pdf-meta-item">'+
+      '<div class="pdf-meta-icon">📅</div>'+
+      '<div class="pdf-meta-text">'+
+       '<div><span class="pdf-meta-label-cn">签发日期</span><span class="pdf-meta-label-en">ISSUE DATE</span></div>'+
+       '<div class="pdf-meta-val">'+fmtDate(o.issuedAt)+'</div>'+
+      '</div>'+
+     '</div>'+
+     /* 客户名称 */
+     '<div class="pdf-meta-item">'+
+      '<div class="pdf-meta-icon">👤</div>'+
+      '<div class="pdf-meta-text">'+
+       '<div><span class="pdf-meta-label-cn">客户名称</span><span class="pdf-meta-label-en">CUSTOMER</span></div>'+
+       '<div class="pdf-meta-val">'+esc(o.user.userDisplayName)+'</div>'+
+      '</div>'+
+     '</div>'+
+     /* 有效期至 */
+     '<div class="pdf-meta-item">'+
+      '<div class="pdf-meta-icon">📆</div>'+
+      '<div class="pdf-meta-text">'+
+       '<div><span class="pdf-meta-label-cn">有效期至</span><span class="pdf-meta-label-en">VALID UNTIL</span></div>'+
+       '<div class="pdf-meta-val">'+fmtDate(o.expireAt)+'</div>'+
+      '</div>'+
+     '</div>'+
+     /* 联系邮箱 */
+     '<div class="pdf-meta-item">'+
+      '<div class="pdf-meta-icon">✉</div>'+
+      '<div class="pdf-meta-text">'+
+       '<div><span class="pdf-meta-label-cn">联系邮箱</span><span class="pdf-meta-label-en">CONTACT EMAIL</span></div>'+
+       '<div class="pdf-meta-val mono">'+esc(o.user.email)+'</div>'+
+      '</div>'+
+     '</div>'+
+     /* 目的地区 */
+     '<div class="pdf-meta-item">'+
+      '<div class="pdf-meta-icon">📍</div>'+
+      '<div class="pdf-meta-text">'+
+       '<div><span class="pdf-meta-label-cn">目的地区</span><span class="pdf-meta-label-en">DESTINATION</span></div>'+
+       '<div class="pdf-meta-val">'+esc(o.user.countryCn)+' · '+esc(o.user.zoneLabel)+'</div>'+
+      '</div>'+
+     '</div>'+
+    '</div>'+
+
+    /* 价格明细 */
+    '<div class="pdf-section">'+
+     '<div class="pdf-section-title">'+
+      '<div class="pdf-section-icon">💰</div>'+
+      '<div class="pdf-section-cn">价格明细</div>'+
+      '<div class="pdf-section-en">PRICING DETAILS</div>'+
+      '<div class="pdf-section-spacer"></div>'+
+      '<div class="pdf-section-hint">★ = 您本次咨询重量 ★ = YOUR INQUIRY WEIGHT</div>'+
+     '</div>'+
+     '<table class="pdf-price-table">'+
+      '<thead><tr>'+
+       '<th class="col-channel">渠道 · 承运商<span class="col-channel-en">CHANNEL · CARRIER</span></th>'+
+       headCells+
+      '</tr></thead>'+
+      '<tbody>'+rowsHtml+'</tbody>'+
+     '</table>'+
+     '<div class="pdf-price-currency">单位:人民币 RMB,含基础运费(不含燃油附加费及末端附加费)<br>Currency: RMB, Includes basic freight (Excludes fuel surcharge and last-mile surcharges)</div>'+
+    '</div>'+
+
+    /* 服务流程 */
+    '<div class="pdf-section">'+
+     '<div class="pdf-section-title">'+
+      '<div class="pdf-section-icon">✈</div>'+
+      '<div class="pdf-section-cn">服务流程</div>'+
+      '<div class="pdf-section-en">SERVICE FLOW</div>'+
+     '</div>'+
+     '<div class="pdf-flow">'+
+      /* Step 1 */
+      '<div class="pdf-flow-step">'+
+       '<div class="pdf-flow-icon-circle">'+
+        '<div class="pdf-flow-num-badge">1</div>'+
+        '<div class="pdf-flow-icon-svg">🖥</div>'+
+       '</div>'+
+       '<div class="pdf-flow-title-cn">在线下单</div>'+
+       '<div class="pdf-flow-title-en">Place Order Online</div>'+
+       '<div class="pdf-flow-desc"><span class="pdf-flow-desc-bold">Portal 提交订单</span>自动生成入仓编号</div>'+
+       '<div class="pdf-flow-arrow">→</div>'+
+      '</div>'+
+      /* Step 2 */
+      '<div class="pdf-flow-step">'+
+       '<div class="pdf-flow-icon-circle">'+
+        '<div class="pdf-flow-num-badge">2</div>'+
+        '<div class="pdf-flow-icon-svg">🏬</div>'+
+       '</div>'+
+       '<div class="pdf-flow-title-cn">霖霖入仓</div>'+
+       '<div class="pdf-flow-title-en">Goods Inbound</div>'+
+       '<div class="pdf-flow-desc"><span class="pdf-flow-desc-bold">深圳 / 香港</span>仓库接收确认</div>'+
+       '<div class="pdf-flow-arrow">→</div>'+
+      '</div>'+
+      /* Step 3 */
+      '<div class="pdf-flow-step">'+
+       '<div class="pdf-flow-icon-circle">'+
+        '<div class="pdf-flow-num-badge">3</div>'+
+        '<div class="pdf-flow-icon-svg">⚓</div>'+
+       '</div>'+
+       '<div class="pdf-flow-title-cn">清关出口</div>'+
+       '<div class="pdf-flow-title-en">Customs &amp; Export</div>'+
+       '<div class="pdf-flow-desc"><span class="pdf-flow-desc-bold">DHL / UPS / FedEx</span>口岸合规操作</div>'+
+       '<div class="pdf-flow-arrow">→</div>'+
+      '</div>'+
+      /* Step 4 */
+      '<div class="pdf-flow-step">'+
+       '<div class="pdf-flow-icon-circle">'+
+        '<div class="pdf-flow-num-badge">4</div>'+
+        '<div class="pdf-flow-icon-svg">🚚</div>'+
+       '</div>'+
+       '<div class="pdf-flow-title-cn">末端派送</div>'+
+       '<div class="pdf-flow-title-en">Last-Mile Delivery</div>'+
+       '<div class="pdf-flow-desc"><span class="pdf-flow-desc-bold">本地签收</span>预计 3-7 工作日</div>'+
+      '</div>'+
+     '</div>'+
+    '</div>'+
+
+    /* 服价说明 */
+    '<div class="pdf-notes">'+
+     '<div class="pdf-notes-title">⚠ 报价说明<span class="pdf-notes-en">/ NOTES</span></div>'+
+     '<ul>'+
+      '<li>以上价格为基础运费,人民币结算,实际账单以入仓计费重量为准'+
+       '<span class="pdf-notes-en-row">The above prices are basic freight rates, settled in RMB. The final invoice will be based on the inbound chargeable weight.</span>'+
+      '</li>'+
+      '<li>燃油附加费按当月费率另算,大货(&gt;30kg) / 敏感品 / 化工品请另询专属报价'+
+       '<span class="pdf-notes-en-row">Fuel surcharge is charged separately based on the current month\'s rate. For bulk cargo (&gt;30kg) / sensitive items / chemicals, please contact us for a dedicated quotation.</span>'+
+      '</li>'+
+      '<li>本报价单自签发日起 7 个自然日内有效,至 <strong>'+fmtDateShort(o.expireAt)+'</strong> 失效,逾期请重新查询'+
+       '<span class="pdf-notes-en-row">This quotation is valid for 7 calendar days from the issue date, until <strong>'+fmtDateShort(o.expireAt)+'</strong>. Please re-quote after expiration.</span>'+
+      '</li>'+
+      '<li>报价基于贵批次实时数据,实际报价 / 派送条件以下单确认为准'+
+       '<span class="pdf-notes-en-row">Quotation is based on real-time data of your shipment. Final price / delivery terms are subject to order confirmation.</span>'+
+      '</li>'+
+     '</ul>'+
+    '</div>'+
+
+   '</div>'+ /* /pdf-body */
+
+   /* 底部 footer */
+   '<div class="pdf-footer">'+
+    '<div class="pdf-footer-brand">'+
+     '<img class="pdf-footer-logo" src="'+BKDLL_LOGO_DATA_URL+'" alt="BKDLL">'+
+     '<div>'+
+      '<div class="pdf-footer-info-cn">BKDLL · 保凯达霖霖国际物流</div>'+
+      '<div class="pdf-footer-info-rows">'+
+       '<div class="pdf-footer-info-row"><span class="pdf-footer-icon">✉</span>邮箱:<strong>bkd@baokaida.com</strong></div>'+
+       '<div class="pdf-footer-info-row pdf-footer-services">'+
+        '<span style="color:#0A6EBD;">🚚</span> 在线下单 · 实时询价 · 全程跟踪 ·  '+
+        'Place Order Online · Real-time Quotation · End-to-End Tracking'+
+       '</div>'+
+      '</div>'+
+     '</div>'+
+    '</div>'+
+    '<div class="pdf-qr-block">'+
+     '<div class="pdf-qr-canvas-wrap"><canvas id="'+qrCanvasId+'" class="pdf-qr-canvas"></canvas></div>'+
+     '<div class="pdf-qr-label">扫码下单</div>'+
+     '<div class="pdf-qr-label-en">SCAN TO ORDER</div>'+
+    '</div>'+
+   '</div>'+
+
+  '</div>'; /* /pdf-content-layer */
 
  /* 生成二维码 */
  try{
   new QRious({
    element: document.getElementById(qrCanvasId),
    value: qrUrl,
-   size: 156,  /* 2x 缩放后清晰 */
+   size: 176,
    level: 'M',
-   foreground: '#0A6EBD',
+   foreground: '#0D2D4A',
    background: '#FFFFFF'
   });
  }catch(e){console.warn('QR 失败',e);}
+
+ /* 等图片加载 */
+ var imgs=tmpl.querySelectorAll('img');
+ var promises=[];
+ imgs.forEach(img=>{
+  if(img.complete)return;
+  promises.push(new Promise(r=>{
+   img.onload=r; img.onerror=r;
+   setTimeout(r,1000);
+  }));
+ });
+ if(promises.length)await Promise.all(promises);
 }
 </script>
 </body>
