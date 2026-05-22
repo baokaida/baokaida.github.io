@@ -178,19 +178,19 @@ tr:hover td{background:var(--sky);}
 #quotePdfTemplate{position:fixed;left:-9999px;top:0;width:794px;background:#fff;font-family:'Noto Sans SC','PingFang SC','Microsoft YaHei',sans-serif;color:#0D2D4A;box-sizing:border-box;}
 
 /* 顶部蓝色 hero 带飞机背景 */
-.pdf-hero{position:relative;background:linear-gradient(135deg,#E8F1FA 0%,#F0F8FF 50%,#DDE8F5 100%);padding:24px 36px;display:flex;align-items:center;gap:18px;overflow:hidden;}
-.pdf-hero::before{content:'✈';position:absolute;right:30px;top:50%;transform:translateY(-50%) rotate(-20deg);font-size:140px;color:#0A6EBD;opacity:0.07;pointer-events:none;}
-.pdf-hero::after{content:'';position:absolute;right:80px;top:8px;width:90px;height:90px;border-radius:50%;background:radial-gradient(circle,#B8D5EE 0%,transparent 70%);opacity:0.5;pointer-events:none;}
-.pdf-hero-logo{height:50px;flex-shrink:0;position:relative;z-index:2;}
+.pdf-hero{position:relative;background:linear-gradient(135deg,#E8F1FA 0%,#F0F8FF 50%,#DDE8F5 100%);padding:28px 36px;display:flex;align-items:center;gap:18px;overflow:hidden;}
+.pdf-hero::before{content:'✈';position:absolute;right:30px;top:50%;transform:translateY(-50%) rotate(-20deg);font-size:170px;color:#0A6EBD;opacity:0.08;pointer-events:none;}
+.pdf-hero::after{content:'';position:absolute;right:80px;top:8px;width:100px;height:100px;border-radius:50%;background:radial-gradient(circle,#B8D5EE 0%,transparent 70%);opacity:0.5;pointer-events:none;}
+.pdf-hero-logo{height:110px;flex-shrink:0;position:relative;z-index:2;}
 .pdf-hero-titles{position:relative;z-index:2;}
 .pdf-hero-cn{font-size:22px;font-weight:700;color:#0D2D4A;letter-spacing:.5px;}
 .pdf-hero-en{font-size:11px;color:#6B8BAA;letter-spacing:1px;margin-top:3px;}
 
 /* 主体区(白底)*/
-.pdf-body{padding:24px 36px 0;}
+.pdf-body{padding:20px 36px 0;}
 
 /* 标题 + 有效期徽章 */
-.pdf-title-row{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:18px;}
+.pdf-title-row{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:14px;}
 .pdf-title-block .pdf-title-cn{font-size:24px;font-weight:700;color:#0D2D4A;letter-spacing:.5px;}
 .pdf-title-block .pdf-title-en{font-size:11px;color:#0BB8C8;letter-spacing:2px;margin-top:4px;font-weight:600;}
 .pdf-title-block .pdf-title-underline{width:50px;height:3px;background:linear-gradient(90deg,#0A6EBD,#0BB8C8);margin-top:6px;border-radius:2px;}
@@ -199,7 +199,7 @@ tr:hover td{background:var(--sky);}
 .pdf-expire-badge .pdf-expire-en{font-size:9px;opacity:0.85;letter-spacing:.5px;margin-top:2px;font-weight:500;}
 
 /* Meta 信息卡(报价编号/客户/邮箱 + 签发/有效期/目的地)*/
-.pdf-meta-card{background:#F5F9FF;border:1px solid #D6E8F5;border-radius:12px;padding:18px 22px;margin-bottom:20px;display:grid;grid-template-columns:1fr 1fr;gap:14px 28px;}
+.pdf-meta-card{background:#F5F9FF;border:1px solid #D6E8F5;border-radius:12px;padding:16px 22px;margin-bottom:18px;display:grid;grid-template-columns:1fr 1fr;gap:12px 28px;}
 .pdf-meta-item{display:flex;align-items:flex-start;gap:10px;}
 .pdf-meta-icon{width:30px;height:30px;background:#fff;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;box-shadow:0 1px 3px rgba(10,110,189,0.08);}
 .pdf-meta-text{flex:1;min-width:0;}
@@ -209,7 +209,7 @@ tr:hover td{background:var(--sky);}
 .pdf-meta-text .pdf-meta-val.mono{font-family:'IBM Plex Mono',monospace;letter-spacing:.5px;}
 
 /* 分节小标题 */
-.pdf-section{margin-bottom:18px;}
+.pdf-section{margin-bottom:14px;}
 .pdf-section-title{display:flex;align-items:center;gap:8px;margin-bottom:10px;}
 .pdf-section-title .pdf-section-icon{width:24px;height:24px;background:linear-gradient(135deg,#0A6EBD,#0BB8C8);border-radius:6px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:13px;}
 .pdf-section-title .pdf-section-cn{font-size:15px;font-weight:700;color:#0D2D4A;}
@@ -224,7 +224,7 @@ tr:hover td{background:var(--sky);}
 .pdf-price-table th.col-channel-en{font-size:9px;color:#A0B5CC;font-weight:500;display:block;margin-top:2px;letter-spacing:1.5px;}
 .pdf-price-table th.highlight{background:linear-gradient(135deg,#0E9E6E,#0BB8C8);position:relative;}
 .pdf-price-table th .col-sub{font-size:9px;font-weight:500;display:block;margin-top:2px;padding:1px 6px;background:rgba(255,255,255,0.2);border-radius:10px;display:inline-block;letter-spacing:.5px;}
-.pdf-price-table td{padding:14px 8px;text-align:center;border-bottom:1px solid #ECF3FB;font-family:'IBM Plex Mono',monospace;color:#0D2D4A;font-size:18px;font-weight:700;line-height:1.2;}
+.pdf-price-table td{padding:11px 8px;text-align:center;border-bottom:1px solid #ECF3FB;font-family:'IBM Plex Mono',monospace;color:#0D2D4A;font-size:18px;font-weight:700;line-height:1.2;}
 .pdf-price-table td .td-unit{font-size:9px;color:#6B8BAA;font-weight:500;display:block;margin-top:3px;font-family:'Noto Sans SC',sans-serif;letter-spacing:.5px;}
 .pdf-price-table td.col-channel{text-align:left;padding-left:18px;font-family:'Noto Sans SC',sans-serif;font-weight:700;font-size:13px;color:#0D2D4A;}
 .pdf-price-table td.col-channel .col-channel-en{display:block;font-weight:500;font-size:10px;color:#6B8BAA;margin-top:2px;letter-spacing:.3px;}
@@ -245,20 +245,10 @@ tr:hover td{background:var(--sky);}
 .pdf-flow-arrow{position:absolute;right:-8px;top:24px;color:#0BB8C8;font-size:24px;font-weight:300;font-family:'IBM Plex Mono',monospace;}
 .pdf-flow-step:last-child .pdf-flow-arrow{display:none;}
 
-/* 注释卡(黄色)*/
-.pdf-notes{background:#FEF8E6;border:1px solid #F0D080;border-radius:10px;padding:14px 18px;margin-top:18px;}
-.pdf-notes-title{display:flex;align-items:center;gap:6px;font-size:12px;font-weight:700;color:#7a5a00;margin-bottom:8px;}
-.pdf-notes-title .pdf-notes-en{font-size:10px;color:#A07a00;letter-spacing:1px;font-weight:600;margin-left:3px;}
-.pdf-notes ul{margin:0;padding-left:0;list-style:none;}
-.pdf-notes li{position:relative;padding-left:18px;font-size:11px;color:#5a4400;line-height:1.7;margin:5px 0;}
-.pdf-notes li::before{content:'•';position:absolute;left:5px;color:#D4A020;font-weight:900;font-size:14px;line-height:1;top:3px;}
-.pdf-notes li .pdf-notes-en-row{display:block;color:#A07a00;font-size:10px;margin-top:1px;line-height:1.5;}
-.pdf-notes li strong{color:#7a3a00;}
-
 /* 底部 footer */
-.pdf-footer{margin-top:22px;padding:18px 36px;background:linear-gradient(135deg,#F5F9FF 0%,#EAF4FE 100%);border-top:2px solid #0BB8C8;display:flex;align-items:center;justify-content:space-between;gap:20px;}
+.pdf-footer{margin-top:18px;padding:18px 36px;background:linear-gradient(135deg,#F5F9FF 0%,#EAF4FE 100%);border-top:2px solid #0BB8C8;display:flex;align-items:center;justify-content:space-between;gap:20px;}
 .pdf-footer-brand{display:flex;align-items:center;gap:14px;flex:1;}
-.pdf-footer-logo{height:44px;flex-shrink:0;}
+.pdf-footer-logo{height:64px;flex-shrink:0;}
 .pdf-footer-info-cn{font-size:14px;font-weight:700;color:#0D2D4A;}
 .pdf-footer-info-rows{margin-top:6px;}
 .pdf-footer-info-row{font-size:11px;color:#3A5A7A;line-height:1.7;display:flex;align-items:center;gap:5px;}
@@ -1353,25 +1343,6 @@ async function renderPdfTemplate(o){
        '<div class="pdf-flow-desc"><span class="pdf-flow-desc-bold">本地签收</span>预计 3-7 工作日</div>'+
       '</div>'+
      '</div>'+
-    '</div>'+
-
-    /* 服价说明 */
-    '<div class="pdf-notes">'+
-     '<div class="pdf-notes-title">⚠ 报价说明<span class="pdf-notes-en">/ NOTES</span></div>'+
-     '<ul>'+
-      '<li>以上价格为基础运费,人民币结算,实际账单以入仓计费重量为准'+
-       '<span class="pdf-notes-en-row">The above prices are basic freight rates, settled in RMB. The final invoice will be based on the inbound chargeable weight.</span>'+
-      '</li>'+
-      '<li>燃油附加费按当月费率另算,大货(&gt;30kg) / 敏感品 / 化工品请另询专属报价'+
-       '<span class="pdf-notes-en-row">Fuel surcharge is charged separately based on the current month\'s rate. For bulk cargo (&gt;30kg) / sensitive items / chemicals, please contact us for a dedicated quotation.</span>'+
-      '</li>'+
-      '<li>本报价单自签发日起 7 个自然日内有效,至 <strong>'+fmtDateShort(o.expireAt)+'</strong> 失效,逾期请重新查询'+
-       '<span class="pdf-notes-en-row">This quotation is valid for 7 calendar days from the issue date, until <strong>'+fmtDateShort(o.expireAt)+'</strong>. Please re-quote after expiration.</span>'+
-      '</li>'+
-      '<li>报价基于贵批次实时数据,实际报价 / 派送条件以下单确认为准'+
-       '<span class="pdf-notes-en-row">Quotation is based on real-time data of your shipment. Final price / delivery terms are subject to order confirmation.</span>'+
-      '</li>'+
-     '</ul>'+
     '</div>'+
 
    '</div>'+ /* /pdf-body */
