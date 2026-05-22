@@ -494,10 +494,83 @@ function peekDailyNum(){var k='bkd_n_'+dateStr(),n=0;try{n=parseInt(localStorage
 
 G('dateTag').textContent=todayDisp();
 G('country').selectedIndex=0;G('channel').selectedIndex=0;if(G('cityManual'))G('cityManual').value='';
+
+/* ── 默认填充逻辑(2026-05-22)──
+ * 优先级:
+ *   邮箱   = 登录邮箱(最高优先,客户可改)
+ *   公司名 = 登录用户的 displayName  >  邮箱后缀推断  >  localStorage 缓存
+ *
+ * 邮箱后缀推断规则:
+ *   chenlihong@notioni.com → "notioni"   (企业邮箱,取 @ 后)
+ *   iris9102@126.com       → "iris9102"  (个人邮箱,取 @ 前,因为后缀没意义)
+ */
+var PERSONAL_EMAIL_DOMAINS = [
+ '126.com','163.com','qq.com','gmail.com','hotmail.com','outlook.com',
+ 'yahoo.com','yahoo.com.cn','foxmail.com','sina.com','sina.cn',
+ '139.com','189.cn','icloud.com','me.com','msn.com','live.com',
+ 'aliyun.com','sohu.com','tom.com','21cn.com','wo.cn','vip.qq.com',
+ '263.net','139.net'
+];
+function inferCompanyFromEmail(email){
+ if(!email||typeof email!=='string')return '';
+ var e=email.trim().toLowerCase();
+ var at=e.indexOf('@');
+ if(at<=0||at===e.length-1)return '';
+ var local=e.slice(0,at);
+ var domain=e.slice(at+1);
+ /* 域名第一段 — 如 notioni.com → notioni,abc.co.uk → abc */
+ var domainFirst=domain.split('.')[0];
+ if(PERSONAL_EMAIL_DOMAINS.indexOf(domain)>=0){
+  /* 个人邮箱 — 用 @ 前的部分 */
+  return local;
+ }
+ /* 企业邮箱 — 用域名第一段 */
+ return domainFirst;
+}
+
 try{
- var sc=localStorage.getItem('bkd_co');if(sc){G('senderCompany').value=sc;G('coBadge').style.display='inline';}
- var se=localStorage.getItem('bkd_em');if(se){G('email').value=se;G('emBadge').style.display='inline';}
-}catch(e){}
+ /* 1) 读登录态(localStorage.bkdll_user 由 portal/login 写入)*/
+ var loggedInUser=null;
+ try{ loggedInUser=JSON.parse(localStorage.getItem('bkdll_user')||'null'); }catch(e){}
+
+ /* 2) 邮箱字段:登录邮箱优先,缓存兜底 */
+ var loginEmail=loggedInUser&&loggedInUser.email?loggedInUser.email:'';
+ var cachedEmail=localStorage.getItem('bkd_em')||'';
+ var defaultEmail=loginEmail||cachedEmail;
+ if(defaultEmail){
+  G('email').value=defaultEmail;
+  if(loginEmail){
+   G('emBadge').style.display='inline';
+   G('emBadge').textContent='登录邮箱';
+  }else if(cachedEmail){
+   G('emBadge').style.display='inline';
+  }
+ }
+
+ /* 3) 公司名字段:displayName > 邮箱推断 > 缓存 */
+ var displayName=loggedInUser&&loggedInUser.displayName?loggedInUser.displayName:'';
+ var inferredCo=loginEmail?inferCompanyFromEmail(loginEmail):'';
+ var cachedCo=localStorage.getItem('bkd_co')||'';
+ var defaultCo=displayName||inferredCo||cachedCo;
+ if(defaultCo){
+  G('senderCompany').value=defaultCo;
+  if(displayName){
+   G('coBadge').style.display='inline';
+   G('coBadge').textContent='默认';
+  }else if(inferredCo){
+   G('coBadge').style.display='inline';
+   G('coBadge').textContent='自动推断';
+  }else if(cachedCo){
+   G('coBadge').style.display='inline';
+  }
+ }
+}catch(e){
+ /* 兜底:原 localStorage 逻辑(用户已登出或异常时)*/
+ try{
+  var sc=localStorage.getItem('bkd_co');if(sc){G('senderCompany').value=sc;G('coBadge').style.display='inline';}
+  var se=localStorage.getItem('bkd_em');if(se){G('email').value=se;G('emBadge').style.display='inline';}
+ }catch(e2){}
+}
 updatePreview();
 updateCounts();
 
