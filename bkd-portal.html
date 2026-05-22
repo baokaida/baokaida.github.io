@@ -146,6 +146,79 @@ tr:hover td{background:var(--sky);}
 
 .quote-error{padding:24px;text-align:center;color:var(--red);background:#fef2f2;border:1px solid #fecaca;border-radius:10px;font-size:13px;}
 
+/* 渠道卡复选框 */
+.quote-pick{display:flex;align-items:center;gap:6px;margin-bottom:10px;padding:6px 10px;background:#fff;border:1.5px dashed var(--border);border-radius:8px;cursor:pointer;user-select:none;}
+.quote-pick:hover{border-color:var(--blue);}
+.quote-pick input{width:16px;height:16px;accent-color:var(--blue);cursor:pointer;flex-shrink:0;}
+.quote-pick-label{font-size:11px;color:var(--muted);font-weight:600;}
+.quote-pick input:checked + .quote-pick-label{color:var(--blue);}
+.quote-card.cheapest .quote-pick{border-color:var(--green);border-style:solid;background:#fff;}
+.quote-card.cheapest .quote-pick-label{color:var(--green);}
+
+/* 底部 PDF 生成栏 */
+.quote-pdf-bar{margin-top:18px;padding:14px 18px;background:linear-gradient(135deg,#fff,#f4f9ff);border:1.5px solid var(--blue);border-radius:12px;display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;}
+.quote-pdf-bar-info{font-size:13px;color:var(--text2);}
+.quote-pdf-bar-info strong{color:var(--blue);font-size:15px;font-weight:700;}
+.btn-pdf{padding:11px 22px;background:linear-gradient(135deg,var(--blue),var(--blue2));color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;box-shadow:0 4px 12px rgba(10,110,189,0.25);transition:all .15s;}
+.btn-pdf:hover{transform:translateY(-1px);box-shadow:0 6px 18px rgba(10,110,189,0.35);}
+.btn-pdf:disabled{background:#cbd5e1;cursor:not-allowed;transform:none;box-shadow:none;}
+
+/* PDF 生成进度遮罩 */
+.pdf-loading-mask{display:none;position:fixed;inset:0;background:rgba(13,45,74,.65);z-index:200;align-items:center;justify-content:center;}
+.pdf-loading-mask.on{display:flex;}
+.pdf-loading-box{background:#fff;border-radius:14px;padding:28px 36px;min-width:320px;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.2);}
+.pdf-loading-title{font-size:15px;font-weight:700;color:var(--navy);margin-bottom:18px;}
+.pdf-loading-step{display:flex;align-items:center;gap:10px;font-size:13px;color:var(--text2);margin:8px 0;padding:6px 10px;border-radius:6px;}
+.pdf-loading-step.pending{color:var(--muted);}
+.pdf-loading-step.active{background:var(--sky);color:var(--blue);font-weight:600;}
+.pdf-loading-step.done{color:var(--green);}
+.pdf-loading-step .step-icon{width:18px;flex-shrink:0;text-align:center;}
+
+/* 报价单模板(隐藏渲染) */
+#quotePdfTemplate{position:fixed;left:-9999px;top:0;width:794px;background:#fff;padding:40px 48px;font-family:'Noto Sans SC','PingFang SC','Microsoft YaHei',sans-serif;color:#0D2D4A;box-sizing:border-box;}
+#quotePdfTemplate .pdf-head{display:flex;align-items:center;gap:14px;border-bottom:3px solid #0A6EBD;padding-bottom:14px;margin-bottom:18px;}
+#quotePdfTemplate .pdf-logo{width:54px;height:54px;background:linear-gradient(135deg,#0A6EBD,#0BB8C8);border-radius:10px;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:900;font-size:18px;letter-spacing:1px;font-family:'IBM Plex Mono',monospace;}
+#quotePdfTemplate .pdf-title-cn{font-size:18px;font-weight:700;color:#0D2D4A;line-height:1.3;}
+#quotePdfTemplate .pdf-title-en{font-size:11px;color:#6B8BAA;letter-spacing:.5px;margin-top:2px;}
+#quotePdfTemplate .pdf-sectit{font-size:22px;font-weight:700;color:#0A6EBD;letter-spacing:.5px;margin-bottom:14px;}
+#quotePdfTemplate .pdf-sectit-sub{font-size:11px;color:#6B8BAA;font-weight:500;letter-spacing:1.5px;text-transform:uppercase;margin-left:8px;}
+#quotePdfTemplate .pdf-meta-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px 24px;background:#F5F9FF;border:1px solid #D6E8F5;border-radius:10px;padding:16px 20px;margin-bottom:20px;}
+#quotePdfTemplate .pdf-meta-row{display:flex;align-items:baseline;font-size:12px;}
+#quotePdfTemplate .pdf-meta-label{color:#6B8BAA;min-width:78px;font-weight:600;}
+#quotePdfTemplate .pdf-meta-val{color:#0D2D4A;font-weight:600;flex:1;word-break:break-all;}
+#quotePdfTemplate .pdf-meta-val.highlight{color:#0A6EBD;font-weight:700;}
+#quotePdfTemplate .pdf-section-head{font-size:13px;font-weight:700;color:#0D2D4A;margin:18px 0 10px;padding-bottom:6px;border-bottom:1.5px solid #D6E8F5;display:flex;align-items:center;justify-content:space-between;}
+#quotePdfTemplate .pdf-section-head .pdf-section-hint{font-size:10px;color:#6B8BAA;font-weight:500;}
+#quotePdfTemplate .pdf-price-table{width:100%;border-collapse:collapse;font-size:12px;border:1px solid #D6E8F5;border-radius:8px;overflow:hidden;}
+#quotePdfTemplate .pdf-price-table th{background:#0A6EBD;color:#fff;padding:9px 8px;text-align:center;font-weight:700;font-size:11px;}
+#quotePdfTemplate .pdf-price-table th.col-channel{text-align:left;padding-left:14px;}
+#quotePdfTemplate .pdf-price-table td{padding:9px 8px;text-align:center;border-bottom:1px solid #ECF3FB;font-family:'IBM Plex Mono',monospace;color:#0D2D4A;}
+#quotePdfTemplate .pdf-price-table td.col-channel{text-align:left;padding-left:14px;font-family:'Noto Sans SC',sans-serif;font-weight:600;font-size:11px;}
+#quotePdfTemplate .pdf-price-table tr:nth-child(even) td{background:#FAFCFE;}
+#quotePdfTemplate .pdf-price-table th.highlight{background:#0BB8C8;}
+#quotePdfTemplate .pdf-price-table td.highlight{background:#E8F8F2;color:#0E9E6E;font-weight:700;}
+#quotePdfTemplate .pdf-price-note{font-size:10px;color:#6B8BAA;margin-top:6px;font-style:italic;}
+#quotePdfTemplate .pdf-flow{display:flex;align-items:stretch;justify-content:space-between;gap:0;margin:10px 0;background:#F5F9FF;border-radius:10px;padding:18px 14px;}
+#quotePdfTemplate .pdf-flow-step{flex:1;text-align:center;position:relative;padding:0 4px;}
+#quotePdfTemplate .pdf-flow-num{width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,#0A6EBD,#0BB8C8);color:#fff;font-weight:900;font-size:15px;display:inline-flex;align-items:center;justify-content:center;margin-bottom:8px;font-family:'IBM Plex Mono',monospace;}
+#quotePdfTemplate .pdf-flow-title{font-size:12px;font-weight:700;color:#0D2D4A;margin-bottom:3px;}
+#quotePdfTemplate .pdf-flow-desc{font-size:10px;color:#6B8BAA;line-height:1.5;}
+#quotePdfTemplate .pdf-flow-arrow{position:absolute;right:-8px;top:11px;color:#0BB8C8;font-size:18px;font-weight:900;}
+#quotePdfTemplate .pdf-flow-step:last-child .pdf-flow-arrow{display:none;}
+#quotePdfTemplate .pdf-notes{background:#FEF8E6;border:1px solid #F0D080;border-radius:8px;padding:12px 16px;margin-top:14px;}
+#quotePdfTemplate .pdf-notes-title{font-size:11px;font-weight:700;color:#7a5a00;margin-bottom:6px;letter-spacing:.5px;}
+#quotePdfTemplate .pdf-notes ul{margin:0;padding-left:18px;list-style-type:disc;}
+#quotePdfTemplate .pdf-notes li{font-size:10.5px;color:#7a5a00;line-height:1.7;}
+#quotePdfTemplate .pdf-footer{margin-top:18px;padding-top:14px;border-top:1.5px solid #D6E8F5;display:flex;align-items:flex-start;justify-content:space-between;gap:14px;}
+#quotePdfTemplate .pdf-footer-left{flex:1;font-size:11px;color:#3A5A7A;line-height:1.7;}
+#quotePdfTemplate .pdf-footer-left .pdf-brand{font-size:13px;font-weight:700;color:#0D2D4A;margin-bottom:4px;}
+#quotePdfTemplate .pdf-footer-left .pdf-contact-line{color:#6B8BAA;}
+#quotePdfTemplate .pdf-footer-left .pdf-contact-line strong{color:#0A6EBD;}
+#quotePdfTemplate .pdf-qr-box{text-align:center;}
+#quotePdfTemplate .pdf-qr-canvas{width:78px;height:78px;border:1px solid #D6E8F5;border-radius:6px;display:block;}
+#quotePdfTemplate .pdf-qr-text{font-size:9px;color:#6B8BAA;margin-top:4px;}
+#quotePdfTemplate .pdf-validity-stamp{position:absolute;top:38px;right:48px;border:2px solid #dc2626;border-radius:6px;padding:6px 12px;color:#dc2626;font-weight:700;font-size:11px;letter-spacing:1px;transform:rotate(-3deg);background:rgba(255,255,255,0.9);}
+
 /* 附加费用 */
 .surcharge-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px;}
 .surcharge-card{background:#fff;border:1px solid var(--border);border-radius:12px;padding:20px;}
@@ -384,7 +457,24 @@ tr:hover td{background:var(--sky);}
  </div>
 </div>
 
+<!-- PDF 生成进度遮罩 -->
+<div class="pdf-loading-mask" id="pdfLoadingMask">
+ <div class="pdf-loading-box">
+  <div class="pdf-loading-title">📄 正在生成报价单...</div>
+  <div class="pdf-loading-step" id="pdfStep1"><span class="step-icon">⏳</span><span>查询重量梯度 1/3</span></div>
+  <div class="pdf-loading-step" id="pdfStep2"><span class="step-icon">⏳</span><span>查询重量梯度 2/3</span></div>
+  <div class="pdf-loading-step" id="pdfStep3"><span class="step-icon">⏳</span><span>查询重量梯度 3/3</span></div>
+  <div class="pdf-loading-step" id="pdfStep4"><span class="step-icon">⏳</span><span>渲染并导出 PDF</span></div>
+ </div>
+</div>
+
+<!-- 报价单 PDF 模板(隐藏渲染,html2canvas 截图后嵌入 PDF) -->
+<div id="quotePdfTemplate"></div>
+
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrious/4.0.2/qrious.min.js"></script>
 <script src="countries.js"></script>
 
 <script>
@@ -737,9 +827,13 @@ async function doQuote(){
     <span>🔍 共找到 <strong>${list.length}</strong> 个可用渠道</span>
    </div>
    <div class="quote-results-grid">
-    ${list.map(item=>{
+    ${list.map((item,idx)=>{
      var isCheap=item.total===minTotal;
-     return `<div class="quote-card ${isCheap?'cheapest':''}">
+     return `<div class="quote-card ${isCheap?'cheapest':''}" data-idx="${idx}">
+      <label class="quote-pick">
+       <input type="checkbox" class="quote-pick-cb" data-idx="${idx}" ${isCheap?'checked':''}>
+       <span class="quote-pick-label">${isCheap?'已选 · 推荐':'勾选加入报价单'}</span>
+      </label>
       ${isCheap?'<span class="quote-cheapest-tag">⚡ 最低价</span>':''}
       <div class="quote-channel">${esc(item.channelName)}</div>
       <div class="quote-price">
@@ -752,9 +846,34 @@ async function doQuote(){
       </div>
      </div>`;
     }).join('')}
+   </div>
+   <div class="quote-pdf-bar">
+    <div class="quote-pdf-bar-info">
+     已选 <strong id="qSelCount">1</strong> 个渠道,生成报价单含 3 个重量梯度(${(weight-0.5).toFixed(1)} / ${weight.toFixed(1)} / ${(weight+0.5).toFixed(1)} KG)
+    </div>
+    <button class="btn-pdf" id="genPdfBtn">📄 生成报价单 PDF</button>
    </div>`;
 
   G('qResults').innerHTML=html;
+
+  /* 缓存本次查询的完整数据,生成 PDF 时复用 */
+  window._lastQuote = {
+   countryCode: code,
+   countryCn: cn,
+   zoneLabel: zoneLabel,
+   weight: weight,
+   pieces: pieces,
+   email: currentUserEmail,
+   userDisplayName: (bkdllUser && bkdllUser.displayName) || (currentUserEmail||'').split('@')[0],
+   channels: list
+  };
+
+  /* 绑定 checkbox 计数 + PDF 按钮 */
+  G('qResults').querySelectorAll('.quote-pick-cb').forEach(cb=>{
+   cb.addEventListener('change', updateSelCount);
+  });
+  G('genPdfBtn').addEventListener('click', generateQuotationPDF);
+  updateSelCount();
 
  }catch(e){
   G('qResults').innerHTML='<div class="quote-error">⚠ 查询失败：'+esc(e.message)+'</div>';
@@ -778,6 +897,290 @@ function exportExcel(){
  var wb=XLSX.utils.book_new();
  XLSX.utils.book_append_sheet(wb,ws,'我的订单');
  XLSX.writeFile(wb,'BKD订单_'+new Date().toLocaleDateString('zh-CN').replace(/\//g,'')+'.xlsx');
+}
+
+// ── 报价单 PDF 生成 ──
+
+function updateSelCount(){
+ var n=G('qResults').querySelectorAll('.quote-pick-cb:checked').length;
+ if(G('qSelCount'))G('qSelCount').textContent=n;
+ var btn=G('genPdfBtn');
+ if(btn){btn.disabled=(n===0);btn.textContent=n===0?'⚠ 请至少勾选 1 个渠道':'📄 生成报价单 PDF';}
+}
+
+/* 生成当天序号 */
+function nextQuoteSerial(){
+ var d=new Date();
+ var key='bkd_quote_n_'+d.getFullYear()+pad2(d.getMonth()+1)+pad2(d.getDate());
+ var n=0;
+ try{n=parseInt(localStorage.getItem(key)||'0');}catch(e){}
+ n++;
+ try{localStorage.setItem(key,String(n));}catch(e){}
+ return n;
+}
+function pad2(n){return n<10?'0'+n:''+n;}
+function pad3(n){return n<10?'00'+n:n<100?'0'+n:''+n;}
+
+/* 格式化日期 */
+function fmtDate(d){
+ return d.getFullYear()+'年'+(d.getMonth()+1)+'月'+d.getDate()+'日';
+}
+function fmtDateShort(d){
+ return d.getFullYear()+'-'+pad2(d.getMonth()+1)+'-'+pad2(d.getDate());
+}
+
+/* 查询指定重量的价格(复用 doQuote 的逻辑) */
+async function fetchQuoteForWeight(countryCode, weight, pieces){
+ var r=await fetch(ITDIDA_WORKER+'/quote',{
+  method:'POST',
+  headers:{
+   'Content-Type':'application/json',
+   'Authorization':'Bearer '+bkdllToken
+  },
+  body:JSON.stringify({
+   countryCode:countryCode,
+   weight:weight,
+   pieceCount:pieces,
+   email:currentUserEmail
+  })
+ });
+ var d=await r.json();
+ if(!d.ok)throw new Error(d.error||'查价失败');
+ return d.data||[];
+}
+
+function setPdfStep(n, state){
+ var el=G('pdfStep'+n);if(!el)return;
+ el.className='pdf-loading-step '+state;
+ var icon=el.querySelector('.step-icon');
+ if(state==='active'){icon.textContent='⏳';}
+ else if(state==='done'){icon.textContent='✓';}
+ else if(state==='error'){icon.textContent='✗';}
+}
+
+async function generateQuotationPDF(){
+ if(!window._lastQuote){alert('请先查价');return;}
+ var q=window._lastQuote;
+
+ /* 1. 收集已勾选的渠道 */
+ var picked=[];
+ G('qResults').querySelectorAll('.quote-pick-cb:checked').forEach(cb=>{
+  var idx=parseInt(cb.dataset.idx);
+  if(!isNaN(idx)&&q.channels[idx])picked.push(q.channels[idx]);
+ });
+ if(!picked.length){alert('请至少勾选 1 个渠道');return;}
+
+ /* 2. 显示 Loading */
+ G('pdfLoadingMask').classList.add('on');
+ ['1','2','3','4'].forEach(n=>setPdfStep(n,'pending'));
+
+ try{
+  /* 3. 计算 3 个重量梯度 */
+  var w0=Math.max(0.1, +(q.weight-0.5).toFixed(1));  /* 不能 <0.1 */
+  var w1=q.weight;                                     /* 当前 */
+  var w2=+(q.weight+0.5).toFixed(1);
+  /* 如果原始重量本身就小于 0.5,梯度往上走一档 */
+  if(w0===w1){w0=w1; w1=+(q.weight+0.5).toFixed(1); w2=+(q.weight+1.0).toFixed(1);}
+  var weights=[w0,w1,w2];
+
+  /* 4. 串行查 3 次(避免易抵达限流)*/
+  var resultsByWeight={};
+  for(var i=0;i<weights.length;i++){
+   setPdfStep(i+1,'active');
+   var w=weights[i];
+   if(w===q.weight){
+    /* 当前重量直接复用 _lastQuote 的数据,不重查 */
+    resultsByWeight[w]=q.channels;
+   }else{
+    resultsByWeight[w]=await fetchQuoteForWeight(q.countryCode, w, q.pieces);
+   }
+   setPdfStep(i+1,'done');
+  }
+
+  /* 5. 为每个 picked 渠道在每个重量梯度里找匹配项(按 channelName 完全匹配)*/
+  var priceMatrix=picked.map(p=>{
+   var row={channelName: p.channelName, prices:{}};
+   weights.forEach(w=>{
+    var match=(resultsByWeight[w]||[]).find(x=>x.channelName===p.channelName);
+    row.prices[w]=match?match.total:null;
+   });
+   return row;
+  });
+
+  /* 6. 计算报价编号 + 日期 */
+  var now=new Date();
+  var serial=nextQuoteSerial();
+  var quoteNo='BKD-Q-'+now.getFullYear()+pad2(now.getMonth()+1)+pad2(now.getDate())+'-'+pad3(serial);
+  var expireDate=new Date(now.getTime()+7*24*3600*1000);
+
+  /* 7. 渲染 HTML 模板 */
+  setPdfStep(4,'active');
+  await renderPdfTemplate({
+   quoteNo: quoteNo,
+   issuedAt: now,
+   expireAt: expireDate,
+   user: q,
+   weights: weights,
+   currentWeight: q.weight,
+   priceMatrix: priceMatrix
+  });
+
+  /* 8. 等一帧让 DOM 完成 */
+  await new Promise(r=>requestAnimationFrame(r));
+  await new Promise(r=>setTimeout(r,80));
+
+  /* 9. html2canvas 截图 → jsPDF 生成 */
+  var tmpl=G('quotePdfTemplate');
+  var canvas=await html2canvas(tmpl,{
+   scale:2,
+   backgroundColor:'#ffffff',
+   useCORS:true,
+   logging:false
+  });
+  var imgData=canvas.toDataURL('image/jpeg',0.92);
+  var pdf=new window.jspdf.jsPDF({orientation:'portrait',unit:'mm',format:'a4'});
+  var pdfW=pdf.internal.pageSize.getWidth();
+  var pdfH=pdf.internal.pageSize.getHeight();
+  /* 等比缩放图片到 A4 */
+  var imgW=pdfW;
+  var imgH=canvas.height*pdfW/canvas.width;
+  if(imgH>pdfH){
+   /* 图比 A4 高时,分页 */
+   var remaining=imgH;
+   var yOffset=0;
+   while(remaining>0){
+    pdf.addImage(imgData,'JPEG',0,yOffset?-((imgH-remaining)):0,imgW,imgH,undefined,'FAST');
+    remaining-=pdfH;
+    if(remaining>0){pdf.addPage();yOffset+=pdfH;}
+   }
+  }else{
+   pdf.addImage(imgData,'JPEG',0,0,imgW,imgH,undefined,'FAST');
+  }
+
+  /* 10. 文件名 + 下载 */
+  var fname='BKD-Q-'+pad2(now.getMonth()+1)+pad2(now.getDate())+'-'+pad3(serial)+'-'+q.countryCn+'-'+q.weight+'kg.pdf';
+  pdf.save(fname);
+  setPdfStep(4,'done');
+
+  /* 11. 隐藏 Loading */
+  setTimeout(()=>{
+   G('pdfLoadingMask').classList.remove('on');
+   /* 清空模板防止 DOM 留垃圾 */
+   G('quotePdfTemplate').innerHTML='';
+  },600);
+
+ }catch(e){
+  console.error('[PDF]',e);
+  alert('生成报价单失败:'+e.message);
+  G('pdfLoadingMask').classList.remove('on');
+ }
+}
+
+async function renderPdfTemplate(o){
+ /* o = {quoteNo, issuedAt, expireAt, user, weights, currentWeight, priceMatrix} */
+ var tmpl=G('quotePdfTemplate');
+
+ /* 二维码 */
+ var qrCanvasId='qrCanvas_'+Date.now();
+ var qrUrl='https://baokaida.github.io/bkd-portal.html#quotes';
+
+ /* 渠道名(脱敏后)颜色化 */
+ function colorChannel(name){
+  return esc(name);
+ }
+
+ var wt=o.weights;
+ var ct=o.currentWeight;
+
+ var rowsHtml=o.priceMatrix.map(row=>{
+  var cells=wt.map(w=>{
+   var p=row.prices[w];
+   var isCur=(w===ct);
+   var txt=(p===null||p===undefined)?'—':p.toFixed(2);
+   return '<td class="'+(isCur?'highlight':'')+'">'+txt+'</td>';
+  }).join('');
+  return '<tr><td class="col-channel">'+colorChannel(row.channelName)+'</td>'+cells+'</tr>';
+ }).join('');
+
+ var headCells=wt.map(w=>{
+  var isCur=(w===ct);
+  return '<th class="'+(isCur?'highlight':'')+'">'+w+' KG'+(isCur?' ★':'')+'</th>';
+ }).join('');
+
+ tmpl.innerHTML=
+  '<div style="position:relative;">'+
+   '<div class="pdf-validity-stamp">7日有效 · 至 '+fmtDateShort(o.expireAt)+'</div>'+
+
+   '<div class="pdf-head">'+
+    '<div class="pdf-logo">BKD</div>'+
+    '<div>'+
+     '<div class="pdf-title-cn">BKDLL 香港国际物流</div>'+
+     '<div class="pdf-title-en">BKDLL Cross-Border Logistics (HK)</div>'+
+    '</div>'+
+   '</div>'+
+
+   '<div class="pdf-sectit">专属运费报价单 <span class="pdf-sectit-sub">CUSTOMIZED QUOTATION</span></div>'+
+
+   '<div class="pdf-meta-grid">'+
+    '<div class="pdf-meta-row"><span class="pdf-meta-label">报价编号</span><span class="pdf-meta-val highlight">'+o.quoteNo+'</span></div>'+
+    '<div class="pdf-meta-row"><span class="pdf-meta-label">签发日期</span><span class="pdf-meta-val">'+fmtDate(o.issuedAt)+'</span></div>'+
+    '<div class="pdf-meta-row"><span class="pdf-meta-label">客户名称</span><span class="pdf-meta-val">'+esc(o.user.userDisplayName)+'</span></div>'+
+    '<div class="pdf-meta-row"><span class="pdf-meta-label">有效期至</span><span class="pdf-meta-val highlight">'+fmtDate(o.expireAt)+'</span></div>'+
+    '<div class="pdf-meta-row"><span class="pdf-meta-label">联系邮箱</span><span class="pdf-meta-val">'+esc(o.user.email)+'</span></div>'+
+    '<div class="pdf-meta-row"><span class="pdf-meta-label">目的地区</span><span class="pdf-meta-val">'+esc(o.user.countryCn)+' · '+esc(o.user.zoneLabel)+'</span></div>'+
+   '</div>'+
+
+   '<div class="pdf-section-head">价格明细 <span class="pdf-section-hint">★ = 您本次咨询重量</span></div>'+
+
+   '<table class="pdf-price-table">'+
+    '<thead><tr><th class="col-channel">渠道 · 承运商</th>'+headCells+'</tr></thead>'+
+    '<tbody>'+rowsHtml+'</tbody>'+
+   '</table>'+
+   '<div class="pdf-price-note">单位:人民币 RMB,含基础运费(不含燃油附加费及末端附加费)</div>'+
+
+   '<div class="pdf-section-head">服务流程 <span class="pdf-section-hint">SERVICE FLOW</span></div>'+
+   '<div class="pdf-flow">'+
+    '<div class="pdf-flow-step"><div class="pdf-flow-num">1</div><div class="pdf-flow-title">在线下单</div><div class="pdf-flow-desc">Portal 提交订单<br/>自动生成入仓编号</div><div class="pdf-flow-arrow">›</div></div>'+
+    '<div class="pdf-flow-step"><div class="pdf-flow-num">2</div><div class="pdf-flow-title">霖霖入仓</div><div class="pdf-flow-desc">深圳 / 香港<br/>仓库接收清点</div><div class="pdf-flow-arrow">›</div></div>'+
+    '<div class="pdf-flow-step"><div class="pdf-flow-num">3</div><div class="pdf-flow-title">清关出口</div><div class="pdf-flow-desc">DHL / UPS / FedEx<br/>口岸合规操作</div><div class="pdf-flow-arrow">›</div></div>'+
+    '<div class="pdf-flow-step"><div class="pdf-flow-num">4</div><div class="pdf-flow-title">末端派送</div><div class="pdf-flow-desc">本地签收<br/>预计 3-7 工作日</div></div>'+
+   '</div>'+
+
+   '<div class="pdf-notes">'+
+    '<div class="pdf-notes-title">⚠ 报价说明 / NOTES</div>'+
+    '<ul>'+
+     '<li>以上价格为基础运费,人民币结算,实际账单以入仓计费重量为准</li>'+
+     '<li>燃油附加费按当月费率另算,大货(>30kg)/敏感品/化工品请另询专属报价</li>'+
+     '<li>本报价单自签发日起 7 个自然日内有效,至 <strong>'+fmtDateShort(o.expireAt)+'</strong> 失效,逾期请重新查询</li>'+
+     '<li>报价基于易抵达实时数据,实际投保 / 派送条件以下单确认为准</li>'+
+    '</ul>'+
+   '</div>'+
+
+   '<div class="pdf-footer">'+
+    '<div class="pdf-footer-left">'+
+     '<div class="pdf-brand">BKDLL · 保凯达霖霖国际物流</div>'+
+     '<div class="pdf-contact-line">邮箱:<strong>bkd@baokaida.com</strong></div>'+
+     '<div class="pdf-contact-line">在线下单 · 实时查价 · 全程跟踪</div>'+
+     '<div class="pdf-contact-line" style="margin-top:4px;font-size:9px;">本报价单由 BKDLL 系统于 '+fmtDateShort(o.issuedAt)+' 自动生成,编号唯一可查</div>'+
+    '</div>'+
+    '<div class="pdf-qr-box">'+
+     '<canvas id="'+qrCanvasId+'" class="pdf-qr-canvas"></canvas>'+
+     '<div class="pdf-qr-text">扫码下单</div>'+
+    '</div>'+
+   '</div>'+
+  '</div>';
+
+ /* 生成二维码 */
+ try{
+  new QRious({
+   element: document.getElementById(qrCanvasId),
+   value: qrUrl,
+   size: 156,  /* 2x 缩放后清晰 */
+   level: 'M',
+   foreground: '#0A6EBD',
+   background: '#FFFFFF'
+  });
+ }catch(e){console.warn('QR 失败',e);}
 }
 </script>
 </body>
