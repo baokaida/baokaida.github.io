@@ -615,11 +615,19 @@ td.td-doc{white-space:nowrap;min-width:80px;}
    <!-- 实际重量 + 拉重量 + 查价按钮 -->
    <div class="field" style="display:flex;gap:6px;align-items:flex-end;">
     <div style="flex:1;">
-     <label>实际重量 (KG) *</label>
-     <input type="number" id="bm-actualWeight" placeholder="如 19" step="0.01" min="0" style="font-size:13px;">
+     <label>实重 (KG) *</label>
+     <input type="number" id="bm-actualWeight" placeholder="如 0.6" step="0.01" min="0" style="font-size:13px;">
     </div>
-    <button class="btn btn-outline btn-sm" id="bm-fetchPackageBtn" style="height:32px;background:#ecfeff;border-color:#06b6d4;color:#0e7490;" title="从易抵达拉实际重量">📡 拉重量</button>
-    <button class="btn btn-itdida btn-sm" id="bm-queryQuoteBtn" style="height:32px;">🔍 查价</button>
+    <div style="flex:1;">
+     <label>材积重 (KG)</label>
+     <input type="number" id="bm-volumeWeight" placeholder="如 3.43" step="0.01" min="0" style="font-size:13px;">
+    </div>
+    <div style="flex:1;">
+     <label>计费重 (KG) <span style="color:#dc2626;font-weight:600;font-size:9px;">·算钱用</span></label>
+     <input type="number" id="bm-chargeableWeight" placeholder="如 3.5" step="0.01" min="0" style="font-size:13px;">
+    </div>
+    <button class="btn btn-outline btn-sm" id="bm-fetchPackageBtn" style="height:32px;background:#ecfeff;border-color:#06b6d4;color:#0e7490;white-space:nowrap;" title="从易抵达拉真实重量数据">📡 拉重量</button>
+    <button class="btn btn-itdida btn-sm" id="bm-queryQuoteBtn" style="height:32px;white-space:nowrap;">🔍 查价</button>
    </div>
 
    <!-- 拉重量结果显示 -->
@@ -1938,6 +1946,8 @@ function openBillingModal(order,onSave){
  G('bm-country').textContent=order.country||order.destCountry||'—';
 
  G('bm-actualWeight').value=order.actualWeight||'';
+ G('bm-volumeWeight').value=order.volumeWeight||'';
+ G('bm-chargeableWeight').value=order.chargeableWeight||'';
  G('bm-freight').value=order.freight||'';
  G('bm-fuelFee').value=order.fuelFee||'';
  G('bm-dutyPrepaid').value=order.dutyPrepaid||'';
@@ -2118,11 +2128,33 @@ async function fetchPackageFromItdida(){
   var filled=[];
   if(pkg.receiptWeight){
    G('bm-actualWeight').value=Number(pkg.receiptWeight).toFixed(2);
-   filled.push('实际重量 '+Number(pkg.receiptWeight).toFixed(2)+'kg');
+   filled.push('实重 '+Number(pkg.receiptWeight).toFixed(2)+'kg');
   }
-  // 自动写到备注里:转单号 + 渠道 + 计费重 + 签收日 + 尺寸
+  if(pkg.receiptVolumeWeight){
+   G('bm-volumeWeight').value=Number(pkg.receiptVolumeWeight).toFixed(2);
+   filled.push('材积 '+Number(pkg.receiptVolumeWeight).toFixed(2)+'kg');
+  }
+  if(pkg.receiptChargeableWeight){
+   G('bm-chargeableWeight').value=Number(pkg.receiptChargeableWeight).toFixed(2);
+   filled.push('计费 '+Number(pkg.receiptChargeableWeight).toFixed(2)+'kg');
+  }
+  // 转单号:如果 admin 表里的 trackingNumber 还是空,自动回填(顺手把单子也补全)
+  if(pkg.zhuanDanHao && !o.trackingNumber){
+   try{
+    var{doc:_doc,updateDoc:_upd}=window._bkdFS;
+    await _upd(_doc(window._bkdDB,'orders',o.id),{trackingNumber:pkg.zhuanDanHao});
+    o.trackingNumber=pkg.zhuanDanHao; // 同步更新内存
+    filled.push('运单号已写入');
+   }catch(updErr){
+    console.warn('运单号回填失败:',updErr);
+   }
+  }
+  // 自动写到备注里:收件人 + 转单号 + 渠道 + 签收日 + 体积尺寸 (计费重独立字段不再写备注)
   var extraMemo=[];
-  if(pkg.receiptChargeableWeight) extraMemo.push('计费重 '+Number(pkg.receiptChargeableWeight).toFixed(2)+'kg');
+  if(pkg.recipientName||pkg.recipientCompany){
+   var rname=[pkg.recipientName,pkg.recipientCompany].filter(Boolean).join(' / ');
+   extraMemo.push('收件人 '+rname);
+  }
   if(pkg.zhuanDanHao) extraMemo.push('转单号 '+pkg.zhuanDanHao);
   if(pkg.shouHuoQuDao) extraMemo.push('渠道 '+pkg.shouHuoQuDao);
   if(pkg.signTime) extraMemo.push('签收 '+String(pkg.signTime).slice(0,10));
@@ -2142,7 +2174,7 @@ async function fetchPackageFromItdida(){
     // 替换原来 [BKDLL] 或老的 [易抵达] 行
     G('bm-memo').value=existingMemo.replace(/\[(BKDLL|易抵达)\][^\n]*/,newMemo);
    }
-   filled.push('备注已填'+extraMemo.length+'项');
+   filled.push('备注'+extraMemo.length+'项');
   }
 
   result.style.background='#f0fdf4';result.style.borderColor='#86efac';result.style.color='#15803d';
@@ -2195,8 +2227,10 @@ async function saveBilling(){
  var o=billingCtx.order;
  if(!o)return;
  var actualWeight=Number(G('bm-actualWeight').value);
+ var volumeWeight=Number(G('bm-volumeWeight').value)||0;
+ var chargeableWeight=Number(G('bm-chargeableWeight').value)||0;
  var freight=Number(G('bm-freight').value);
- if(!actualWeight||actualWeight<=0){alert('请输入实际重量');return;}
+ if(!actualWeight||actualWeight<=0){alert('请输入实重');return;}
  if(freight===''||isNaN(freight)){alert('请输入运费');return;}
 
  var fuelFee=Number(G('bm-fuelFee').value)||0;
@@ -2206,6 +2240,8 @@ async function saveBilling(){
 
  var updates={
   actualWeight:actualWeight,
+  volumeWeight:volumeWeight||null,
+  chargeableWeight:chargeableWeight||null,
   freight:freight,
   fuelFee:fuelFee||null,
   surcharges:surcharges,
@@ -2246,7 +2282,9 @@ function renderDetailBillingCard(o){
  }
  return '<div class="detail-billing-card">'+
   '<div class="b-title">💰 计费明细 <span style="font-weight:400;font-size:9px;color:var(--muted);">'+(o.billedAt?'录入于 '+esc(o.billedAt.slice(0,10)):'')+'</span></div>'+
-  '<div class="b-row"><span class="lbl">实际重量</span><span class="val">'+fmt(o.actualWeight)+' KG</span></div>'+
+  '<div class="b-row"><span class="lbl">实重</span><span class="val">'+fmt(o.actualWeight)+' KG</span></div>'+
+  (o.volumeWeight?'<div class="b-row"><span class="lbl">材积重</span><span class="val">'+fmt(o.volumeWeight)+' KG</span></div>':'')+
+  (o.chargeableWeight?'<div class="b-row"><span class="lbl">计费重 <span style="color:#dc2626;font-size:9px;">算钱</span></span><span class="val" style="color:#0e7490;font-weight:700;">'+fmt(o.chargeableWeight)+' KG</span></div>':'')+
   '<div class="b-row"><span class="lbl">运费</span><span class="val">¥'+fmt(o.freight)+'</span></div>'+
   (o.fuelFee?'<div class="b-row"><span class="lbl">燃油</span><span class="val">¥'+fmt(o.fuelFee)+'</span></div>':'')+
   surHtml+
@@ -2347,7 +2385,10 @@ function renderBillingTable(){
   '<thead><tr>'+
    '<th style="width:30px;"></th>'+
    '<th>日期</th><th>单号</th><th>运单号</th><th>国家</th>'+
-   '<th class="num">重量KG</th><th class="num">运费</th><th class="num">附加</th>'+
+   '<th class="num" title="实际重量">实重</th>'+
+   '<th class="num" title="材积重">材积</th>'+
+   '<th class="num" title="计费重 = max(实重,材积) 算钱依据">计费</th>'+
+   '<th class="num">运费</th><th class="num">附加</th>'+
    '<th class="num">关税</th><th class="num">合计</th>'+
    '<th>备注</th><th>操作</th>'+
   '</tr></thead><tbody>';
@@ -2362,7 +2403,9 @@ function renderBillingTable(){
    '<td style="font-family:monospace;">'+esc(o.orderId||o.id)+'</td>'+
    '<td style="font-family:monospace;font-size:10px;">'+esc(o.trackingNumber||'—')+'</td>'+
    '<td>'+esc(o.country||o.destCountry||'—')+'</td>'+
-   '<td class="num">'+(o.actualWeight?fmt(o.actualWeight):'<span style="color:#dc2626;">未录</span>')+'</td>'+
+   '<td class="num">'+(o.actualWeight?fmt(o.actualWeight):'<span style="color:#dc2626;">—</span>')+'</td>'+
+   '<td class="num" style="color:#64748b;">'+(o.volumeWeight?fmt(o.volumeWeight):'—')+'</td>'+
+   '<td class="num" style="font-weight:600;color:#0e7490;">'+(o.chargeableWeight?fmt(o.chargeableWeight):'—')+'</td>'+
    '<td class="num">'+(o.freight?'¥'+fmt(o.freight):'—')+'</td>'+
    '<td class="num">'+(surTotal?'¥'+fmt(surTotal):'—')+'</td>'+
    '<td class="num">'+(o.dutyPrepaid?'¥'+fmt(o.dutyPrepaid):'—')+'</td>'+
@@ -2436,7 +2479,7 @@ async function exportBillingXlsx(){
  var XLSX=window.XLSX;
  if(!XLSX){alert('Excel库加载失败');return;}
 
- var header=['日期','运单号','国家','重量 KG','体积(cm)','基础运费','旺季费','燃油','SF+加急','关税预付','不含税合计','备注'];
+ var header=['日期','运单号','国家','实重KG','材积KG','计费KG','体积(cm)','基础运费','旺季费','燃油','SF+加急','关税预付','不含税合计','备注'];
  var rows=[header];
  var total=0;
  // 从备注提取体积
@@ -2461,6 +2504,8 @@ async function exportBillingXlsx(){
    o.trackingNumber||'(未生成运单)',
    o.country||o.destCountry||'',
    Number(o.actualWeight)||'',
+   Number(o.volumeWeight)||'',
+   Number(o.chargeableWeight)||'',
    extractVolume(o.memo),
    Number(o.freight)||'',
    seasonAmt||'',
@@ -2472,10 +2517,10 @@ async function exportBillingXlsx(){
   ]);
   total+=(Number(o.totalAmount)||0);
  });
- rows.push(['合计','','','','','','','','','',total,'']);
+ rows.push(['合计','','','','','','','','','','','',total,'']);
 
  var ws=XLSX.utils.aoa_to_sheet(rows);
- ws['!cols']=[{wch:13},{wch:22},{wch:8},{wch:8},{wch:11},{wch:10},{wch:10},{wch:10},{wch:10},{wch:10},{wch:12},{wch:36}];
+ ws['!cols']=[{wch:13},{wch:22},{wch:8},{wch:8},{wch:8},{wch:8},{wch:11},{wch:10},{wch:10},{wch:10},{wch:10},{wch:10},{wch:12},{wch:36}];
  var wb=XLSX.utils.book_new();
  XLSX.utils.book_append_sheet(wb,ws,'Details');
  var fname='BKD_'+customerName+'_对账单_'+month+'.xlsx';
@@ -2505,6 +2550,8 @@ async function exportBillingPdf(){
    '<td style="font-family:monospace;word-break:break-all;">'+esc(o.trackingNumber||'(未生成)')+'</td>'+
    '<td>'+esc(o.country||o.destCountry||'')+'</td>'+
    '<td class="num">'+(Number(o.actualWeight)?fmt(o.actualWeight):'—')+'</td>'+
+   '<td class="num" style="color:#64748b;">'+(Number(o.volumeWeight)?fmt(o.volumeWeight):'—')+'</td>'+
+   '<td class="num" style="font-weight:700;color:#0e7490;">'+(Number(o.chargeableWeight)?fmt(o.chargeableWeight):'—')+'</td>'+
    '<td style="font-family:monospace;font-size:8px;">'+esc(volume||'—')+'</td>'+
    '<td class="num">'+(Number(o.freight)?'¥'+fmt(o.freight):'—')+'</td>'+
    '<td class="num">'+(Number(o.fuelFee)?'¥'+fmt(o.fuelFee):'—')+'</td>'+
@@ -2557,27 +2604,32 @@ async function exportBillingPdf(){
   '</div>'+
   '<table>'+
   '<colgroup>'+
-   '<col style="width:8%;">'+   /* 日期 */
-   '<col style="width:12%;">'+  /* 运单号 */
-   '<col style="width:7%;">'+   /* 国家 */
-   '<col style="width:6%;">'+   /* 重量 */
-   '<col style="width:9%;">'+   /* 体积 */
-   '<col style="width:8%;">'+   /* 运费 */
-   '<col style="width:7%;">'+   /* 燃油 */
-   '<col style="width:8%;">'+   /* 附加 */
-   '<col style="width:7%;">'+   /* 关税 */
-   '<col style="width:9%;">'+   /* 合计 */
-   '<col style="width:19%;">'+  /* 备注 - 加宽,自动换行 */
+   '<col style="width:7%;">'+   /* 日期 */
+   '<col style="width:11%;">'+  /* 运单号 */
+   '<col style="width:6%;">'+   /* 国家 */
+   '<col style="width:5%;">'+   /* 实重 */
+   '<col style="width:5%;">'+   /* 材积 */
+   '<col style="width:5%;">'+   /* 计费 */
+   '<col style="width:8%;">'+   /* 体积 cm */
+   '<col style="width:7%;">'+   /* 运费 */
+   '<col style="width:6%;">'+   /* 燃油 */
+   '<col style="width:7%;">'+   /* 附加 */
+   '<col style="width:6%;">'+   /* 关税 */
+   '<col style="width:8%;">'+   /* 合计 */
+   '<col style="width:19%;">'+  /* 备注 */
   '</colgroup>'+
   '<thead><tr>'+
    '<th>日期</th><th>运单号</th><th>国家</th>'+
-   '<th class="num">重量KG</th><th>体积(cm)</th>'+
+   '<th class="num">实重</th>'+
+   '<th class="num">材积</th>'+
+   '<th class="num">计费</th>'+
+   '<th>体积(cm)</th>'+
    '<th class="num">运费</th><th class="num">燃油</th>'+
    '<th class="num">附加费</th><th class="num">关税</th><th class="num">合计</th>'+
    '<th>备注</th>'+
   '</tr></thead><tbody>'+
   rowsHtml+
-  '<tr class="total"><td colspan="9" style="text-align:right;padding-right:10px;">合计</td><td class="num">¥'+fmt(total)+'</td><td></td></tr>'+
+  '<tr class="total"><td colspan="11" style="text-align:right;padding-right:10px;">合计</td><td class="num">¥'+fmt(total)+'</td><td></td></tr>'+
   '</tbody></table>'+
   '<div style="margin-top:18px;font-size:9px;color:#64748b;line-height:1.8;">'+
   '1) 本对账单用于月度费用核对与结算。<br>'+
