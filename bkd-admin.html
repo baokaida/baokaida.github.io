@@ -2135,12 +2135,12 @@ async function fetchPackageFromItdida(){
   }
   if(extraMemo.length){
    var existingMemo=G('bm-memo').value||'';
-   var newMemo='[易抵达] '+extraMemo.join(' · ');
-   if(existingMemo.indexOf('[易抵达]')<0){
+   var newMemo='[BKDLL] '+extraMemo.join(' · ');
+   if(existingMemo.indexOf('[BKDLL]')<0&&existingMemo.indexOf('[易抵达]')<0){
     G('bm-memo').value=existingMemo?(existingMemo+'\n'+newMemo):newMemo;
    }else{
-    // 替换原来 [易抵达] 行
-    G('bm-memo').value=existingMemo.replace(/\[易抵达\][^\n]*/,newMemo);
+    // 替换原来 [BKDLL] 或老的 [易抵达] 行
+    G('bm-memo').value=existingMemo.replace(/\[(BKDLL|易抵达)\][^\n]*/,newMemo);
    }
    filled.push('备注已填'+extraMemo.length+'项');
   }
@@ -2436,9 +2436,15 @@ async function exportBillingXlsx(){
  var XLSX=window.XLSX;
  if(!XLSX){alert('Excel库加载失败');return;}
 
- var header=['日期','运单号','国家','重量 KG','基础运费','旺季费','燃油','SF+加急','关税预付','不含税合计','备注'];
+ var header=['日期','运单号','国家','重量 KG','体积(cm)','基础运费','旺季费','燃油','SF+加急','关税预付','不含税合计','备注'];
  var rows=[header];
  var total=0;
+ // 从备注提取体积
+ function extractVolume(memo){
+  if(!memo)return '';
+  var m=String(memo).match(/体积\s+(\d+(?:\.\d+)?-\d+(?:\.\d+)?-\d+(?:\.\d+)?(?:\s*CM)?)/i);
+  return m?m[1].replace(/\s*CM\s*$/i,''):'';
+ }
  picked.forEach(function(o){
   var sur=Array.isArray(o.surcharges)?o.surcharges:[];
   var seasonAmt=0,sfAmt=0,otherAmt=0,otherLabels=[];
@@ -2455,6 +2461,7 @@ async function exportBillingXlsx(){
    o.trackingNumber||'(未生成运单)',
    o.country||o.destCountry||'',
    Number(o.actualWeight)||'',
+   extractVolume(o.memo),
    Number(o.freight)||'',
    seasonAmt||'',
    Number(o.fuelFee)||'',
@@ -2465,10 +2472,10 @@ async function exportBillingXlsx(){
   ]);
   total+=(Number(o.totalAmount)||0);
  });
- rows.push(['合计','','','','','','','','',total,'']);
+ rows.push(['合计','','','','','','','','','',total,'']);
 
  var ws=XLSX.utils.aoa_to_sheet(rows);
- ws['!cols']=[{wch:13},{wch:22},{wch:8},{wch:8},{wch:10},{wch:10},{wch:10},{wch:10},{wch:10},{wch:12},{wch:24}];
+ ws['!cols']=[{wch:13},{wch:22},{wch:8},{wch:8},{wch:11},{wch:10},{wch:10},{wch:10},{wch:10},{wch:10},{wch:12},{wch:36}];
  var wb=XLSX.utils.book_new();
  XLSX.utils.book_append_sheet(wb,ws,'Details');
  var fname='BKD_'+customerName+'_对账单_'+month+'.xlsx';
@@ -2481,21 +2488,30 @@ async function exportBillingPdf(){
  var customerName=picked[0].senderCompany||picked[0].email||'客户';
  var month=billingPage.month||'';
 
+ // 从备注里提取体积 (如果用过拉重量,体积写在 [BKDLL] / [易抵达] 段里)
+ function extractVolume(memo){
+  if(!memo)return '';
+  var m=String(memo).match(/体积\s+(\d+(?:\.\d+)?-\d+(?:\.\d+)?-\d+(?:\.\d+)?(?:\s*CM)?)/i);
+  return m?m[1].replace(/\s*CM\s*$/i,''):'';
+ }
+
  var total=picked.reduce(function(a,o){return a+(Number(o.totalAmount)||0);},0);
  var rowsHtml=picked.map(function(o){
   var sur=Array.isArray(o.surcharges)?o.surcharges:[];
   var surTotal=sur.reduce(function(a,b){return a+(Number(b.amount)||0);},0);
+  var volume=extractVolume(o.memo);
   return '<tr>'+
    '<td>'+esc(fmtDate(o.createdAt||o.submitTime))+'</td>'+
-   '<td style="font-family:monospace;">'+esc(o.trackingNumber||'(未生成)')+'</td>'+
+   '<td style="font-family:monospace;word-break:break-all;">'+esc(o.trackingNumber||'(未生成)')+'</td>'+
    '<td>'+esc(o.country||o.destCountry||'')+'</td>'+
    '<td class="num">'+(Number(o.actualWeight)?fmt(o.actualWeight):'—')+'</td>'+
+   '<td style="font-family:monospace;font-size:8px;">'+esc(volume||'—')+'</td>'+
    '<td class="num">'+(Number(o.freight)?'¥'+fmt(o.freight):'—')+'</td>'+
    '<td class="num">'+(Number(o.fuelFee)?'¥'+fmt(o.fuelFee):'—')+'</td>'+
    '<td class="num">'+(surTotal?'¥'+fmt(surTotal):'—')+'</td>'+
    '<td class="num">'+(Number(o.dutyPrepaid)?'¥'+fmt(o.dutyPrepaid):'—')+'</td>'+
    '<td class="num"><strong>¥'+fmt(o.totalAmount||0)+'</strong></td>'+
-   '<td>'+esc(o.memo||'')+'</td>'+
+   '<td class="memo">'+esc(o.memo||'')+'</td>'+
   '</tr>';
  }).join('');
 
@@ -2503,7 +2519,6 @@ async function exportBillingPdf(){
  var logoUrl=location.origin+location.pathname.replace(/[^/]+$/,'')+'logo.png';
  // 水印:客户公司名大写,密+淡
  var wmText=String(customerName||'BKDLL').toUpperCase().replace(/[^A-Z0-9]/g,'').slice(0,12)||'BKDLL';
- // SVG 平铺水印 - 倾斜 -20度,密(180x100 cell),淡(opacity 0.05)
  var wmSvg='<svg xmlns="http://www.w3.org/2000/svg" width="180" height="100"><text x="90" y="55" fill="%230F2C5C" font-size="16" font-weight="600" font-family="Arial,sans-serif" text-anchor="middle" opacity="0.06" transform="rotate(-22 90 50)">'+esc(wmText)+'</text></svg>';
  var wmDataUrl='data:image/svg+xml;utf8,'+encodeURIComponent(wmSvg).replace(/'/g,"%27");
 
@@ -2521,8 +2536,9 @@ async function exportBillingPdf(){
   'table{width:100%;border-collapse:collapse;font-size:9px;table-layout:fixed;}'+
   'th{background:#0F2C5C;color:#fff;padding:7px 5px;text-align:left;font-weight:600;}'+
   'th.num{text-align:right;}'+
-  'td{padding:6px 5px;border-bottom:1px solid #e2e8f0;background:rgba(255,255,255,0.85);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}'+
+  'td{padding:6px 5px;border-bottom:1px solid #e2e8f0;background:rgba(255,255,255,0.85);vertical-align:top;word-break:break-word;}'+
   'td.num{text-align:right;font-family:monospace;}'+
+  'td.memo{font-size:8.5px;line-height:1.5;white-space:normal;word-break:break-all;}'+
   'tr.total td{background:rgba(254,243,199,0.95);font-weight:700;color:#92400e;font-size:11px;}'+
   '@media print{@page{size:A3 landscape;margin:10mm;} body::before{position:absolute;}}'+
   '</style></head><body>'+
@@ -2541,25 +2557,27 @@ async function exportBillingPdf(){
   '</div>'+
   '<table>'+
   '<colgroup>'+
-   '<col style="width:9%;">'+   /* 日期 */
-   '<col style="width:13%;">'+  /* 运单号 */
-   '<col style="width:9%;">'+   /* 国家 */
-   '<col style="width:7%;">'+   /* 重量 */
-   '<col style="width:9%;">'+   /* 运费 */
-   '<col style="width:8%;">'+   /* 燃油 */
-   '<col style="width:9%;">'+   /* 附加 */
-   '<col style="width:8%;">'+   /* 关税 */
-   '<col style="width:10%;">'+  /* 合计 */
-   '<col style="width:18%;">'+  /* 备注 */
+   '<col style="width:8%;">'+   /* 日期 */
+   '<col style="width:12%;">'+  /* 运单号 */
+   '<col style="width:7%;">'+   /* 国家 */
+   '<col style="width:6%;">'+   /* 重量 */
+   '<col style="width:9%;">'+   /* 体积 */
+   '<col style="width:8%;">'+   /* 运费 */
+   '<col style="width:7%;">'+   /* 燃油 */
+   '<col style="width:8%;">'+   /* 附加 */
+   '<col style="width:7%;">'+   /* 关税 */
+   '<col style="width:9%;">'+   /* 合计 */
+   '<col style="width:19%;">'+  /* 备注 - 加宽,自动换行 */
   '</colgroup>'+
   '<thead><tr>'+
    '<th>日期</th><th>运单号</th><th>国家</th>'+
-   '<th class="num">重量KG</th><th class="num">运费</th><th class="num">燃油</th>'+
+   '<th class="num">重量KG</th><th>体积(cm)</th>'+
+   '<th class="num">运费</th><th class="num">燃油</th>'+
    '<th class="num">附加费</th><th class="num">关税</th><th class="num">合计</th>'+
    '<th>备注</th>'+
   '</tr></thead><tbody>'+
   rowsHtml+
-  '<tr class="total"><td colspan="8" style="text-align:right;padding-right:10px;">合计</td><td class="num">¥'+fmt(total)+'</td><td></td></tr>'+
+  '<tr class="total"><td colspan="9" style="text-align:right;padding-right:10px;">合计</td><td class="num">¥'+fmt(total)+'</td><td></td></tr>'+
   '</tbody></table>'+
   '<div style="margin-top:18px;font-size:9px;color:#64748b;line-height:1.8;">'+
   '1) 本对账单用于月度费用核对与结算。<br>'+
