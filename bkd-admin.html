@@ -2020,8 +2020,12 @@ function renderWeighImagePreview(){
 async function queryQuote(){
  var o=billingCtx.order;
  if(!o)return;
- var weight=Number(G('bm-actualWeight').value);
- if(!weight||weight<=0){alert('请先输入实际重量');return;}
+ var actualW=Number(G('bm-actualWeight').value)||0;
+ var volumeW=Number(G('bm-volumeWeight').value)||0;
+ var chargeW=Number(G('bm-chargeableWeight').value)||0;
+ // 查价重量优先级:计费重 > max(实重,材积重)
+ var weight=chargeW||Math.max(actualW,volumeW);
+ if(!weight||weight<=0){alert('请先输入实重(或材积重/计费重之一)');return;}
 
  var countryName=o.country||o.destCountry||'';
  var country=findCountryByName(countryName);
@@ -2034,7 +2038,7 @@ async function queryQuote(){
  var btn=G('bm-queryQuoteBtn');
  btn.disabled=true;btn.textContent='查询中…';
  G('bm-quoteResults').style.display='block';
- G('bm-quoteList').innerHTML='<div style="color:var(--muted);font-size:11px;padding:8px;">⏳ 查询中…</div>';
+ G('bm-quoteList').innerHTML='<div style="color:var(--muted);font-size:11px;padding:8px;">⏳ 查询中… (按 '+weight+' kg 计费重查价)</div>';
 
  try{
   var resp=await fetch(BKDLL_API+'/api/itdida/quote',{
