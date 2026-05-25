@@ -612,14 +612,18 @@ td.td-doc{white-space:nowrap;min-width:80px;}
     <div><span style="color:var(--muted);">货物：</span><span id="bm-goods"></span> · <span style="color:var(--muted);">国家：</span><strong id="bm-country"></strong></div>
    </div>
 
-   <!-- 实际重量 + 查价按钮 -->
-   <div class="field" style="display:flex;gap:8px;align-items:flex-end;">
+   <!-- 实际重量 + 拉重量 + 查价按钮 -->
+   <div class="field" style="display:flex;gap:6px;align-items:flex-end;">
     <div style="flex:1;">
      <label>实际重量 (KG) *</label>
      <input type="number" id="bm-actualWeight" placeholder="如 19" step="0.01" min="0" style="font-size:13px;">
     </div>
+    <button class="btn btn-outline btn-sm" id="bm-fetchPackageBtn" style="height:32px;background:#ecfeff;border-color:#06b6d4;color:#0e7490;" title="从易抵达拉实际重量">📡 拉重量</button>
     <button class="btn btn-itdida btn-sm" id="bm-queryQuoteBtn" style="height:32px;">🔍 查价</button>
    </div>
+
+   <!-- 拉重量结果显示 -->
+   <div id="bm-fetchResult" style="display:none;margin:-6px 0 10px;padding:7px 10px;background:#ecfeff;border:1px solid #06b6d4;border-radius:6px;font-size:11px;color:#0e7490;"></div>
 
    <!-- 查价结果 -->
    <div id="bm-quoteResults" style="display:none;margin:8px 0 12px;padding:10px;background:#faf5ff;border:1px solid #d8b4fe;border-radius:8px;max-height:220px;overflow-y:auto;">
@@ -1941,6 +1945,7 @@ function openBillingModal(order,onSave){
  G('bm-weighImageFile').value='';
  G('bm-quoteResults').style.display='none';
  G('bm-quoteList').innerHTML='';
+ if(G('bm-fetchResult')){G('bm-fetchResult').style.display='none';G('bm-fetchResult').innerHTML='';}
  G('billingModalAlert').style.display='none';
 
  renderSurcharges();
@@ -2067,6 +2072,86 @@ async function queryQuote(){
   G('bm-quoteList').innerHTML='<div style="color:#dc2626;font-size:11px;padding:8px;">⚠ '+esc(e.message)+'</div>';
  }finally{
   btn.disabled=false;btn.textContent='🔍 查价';
+ }
+}
+
+/* ──────── 从易抵达拉真实运单数据 (模块①+) ──────── */
+async function fetchPackageFromItdida(){
+ var o=billingCtx.order;
+ if(!o)return;
+ var danHao=o.orderId||o.id; // BKD 入仓号就是易抵达的客户单号
+
+ var btn=G('bm-fetchPackageBtn');
+ var result=G('bm-fetchResult');
+ btn.disabled=true;btn.textContent='⏳ 拉取中…';
+ result.style.display='block';
+ result.style.background='#f0f9ff';result.style.borderColor='#7dd3fc';result.style.color='#0369a1';
+ result.innerHTML='⏳ 正在从易抵达拉取 '+esc(danHao)+' …';
+
+ try{
+  var resp=await fetch(BKDLL_API+'/api/itdida/fetch-package',{
+   method:'POST',
+   headers:Object.assign({'Content-Type':'application/json'},tokenHeader()),
+   body:JSON.stringify({danHao:danHao})
+  });
+  var d=await resp.json();
+  if(!d.ok){
+   result.style.background='#fef2f2';result.style.borderColor='#fecaca';result.style.color='#dc2626';
+   result.innerHTML='⚠ 拉取失败: '+esc(d.error||'unknown');
+   return;
+  }
+  // 易抵达返回结构: { data: [{ receiptWeight, signTime, zhuanDanHao, ... }] }
+  var arr=(d.data&&d.data.data)||[];
+  var pkg=arr[0];
+  if(!pkg){
+   result.style.background='#fef3c7';result.style.borderColor='#fbbf24';result.style.color='#92400e';
+   result.innerHTML='⚠ 易抵达没找到该运单。请确认 '+esc(danHao)+' 是否已录入易抵达系统。';
+   return;
+  }
+  if(!pkg.success&&pkg.errorMsg){
+   result.style.background='#fef3c7';result.style.borderColor='#fbbf24';result.style.color='#92400e';
+   result.innerHTML='⚠ '+esc(pkg.errorMsg);
+   return;
+  }
+
+  // 填字段
+  var filled=[];
+  if(pkg.receiptWeight){
+   G('bm-actualWeight').value=Number(pkg.receiptWeight).toFixed(2);
+   filled.push('实际重量 '+Number(pkg.receiptWeight).toFixed(2)+'kg');
+  }
+  // 自动写到备注里:转单号 + 渠道 + 计费重 + 签收日 + 尺寸
+  var extraMemo=[];
+  if(pkg.receiptChargeableWeight) extraMemo.push('计费重 '+Number(pkg.receiptChargeableWeight).toFixed(2)+'kg');
+  if(pkg.zhuanDanHao) extraMemo.push('转单号 '+pkg.zhuanDanHao);
+  if(pkg.shouHuoQuDao) extraMemo.push('渠道 '+pkg.shouHuoQuDao);
+  if(pkg.signTime) extraMemo.push('签收 '+String(pkg.signTime).slice(0,10));
+  // 尺寸:如果有单件信息,取第一件
+  if(pkg.apiUnitModelList&&pkg.apiUnitModelList.length){
+   var u=pkg.apiUnitModelList[0];
+   if(u.length&&u.width&&u.height){
+    extraMemo.push('体积 '+u.length+'-'+u.width+'-'+u.height+'CM');
+   }
+  }
+  if(extraMemo.length){
+   var existingMemo=G('bm-memo').value||'';
+   var newMemo='[易抵达] '+extraMemo.join(' · ');
+   if(existingMemo.indexOf('[易抵达]')<0){
+    G('bm-memo').value=existingMemo?(existingMemo+'\n'+newMemo):newMemo;
+   }else{
+    // 替换原来 [易抵达] 行
+    G('bm-memo').value=existingMemo.replace(/\[易抵达\][^\n]*/,newMemo);
+   }
+   filled.push('备注已填'+extraMemo.length+'项');
+  }
+
+  result.style.background='#f0fdf4';result.style.borderColor='#86efac';result.style.color='#15803d';
+  result.innerHTML='✅ 拉取成功: '+filled.join(' · ')+(pkg.recipientName?(' · 收件人 '+esc(pkg.recipientName)):'');
+ }catch(e){
+  result.style.background='#fef2f2';result.style.borderColor='#fecaca';result.style.color='#dc2626';
+  result.innerHTML='⚠ 网络错误: '+esc(e.message);
+ }finally{
+  btn.disabled=false;btn.textContent='📡 拉重量';
  }
 }
 
@@ -2502,6 +2587,7 @@ function initBillingModal(){
  G('billingModalCancel').addEventListener('click',function(){closeModal('billingModal');});
  G('billingModal').addEventListener('click',function(e){if(e.target===G('billingModal'))closeModal('billingModal');});
  G('bm-queryQuoteBtn').addEventListener('click',queryQuote);
+ G('bm-fetchPackageBtn').addEventListener('click',fetchPackageFromItdida);
  G('billingModalSave').addEventListener('click',saveBilling);
  G('bm-addSurchargeBtn').addEventListener('click',function(){
   billingCtx.surcharges.push({label:'',amount:0});
