@@ -764,7 +764,11 @@ async function uploadBytes(ref, file){
  });
  var d = await resp.json();
  if(!d.ok) throw new Error(d.error || 'upload_failed');
- // 模拟 Firebase 返回的 snapshot
+ // 把 url 写回原 ref 对象(原代码模式: sRef = ref(...); uploadBytes(sRef); getDownloadURL(sRef))
+ // 这样后续 getDownloadURL(sRef) 能拿到 _url
+ ref._url = d.url;
+ ref.path = d.path;
+ // 同时返回 snapshot,跟 Firebase 真 SDK 一致
  return {
   ref: { _type: 'ref', path: d.path, _url: d.url },
   metadata: { fullPath: d.path, contentType: d.contentType, size: d.size }
