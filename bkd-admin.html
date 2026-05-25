@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>BKD Admin — BKDLL后台</title>
+<script src="countries.js"></script>
 <style>
 :root {
  --blue:#1a56db;--teal:#0d9488;--red:#dc2626;--amber:#d97706;
@@ -240,6 +241,42 @@ td.td-doc{white-space:nowrap;min-width:80px;}
   }
   .ht p { display: none; }
 }
+
+/* 计费模块 CSS (模块①) */
+.bm-quote-item{padding:8px 10px;border:1px solid #e9d5ff;border-radius:6px;background:#fff;margin-bottom:6px;cursor:pointer;display:flex;align-items:center;gap:8px;font-size:11px;transition:all .15s;}
+.bm-quote-item:hover{border-color:#a855f7;background:#faf5ff;}
+.bm-quote-item.selected{border-color:#7c3aed;background:#faf5ff;box-shadow:0 0 0 2px rgba(124,58,237,.15);}
+.bm-quote-item input[type=radio]{margin:0;cursor:pointer;flex-shrink:0;accent-color:#7c3aed;}
+.bm-quote-item .bm-q-channel{flex:1;font-weight:600;color:#1e293b;}
+.bm-quote-item .bm-q-price{font-weight:700;color:#7c3aed;font-family:monospace;font-size:13px;}
+.bm-quote-item .bm-q-meta{color:var(--muted);font-size:10px;margin-left:6px;}
+.bm-surcharge-row{display:flex;gap:6px;margin-bottom:6px;align-items:center;}
+.bm-surcharge-row input[type=text]{flex:1.5;padding:5px 8px;border:1.5px solid var(--border);border-radius:6px;font-size:11px;}
+.bm-surcharge-row input[type=number]{flex:1;padding:5px 8px;border:1.5px solid var(--border);border-radius:6px;font-size:11px;font-family:monospace;}
+.bm-surcharge-row .bm-surcharge-del{background:#fef2f2;border:1px solid #fecaca;color:#dc2626;border-radius:6px;width:28px;height:28px;cursor:pointer;font-size:13px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.bm-surcharge-row .bm-surcharge-del:hover{background:#dc2626;color:#fff;}
+
+/* 订单列表 + 对账勾选 */
+.billing-row{display:flex;align-items:center;gap:6px;}
+.billing-row input[type=checkbox]{cursor:pointer;width:16px;height:16px;accent-color:var(--blue);}
+.billing-table{width:100%;border-collapse:collapse;font-size:11px;}
+.billing-table th{background:#f4f9ff;padding:8px 6px;text-align:left;font-weight:600;color:var(--text2);border-bottom:1.5px solid var(--border);position:sticky;top:0;}
+.billing-table td{padding:7px 6px;border-bottom:1px solid #f1f5f9;}
+.billing-table tr:hover td{background:#fafbfc;}
+.billing-table .num{font-family:monospace;text-align:right;}
+.billing-table .picked-yes{background:#f0fdf4 !important;}
+
+/* 详情只读区计费块 */
+.detail-billing-card{background:linear-gradient(135deg,#ecfeff,#f0f9ff);border:1.5px solid #06b6d4;border-radius:8px;padding:10px 12px;margin:10px 0;}
+.detail-billing-card .b-title{font-size:11px;font-weight:700;color:#0e7490;margin-bottom:8px;display:flex;align-items:center;gap:5px;justify-content:space-between;}
+.detail-billing-card .b-row{display:flex;justify-content:space-between;padding:3px 0;font-size:11px;border-bottom:1px dashed rgba(14,116,144,.15);}
+.detail-billing-card .b-row:last-child{border-bottom:none;}
+.detail-billing-card .b-row .lbl{color:var(--muted);}
+.detail-billing-card .b-row .val{font-family:monospace;font-weight:600;color:#0e7490;}
+.detail-billing-card .b-total{margin-top:6px;padding-top:8px;border-top:1.5px solid rgba(14,116,144,.3);display:flex;justify-content:space-between;align-items:center;}
+.detail-billing-card .b-total .lbl{font-size:12px;font-weight:700;color:#0e7490;}
+.detail-billing-card .b-total .val{font-size:16px;font-weight:700;color:#0e7490;font-family:monospace;}
+.detail-billing-card img.b-img{margin-top:6px;max-width:100%;max-height:180px;border:1px solid rgba(14,116,144,.3);border-radius:4px;display:block;cursor:zoom-in;}
 </style>
 </head>
 <body>
@@ -269,6 +306,7 @@ td.td-doc{white-space:nowrap;min-width:80px;}
    <div class="nav-item" data-page="tracking"><span class="nav-icon">🔍</span>物流查询</div>
    <div class="nav-item" data-page="stats"><span class="nav-icon">📊</span>数据统计</div>
    <div class="nav-item" data-page="customers"><span class="nav-icon">👥</span>客户管理</div>
+   <div class="nav-item" data-page="billing"><span class="nav-icon">💰</span>月结对账</div>
   </nav>
   <div class="sb-footer"><button id="logoutBtn">⬅ 退出登录</button></div>
  </div>
@@ -388,6 +426,32 @@ td.td-doc{white-space:nowrap;min-width:80px;}
       </div>
      </div>
     </div>
+   <!-- 月结对账 -->
+   <div class="page" id="page-billing">
+    <div class="table-card">
+     <div class="table-header">
+      <h3>月结对账单生成</h3>
+      <div class="search-bar" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+       <select id="billingCustomerSel" style="padding:6px 10px;border:1.5px solid var(--border);border-radius:6px;font-size:12px;min-width:180px;">
+        <option value="">— 选择客户 —</option>
+       </select>
+       <input type="month" id="billingMonthSel" style="padding:6px 10px;border:1.5px solid var(--border);border-radius:6px;font-size:12px;">
+       <button class="btn btn-outline btn-sm" id="billingFilterAllBtn">所有订单</button>
+       <button class="btn btn-primary btn-sm" id="billingLoadBtn">📋 加载订单</button>
+      </div>
+     </div>
+     <div id="billingStatsBar" style="padding:10px 18px;background:#f4f9ff;border-bottom:1px solid var(--border);display:none;font-size:12px;color:var(--text2);">
+      <span>已勾选 <strong id="billingPickedCount" style="color:var(--blue);">0</strong> / 共 <strong id="billingTotalCount">0</strong> 票</span>
+      <span style="margin-left:18px;">合计 <strong id="billingPickedAmount" style="color:var(--blue);">¥0.00</strong></span>
+      <span style="float:right;display:flex;gap:8px;">
+       <button class="btn btn-outline btn-sm" id="billingSelectAllBtn">全选</button>
+       <button class="btn btn-outline btn-sm" id="billingDeselectBtn">反选</button>
+       <button class="btn btn-teal btn-sm" id="billingExportXlsxBtn">📊 导出 Excel</button>
+       <button class="btn btn-teal btn-sm" id="billingExportPdfBtn">📄 导出 PDF</button>
+      </span>
+     </div>
+     <div id="billingTableWrap" style="padding:14px;"><div style="color:var(--muted);font-size:12px;padding:20px;text-align:center;">请选择客户和月份后点"加载订单"</div></div>
+    </div>
    </div>
 
   </div>
@@ -446,6 +510,7 @@ td.td-doc{white-space:nowrap;min-width:80px;}
    <h3 id="detail-title">订单详情</h3>
    <div style="display:flex;gap:6px;align-items:center;">
     <button class="btn btn-itdida btn-sm" id="syncItdidaBtn" title="从霖霖深圳仓拉取最新轨迹">📡 同步深圳仓</button>
+    <button class="btn btn-teal btn-sm" id="openBillingBtn" title="录入实际重量/运费/附加费">💰 录入计费</button>
     <button class="btn btn-teal btn-sm" id="editToggleBtn">✏️ 编辑</button>
     <button class="modal-close" id="detailClose">✕</button>
    </div>
@@ -522,6 +587,92 @@ td.td-doc{white-space:nowrap;min-width:80px;}
   <div class="modal-foot">
    <button class="btn btn-outline" id="customerModalCancel">关闭</button>
    <button class="btn btn-primary" id="customerModalSave">创建账号</button>
+  </div>
+ </div>
+</div>
+
+<!-- 计费录入 Modal (模块①) -->
+<div class="overlay" id="billingModal">
+ <div class="modal" style="width:min(96vw,640px);max-height:90vh;display:flex;flex-direction:column;">
+  <div class="modal-head">
+   <h3 id="billing-title">💰 录入计费</h3>
+   <button class="modal-close" id="billingModalClose">✕</button>
+  </div>
+  <div class="modal-body" id="billingModalBody" style="overflow-y:auto;flex:1;">
+   <div id="billingModalAlert" class="alert"></div>
+
+   <!-- 订单信息条 -->
+   <div style="background:#f4f8ff;border:1px solid var(--border);border-radius:7px;padding:9px 12px;margin-bottom:12px;font-size:11px;line-height:1.8;">
+    <div><span style="color:var(--muted);">订单：</span><strong id="bm-orderId" style="font-family:monospace;"></strong></div>
+    <div><span style="color:var(--muted);">客户：</span><strong id="bm-company"></strong> <span style="color:var(--muted);" id="bm-email"></span></div>
+    <div><span style="color:var(--muted);">货物：</span><span id="bm-goods"></span> · <span style="color:var(--muted);">国家：</span><strong id="bm-country"></strong> · <span style="color:var(--muted);">件数：</span><strong id="bm-qty"></strong></div>
+   </div>
+
+   <!-- 实际重量 + 查价按钮 -->
+   <div class="field" style="display:flex;gap:8px;align-items:flex-end;">
+    <div style="flex:1;">
+     <label>实际重量 (KG) *</label>
+     <input type="number" id="bm-actualWeight" placeholder="如 19" step="0.01" min="0" style="font-size:13px;">
+    </div>
+    <button class="btn btn-itdida btn-sm" id="bm-queryQuoteBtn" style="height:32px;">🔍 查价</button>
+   </div>
+
+   <!-- 查价结果 -->
+   <div id="bm-quoteResults" style="display:none;margin:8px 0 12px;padding:10px;background:#faf5ff;border:1px solid #d8b4fe;border-radius:8px;max-height:220px;overflow-y:auto;">
+    <div id="bm-quoteList"></div>
+   </div>
+
+   <!-- 费用字段 -->
+   <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+    <div class="field">
+     <label>运费 (CNY) *</label>
+     <input type="number" id="bm-freight" placeholder="0.00" step="0.01" min="0" style="font-size:13px;">
+    </div>
+    <div class="field">
+     <label>燃油 (CNY) <span style="color:var(--muted);font-weight:400;font-size:9px;">·选填</span></label>
+     <input type="number" id="bm-fuelFee" placeholder="0.00" step="0.01" min="0" style="font-size:13px;">
+    </div>
+   </div>
+
+   <!-- 附加费数组 -->
+   <div class="field">
+    <label>附加费 <span style="color:var(--muted);font-weight:400;font-size:9px;">·可加多条，如 SF加急/旺季费</span></label>
+    <div id="bm-surchargeList"></div>
+    <button type="button" class="btn btn-outline btn-sm" id="bm-addSurchargeBtn" style="margin-top:6px;">+ 添加附加费</button>
+   </div>
+
+   <div class="field">
+    <label>关税预付 (CNY) <span style="color:var(--muted);font-weight:400;font-size:9px;">·选填</span></label>
+    <input type="number" id="bm-dutyPrepaid" placeholder="0.00" step="0.01" min="0" style="font-size:13px;">
+   </div>
+
+   <!-- 自动算总额 -->
+   <div style="background:linear-gradient(135deg,#ecfeff,#cffafe);border:1.5px solid #06b6d4;border-radius:8px;padding:12px 14px;margin:12px 0;display:flex;align-items:center;justify-content:space-between;">
+    <span style="font-size:12px;color:#0e7490;font-weight:600;">不含税合计</span>
+    <span style="font-size:22px;font-weight:700;color:#0e7490;font-family:monospace;">¥<span id="bm-totalAmount">0.00</span></span>
+   </div>
+
+   <!-- 称重图 -->
+   <div class="field">
+    <label>称重图 <span style="color:var(--muted);font-weight:400;font-size:9px;">·从易抵达截图,上传</span></label>
+    <div style="display:flex;gap:6px;align-items:center;">
+     <input type="file" id="bm-weighImageFile" accept="image/*" style="font-size:11px;flex:1;">
+     <button class="btn btn-outline btn-sm" id="bm-weighImageClear" style="display:none;">✕ 清除</button>
+    </div>
+    <div id="bm-weighImagePreview" style="margin-top:8px;display:none;">
+     <img id="bm-weighImageImg" style="max-width:100%;max-height:180px;border:1px solid var(--border);border-radius:6px;">
+     <div style="font-size:9px;color:var(--muted);margin-top:4px;" id="bm-weighImageStatus"></div>
+    </div>
+   </div>
+
+   <div class="field">
+    <label>备注 <span style="color:var(--muted);font-weight:400;font-size:9px;">·如 HK双清包税渠道</span></label>
+    <textarea id="bm-memo" placeholder="备注..." style="min-height:48px;font-size:12px;"></textarea>
+   </div>
+  </div>
+  <div class="modal-foot">
+   <button class="btn btn-outline" id="billingModalCancel">取消</button>
+   <button class="btn btn-teal" id="billingModalSave">保存</button>
   </div>
  </div>
 </div>
@@ -1311,6 +1462,29 @@ function initDetailModal(){
  G('editCancelBtn').addEventListener('click',()=>{isEdit=false;openDetailModal(cur);});
  G('editSaveBtn').addEventListener('click',saveDetailEdit);
  G('syncItdidaBtn').addEventListener('click',syncFromItdida);
+ // 模块①: 录入计费按钮
+ var openBillBtn=G('openBillingBtn');
+ if(openBillBtn){
+  openBillBtn.addEventListener('click',function(){
+   if(!cur||!window.BKDLLBilling)return;
+   window.BKDLLBilling.openBillingModal(cur,function(updated){
+    // 保存后回调:刷新 allOrders 里这条记录,重渲详情
+    var ix=allOrders.findIndex(x=>x.id===cur.id);
+    if(ix>=0){allOrders[ix]=Object.assign({},allOrders[ix],updated);cur=allOrders[ix];}
+    renderTable();updateStats();openDetailModal(cur);
+   });
+  });
+ }
+ // 模块①: 暴露钩子给 BKDLLBilling 用
+ window.__bkdGetAllOrders=function(){return allOrders;};
+ window.__bkdReloadOrders=async function(){
+  try{
+   var{collection,getDocs,orderBy,query}=window._bkdFS;
+   var snap=await getDocs(query(collection(window._bkdDB,'orders'),orderBy('createdAt','desc')));
+   allOrders=snap.docs.map(d=>({id:d.id,...d.data()}));
+   renderTable();updateStats();
+  }catch(e){console.error('reload orders failed',e);}
+ };
 }
 
 /* ── 从易抵达同步 ──
@@ -1428,6 +1602,7 @@ function openDetailModal(o){
  G('syncItdidaBtn').style.display='inline-block';
  G('syncItdidaBtn').disabled=false;
  G('syncItdidaBtn').textContent='📡 同步深圳仓';
+ if(G('openBillingBtn'))G('openBillingBtn').style.display='inline-block';
  G('detailFoot').style.display='none';
  var dt='';if(o.createdAt&&o.createdAt.toDate)dt=o.createdAt.toDate().toLocaleString('zh-CN');
  else if(o.submitTime)dt=o.submitTime.replace('T',' ').slice(0,16);
@@ -1451,6 +1626,12 @@ function openDetailModal(o){
    <div class="itdida-track-title">📡 霖霖深圳仓轨迹（${lastItdidaTracks.trackList.length} 条 · ${esc(lastItdidaTracks.fetchedAt.slice(0,16).replace('T',' '))} 拉取）</div>
    ${tl}
   </div>`;
+ }
+
+ // 如果有计费数据,渲染计费区 (模块①)
+ if(window.BKDLLBilling && window.BKDLLBilling.renderDetailBillingCard){
+  var billingHtml=window.BKDLLBilling.renderDetailBillingCard(o);
+  if(billingHtml)html=billingHtml+html;
  }
 
  G('detailBody').innerHTML=html;
@@ -1692,6 +1873,627 @@ function openModal(id){G(id).classList.add('on');document.body.style.overflow='h
 function closeModal(id){G(id).classList.remove('on');document.body.style.overflow='';}
 function showAlert(id,tp,msg){var el=G(id);el.className='alert alert-'+(tp==='err'?'err':'ok');el.textContent=msg;el.style.display='block';setTimeout(()=>el.style.display='none',4000);}
 function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+})();
+</script>
+
+<!-- ════════════════════════════════════════════════════
+     BKDLL 月结对账模块 (模块①+②) — 2026-05-25
+     完全独立的 IIFE,挂在 window.BKDLLBilling 上
+     依赖:
+       - window._bkdFS (doc, updateDoc, collection, getDocs)
+       - window._bkdDB
+       - window._bkdStorage + window._bkdStorageRef (ref, uploadBytes)
+       - window.BKDLL_COUNTRIES (countries.js)
+       - window.__bkdGetAllOrders() (主 IIFE 暴露)
+     不动: admin.js / itdida.js / upload.js
+══════════════════════════════════════════════════════ -->
+<script>
+(function(){
+'use strict';
+var BKDLL_API='https://api.bkdll.com';
+var ADMIN_EMAIL='bkd@baokaida.com';
+
+function G(id){return document.getElementById(id);}
+function esc(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function openModal(id){G(id).classList.add('on');document.body.style.overflow='hidden';}
+function closeModal(id){G(id).classList.remove('on');document.body.style.overflow='';}
+function tokenHeader(){var t=localStorage.getItem('bkdll_token');return t?{'Authorization':'Bearer '+t}:{};}
+function fmt(n){var v=Number(n);if(!isFinite(v))return '0.00';return v.toFixed(2);}
+
+/* 中文国名 → countryCode */
+function findCountryByName(cnOrEn){
+ if(!window.BKDLL_COUNTRIES)return null;
+ var s=String(cnOrEn||'').trim();
+ if(!s)return null;
+ var exact=window.BKDLL_COUNTRIES.find(c=>c.cn===s||c.en===s||c.code===s.toUpperCase());
+ if(exact)return exact;
+ var fuzzy=window.BKDLL_COUNTRIES.find(c=>c.cn.indexOf(s)>=0||s.indexOf(c.cn)>=0||c.en.toLowerCase().indexOf(s.toLowerCase())>=0);
+ return fuzzy||null;
+}
+
+var billingCtx={order:null,onSave:null,selectedQuote:null,quoteList:[],surcharges:[],weighImageUrl:'',weighImagePath:''};
+
+function openBillingModal(order,onSave){
+ billingCtx.order=order;
+ billingCtx.onSave=onSave||function(){};
+ billingCtx.selectedQuote=null;
+ billingCtx.quoteList=[];
+ billingCtx.surcharges=Array.isArray(order.surcharges)?JSON.parse(JSON.stringify(order.surcharges)):[];
+ billingCtx.weighImageUrl=order.weighImage||'';
+ billingCtx.weighImagePath=order.weighImagePath||'';
+
+ G('billing-title').textContent='💰 录入计费 — '+(order.orderId||order.id);
+ G('bm-orderId').textContent=order.orderId||order.id;
+ G('bm-company').textContent=order.senderCompany||'—';
+ G('bm-email').textContent=order.email?'('+order.email+')':'';
+ G('bm-goods').textContent=order.goods||'—';
+ G('bm-country').textContent=order.country||order.destCountry||'—';
+ G('bm-qty').textContent=order.qty||'1';
+
+ G('bm-actualWeight').value=order.actualWeight||'';
+ G('bm-freight').value=order.freight||'';
+ G('bm-fuelFee').value=order.fuelFee||'';
+ G('bm-dutyPrepaid').value=order.dutyPrepaid||'';
+ G('bm-memo').value=order.memo||'';
+ G('bm-weighImageFile').value='';
+ G('bm-quoteResults').style.display='none';
+ G('bm-quoteList').innerHTML='';
+ G('billingModalAlert').style.display='none';
+
+ renderSurcharges();
+ renderWeighImagePreview();
+ recalcTotal();
+ openModal('billingModal');
+}
+
+function renderSurcharges(){
+ var html=billingCtx.surcharges.map(function(s,i){
+  return '<div class="bm-surcharge-row" data-i="'+i+'">'+
+   '<input type="text" class="bm-sc-label" placeholder="名称 如 SF加急" value="'+esc(s.label||'')+'">'+
+   '<input type="number" class="bm-sc-amt" placeholder="金额" step="0.01" value="'+esc(s.amount||0)+'">'+
+   '<button type="button" class="bm-surcharge-del" data-i="'+i+'" title="删除">✕</button>'+
+  '</div>';
+ }).join('');
+ G('bm-surchargeList').innerHTML=html;
+ G('bm-surchargeList').querySelectorAll('.bm-sc-label').forEach(function(el){
+  el.addEventListener('input',function(){
+   var i=Number(el.closest('.bm-surcharge-row').dataset.i);
+   billingCtx.surcharges[i].label=el.value;
+  });
+ });
+ G('bm-surchargeList').querySelectorAll('.bm-sc-amt').forEach(function(el){
+  el.addEventListener('input',function(){
+   var i=Number(el.closest('.bm-surcharge-row').dataset.i);
+   billingCtx.surcharges[i].amount=Number(el.value)||0;
+   recalcTotal();
+  });
+ });
+ G('bm-surchargeList').querySelectorAll('.bm-surcharge-del').forEach(function(el){
+  el.addEventListener('click',function(){
+   var i=Number(el.dataset.i);
+   billingCtx.surcharges.splice(i,1);
+   renderSurcharges();
+   recalcTotal();
+  });
+ });
+}
+
+function recalcTotal(){
+ var freight=Number(G('bm-freight').value)||0;
+ var fuelFee=Number(G('bm-fuelFee').value)||0;
+ var duty=Number(G('bm-dutyPrepaid').value)||0;
+ var sur=billingCtx.surcharges.reduce(function(s,x){return s+(Number(x.amount)||0);},0);
+ var total=freight+fuelFee+duty+sur;
+ G('bm-totalAmount').textContent=fmt(total);
+}
+
+function renderWeighImagePreview(){
+ if(billingCtx.weighImageUrl){
+  G('bm-weighImageImg').src=billingCtx.weighImageUrl;
+  G('bm-weighImagePreview').style.display='block';
+  G('bm-weighImageClear').style.display='inline-block';
+  G('bm-weighImageStatus').textContent='✅ 已保存';
+ }else{
+  G('bm-weighImagePreview').style.display='none';
+  G('bm-weighImageClear').style.display='none';
+ }
+}
+
+async function queryQuote(){
+ var o=billingCtx.order;
+ if(!o)return;
+ var weight=Number(G('bm-actualWeight').value);
+ if(!weight||weight<=0){alert('请先输入实际重量');return;}
+
+ var countryName=o.country||o.destCountry||'';
+ var country=findCountryByName(countryName);
+ if(!country){
+  alert('订单国家"'+countryName+'"在 countries.js 里找不到匹配。请手填运费。');
+  return;
+ }
+
+ var pieces=Number(o.qty)||1;
+ var btn=G('bm-queryQuoteBtn');
+ btn.disabled=true;btn.textContent='查询中…';
+ G('bm-quoteResults').style.display='block';
+ G('bm-quoteList').innerHTML='<div style="color:var(--muted);font-size:11px;padding:8px;">⏳ 查询中…</div>';
+
+ try{
+  var resp=await fetch(BKDLL_API+'/api/itdida/quote',{
+   method:'POST',
+   headers:Object.assign({'Content-Type':'application/json'},tokenHeader()),
+   body:JSON.stringify({
+    countryCode:country.code,
+    countryCn:country.cn,
+    weight:weight,
+    pieceCount:pieces,
+    targetEmail:o.email||o.contactEmail||''
+   })
+  });
+  var d=await resp.json();
+  if(d.ok===false){
+   G('bm-quoteList').innerHTML='<div style="color:#dc2626;font-size:11px;padding:8px;">⚠ '+esc(d.error||'查询失败')+'</div>';
+   return;
+  }
+  var list=d.data||[];
+  if(!list.length){
+   G('bm-quoteList').innerHTML='<div style="color:var(--muted);font-size:11px;padding:8px;">该目的地暂无可用渠道,请手填运费</div>';
+   return;
+  }
+  billingCtx.quoteList=list;
+  G('bm-quoteList').innerHTML=list.map(function(it,idx){
+   return '<label class="bm-quote-item" data-idx="'+idx+'">'+
+    '<input type="radio" name="bm-quote" value="'+idx+'">'+
+    '<span class="bm-q-channel">'+esc(it.channelName||'—')+'</span>'+
+    '<span class="bm-q-meta">'+(it.chargeableWeight||weight)+'KG · '+esc(it.timeCost||'')+'</span>'+
+    '<span class="bm-q-price">¥'+fmt(it.total)+'</span>'+
+   '</label>';
+  }).join('');
+  G('bm-quoteList').querySelectorAll('.bm-quote-item').forEach(function(el){
+   el.addEventListener('click',function(){
+    var idx=Number(el.dataset.idx);
+    billingCtx.selectedQuote=billingCtx.quoteList[idx];
+    G('bm-quoteList').querySelectorAll('.bm-quote-item').forEach(function(x){x.classList.remove('selected');});
+    el.classList.add('selected');
+    el.querySelector('input').checked=true;
+    G('bm-freight').value=billingCtx.selectedQuote.total.toFixed(2);
+    recalcTotal();
+   });
+  });
+ }catch(e){
+  G('bm-quoteList').innerHTML='<div style="color:#dc2626;font-size:11px;padding:8px;">⚠ '+esc(e.message)+'</div>';
+ }finally{
+  btn.disabled=false;btn.textContent='🔍 查价';
+ }
+}
+
+async function uploadWeighImage(file){
+ if(!file)return;
+ var o=billingCtx.order;
+ var ext=(file.name||'').split('.').pop().toLowerCase()||'jpg';
+ if(['jpg','jpeg','png','gif','webp'].indexOf(ext)<0)ext='jpg';
+ var path='weigh_images/'+(o.orderId||o.id)+'_'+Date.now()+'.'+ext;
+
+ G('bm-weighImageStatus').textContent='⏳ 上传中…';
+ G('bm-weighImagePreview').style.display='block';
+
+ try{
+  var ref=window._bkdStorageRef.ref(window._bkdStorage,path);
+  var snap=await window._bkdStorageRef.uploadBytes(ref,file);
+  var url=snap.ref._url;
+  billingCtx.weighImageUrl=url;
+  billingCtx.weighImagePath=snap.ref.path;
+  G('bm-weighImageImg').src=url;
+  G('bm-weighImageStatus').textContent='✅ 上传成功 (保存订单后生效)';
+  G('bm-weighImageClear').style.display='inline-block';
+ }catch(e){
+  G('bm-weighImageStatus').textContent='❌ 上传失败: '+e.message;
+ }
+}
+
+async function clearWeighImage(){
+ if(billingCtx.weighImagePath){
+  try{
+   await window._bkdStorageRef.deleteObject({_type:'ref',path:billingCtx.weighImagePath});
+  }catch(e){console.warn('删除旧图失败',e);}
+ }
+ billingCtx.weighImageUrl='';
+ billingCtx.weighImagePath='';
+ G('bm-weighImageFile').value='';
+ renderWeighImagePreview();
+}
+
+async function saveBilling(){
+ var o=billingCtx.order;
+ if(!o)return;
+ var actualWeight=Number(G('bm-actualWeight').value);
+ var freight=Number(G('bm-freight').value);
+ if(!actualWeight||actualWeight<=0){alert('请输入实际重量');return;}
+ if(freight===''||isNaN(freight)){alert('请输入运费');return;}
+
+ var fuelFee=Number(G('bm-fuelFee').value)||0;
+ var dutyPrepaid=Number(G('bm-dutyPrepaid').value)||0;
+ var surcharges=billingCtx.surcharges.filter(function(s){return s.label&&Number(s.amount);}).map(function(s){return {label:String(s.label),amount:Number(s.amount)||0};});
+ var totalAmount=freight+fuelFee+dutyPrepaid+surcharges.reduce(function(a,b){return a+(b.amount||0);},0);
+
+ var updates={
+  actualWeight:actualWeight,
+  freight:freight,
+  fuelFee:fuelFee||null,
+  surcharges:surcharges,
+  dutyPrepaid:dutyPrepaid||null,
+  totalAmount:Math.round(totalAmount*100)/100,
+  memo:G('bm-memo').value||'',
+  weighImage:billingCtx.weighImageUrl||'',
+  weighImagePath:billingCtx.weighImagePath||'',
+  billedAt:new Date().toISOString(),
+ };
+
+ var btn=G('billingModalSave');
+ btn.disabled=true;btn.textContent='保存中…';
+ try{
+  var{doc,updateDoc}=window._bkdFS;
+  await updateDoc(doc(window._bkdDB,'orders',o.id),updates);
+  closeModal('billingModal');
+  if(billingCtx.onSave)billingCtx.onSave(updates);
+ }catch(e){
+  alert('保存失败: '+e.message);
+ }finally{
+  btn.disabled=false;btn.textContent='保存';
+ }
+}
+
+function renderDetailBillingCard(o){
+ var hasBilling=o.actualWeight||o.freight||o.totalAmount;
+ if(!hasBilling)return '';
+ var surHtml='';
+ if(Array.isArray(o.surcharges)&&o.surcharges.length){
+  surHtml=o.surcharges.map(function(s){
+   return '<div class="b-row"><span class="lbl">'+esc(s.label)+'</span><span class="val">¥'+fmt(s.amount)+'</span></div>';
+  }).join('');
+ }
+ var imgHtml='';
+ if(o.weighImage){
+  imgHtml='<img class="b-img" src="'+esc(o.weighImage)+'" onclick="window.open(this.src,\'_blank\')" title="点击放大">';
+ }
+ return '<div class="detail-billing-card">'+
+  '<div class="b-title">💰 计费明细 <span style="font-weight:400;font-size:9px;color:var(--muted);">'+(o.billedAt?'录入于 '+esc(o.billedAt.slice(0,10)):'')+'</span></div>'+
+  '<div class="b-row"><span class="lbl">实际重量</span><span class="val">'+fmt(o.actualWeight)+' KG</span></div>'+
+  '<div class="b-row"><span class="lbl">运费</span><span class="val">¥'+fmt(o.freight)+'</span></div>'+
+  (o.fuelFee?'<div class="b-row"><span class="lbl">燃油</span><span class="val">¥'+fmt(o.fuelFee)+'</span></div>':'')+
+  surHtml+
+  (o.dutyPrepaid?'<div class="b-row"><span class="lbl">关税预付</span><span class="val">¥'+fmt(o.dutyPrepaid)+'</span></div>':'')+
+  '<div class="b-total"><span class="lbl">不含税合计</span><span class="val">¥'+fmt(o.totalAmount)+'</span></div>'+
+  (o.memo?'<div class="b-row" style="margin-top:6px;"><span class="lbl">备注</span><span class="val" style="font-family:inherit;font-weight:400;">'+esc(o.memo)+'</span></div>':'')+
+  imgHtml+
+ '</div>';
+}
+
+/* ════════════ 模块② 月结对账单 ════════════ */
+var billingPage={customer:'',month:'',mode:'month',list:[],picked:new Set()};
+
+function initBillingPage(){
+ var ld=G('billingLoadBtn');if(!ld)return;
+ ld.addEventListener('click',function(){billingPage.mode='month';loadBillingOrders();});
+ G('billingFilterAllBtn').addEventListener('click',function(){billingPage.mode='all';loadBillingOrders();});
+ G('billingSelectAllBtn').addEventListener('click',function(){
+  billingPage.list.forEach(function(o){billingPage.picked.add(o.id);});
+  renderBillingTable();updateBillingStats();
+ });
+ G('billingDeselectBtn').addEventListener('click',function(){
+  billingPage.list.forEach(function(o){
+   if(billingPage.picked.has(o.id))billingPage.picked.delete(o.id);
+   else billingPage.picked.add(o.id);
+  });
+  renderBillingTable();updateBillingStats();
+ });
+ G('billingExportXlsxBtn').addEventListener('click',exportBillingXlsx);
+ G('billingExportPdfBtn').addEventListener('click',exportBillingPdf);
+ var d=new Date();
+ G('billingMonthSel').value=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');
+}
+
+function populateCustomerSelect(){
+ var sel=G('billingCustomerSel');if(!sel)return;
+ var allOrders=(window.__bkdGetAllOrders&&window.__bkdGetAllOrders())||[];
+ var map={};
+ allOrders.forEach(function(o){
+  var e=String(o.email||'').trim().toLowerCase();
+  if(!e||e===ADMIN_EMAIL)return;
+  if(!map[e])map[e]={email:e,company:o.senderCompany||o.companyName||e,count:0};
+  map[e].count++;
+ });
+ var rows=Object.values(map).sort(function(a,b){return b.count-a.count;});
+ var prev=sel.value;
+ sel.innerHTML='<option value="">— 选择客户 —</option>'+rows.map(function(r){
+  return '<option value="'+esc(r.email)+'">'+esc(r.company)+' ('+r.count+'票)</option>';
+ }).join('');
+ if(prev)sel.value=prev;
+}
+
+function loadBillingOrders(){
+ var sel=G('billingCustomerSel');
+ var customer=sel.value;
+ var month=G('billingMonthSel').value;
+ if(!customer){alert('请先选择客户');return;}
+ billingPage.customer=customer;
+ billingPage.month=month;
+ var isAll=(billingPage.mode==='all');
+
+ var allOrders=(window.__bkdGetAllOrders&&window.__bkdGetAllOrders())||[];
+ var list=allOrders.filter(function(o){
+  if(String(o.email||'').trim().toLowerCase()!==customer)return false;
+  if(isAll||!month)return true;
+  var ts=o.createdAt;
+  var d=null;
+  if(typeof ts==='number')d=new Date(ts);
+  else if(ts&&typeof ts.toDate==='function')d=ts.toDate();
+  else if(o.submitTime)d=new Date(o.submitTime);
+  if(!d||isNaN(d.getTime()))return false;
+  var ym=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');
+  return ym===month;
+ });
+ billingPage.list=list;
+ billingPage.picked=new Set(list.filter(function(o){return o.totalAmount;}).map(function(o){return o.id;}));
+ renderBillingTable();
+ updateBillingStats();
+}
+
+function renderBillingTable(){
+ var w=G('billingTableWrap');
+ if(!billingPage.list.length){
+  w.innerHTML='<div style="color:var(--muted);font-size:12px;padding:20px;text-align:center;">该客户在所选范围内没有订单</div>';
+  G('billingStatsBar').style.display='none';
+  return;
+ }
+ G('billingStatsBar').style.display='block';
+ var html='<div style="overflow:auto;max-height:60vh;"><table class="billing-table">'+
+  '<thead><tr>'+
+   '<th style="width:30px;"></th>'+
+   '<th>日期</th><th>单号</th><th>国家</th><th>件数</th>'+
+   '<th class="num">重量KG</th><th class="num">运费</th><th class="num">附加</th>'+
+   '<th class="num">关税</th><th class="num">合计</th>'+
+   '<th>备注</th><th>操作</th>'+
+  '</tr></thead><tbody>';
+ billingPage.list.forEach(function(o){
+  var picked=billingPage.picked.has(o.id);
+  var date=fmtDate(o.createdAt||o.submitTime);
+  var surTotal=(Array.isArray(o.surcharges)?o.surcharges.reduce(function(a,b){return a+(Number(b.amount)||0);},0):0);
+  var hasBilling=o.totalAmount;
+  html+='<tr class="'+(picked?'picked-yes':'')+'" data-id="'+esc(o.id)+'">'+
+   '<td><input type="checkbox" class="bill-pick-cb" '+(picked?'checked':'')+'></td>'+
+   '<td>'+esc(date)+'</td>'+
+   '<td style="font-family:monospace;">'+esc(o.orderId||o.id)+'</td>'+
+   '<td>'+esc(o.country||o.destCountry||'—')+'</td>'+
+   '<td>'+esc(o.qty||'1')+'</td>'+
+   '<td class="num">'+(o.actualWeight?fmt(o.actualWeight):'<span style="color:#dc2626;">未录</span>')+'</td>'+
+   '<td class="num">'+(o.freight?'¥'+fmt(o.freight):'—')+'</td>'+
+   '<td class="num">'+(surTotal?'¥'+fmt(surTotal):'—')+'</td>'+
+   '<td class="num">'+(o.dutyPrepaid?'¥'+fmt(o.dutyPrepaid):'—')+'</td>'+
+   '<td class="num" style="font-weight:700;color:'+(hasBilling?'#0e7490':'#dc2626')+';">'+(hasBilling?'¥'+fmt(o.totalAmount):'未录')+'</td>'+
+   '<td style="max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+esc(o.memo||'—')+'</td>'+
+   '<td><button class="btn btn-outline btn-sm" data-billopen="'+esc(o.id)+'" style="font-size:9px;padding:3px 7px;">'+(hasBilling?'✏️ 改':'+ 录')+'</button></td>'+
+  '</tr>';
+ });
+ html+='</tbody></table></div>';
+ w.innerHTML=html;
+ w.querySelectorAll('.bill-pick-cb').forEach(function(cb){
+  cb.addEventListener('change',function(){
+   var id=cb.closest('tr').dataset.id;
+   if(cb.checked)billingPage.picked.add(id);else billingPage.picked.delete(id);
+   cb.closest('tr').classList.toggle('picked-yes',cb.checked);
+   updateBillingStats();
+  });
+ });
+ w.querySelectorAll('[data-billopen]').forEach(function(b){
+  b.addEventListener('click',function(){
+   var id=b.getAttribute('data-billopen');
+   var o=billingPage.list.find(function(x){return x.id===id;});
+   if(!o)return;
+   openBillingModal(o,function(updates){
+    Object.assign(o,updates);
+    var allOrders=(window.__bkdGetAllOrders&&window.__bkdGetAllOrders())||[];
+    var ix=allOrders.findIndex(function(x){return x.id===id;});
+    if(ix>=0)Object.assign(allOrders[ix],updates);
+    renderBillingTable();updateBillingStats();
+   });
+  });
+ });
+}
+
+function updateBillingStats(){
+ G('billingTotalCount').textContent=billingPage.list.length;
+ G('billingPickedCount').textContent=billingPage.picked.size;
+ var total=billingPage.list.filter(function(o){return billingPage.picked.has(o.id);})
+   .reduce(function(a,o){return a+(Number(o.totalAmount)||0);},0);
+ G('billingPickedAmount').textContent='¥'+fmt(total);
+}
+
+function fmtDate(ts){
+ if(!ts)return '—';
+ var d;
+ if(typeof ts==='number')d=new Date(ts);
+ else if(ts&&typeof ts.toDate==='function')d=ts.toDate();
+ else if(typeof ts==='string')d=new Date(ts);
+ else return '—';
+ if(isNaN(d.getTime()))return '—';
+ return d.getFullYear()+'年'+(d.getMonth()+1)+'月'+d.getDate()+'日';
+}
+function fmtDateShort(ts){
+ if(!ts)return '';
+ var d;
+ if(typeof ts==='number')d=new Date(ts);
+ else if(ts&&typeof ts.toDate==='function')d=ts.toDate();
+ else if(typeof ts==='string')d=new Date(ts);
+ else return '';
+ if(isNaN(d.getTime()))return '';
+ return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+}
+
+async function exportBillingXlsx(){
+ var picked=billingPage.list.filter(function(o){return billingPage.picked.has(o.id);});
+ if(!picked.length){alert('请先勾选订单');return;}
+ var customerName=picked[0].senderCompany||picked[0].email||'客户';
+ var month=billingPage.month||fmtDateShort(new Date()).slice(0,7);
+
+ await loadScriptOnce('https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js');
+ var XLSX=window.XLSX;
+ if(!XLSX){alert('Excel库加载失败');return;}
+
+ var header=['日期','单号','国家','件数','重量 KG','基础运费','旺季费','燃油','SF+加急','关税预付','不含税合计','备注','签收日期'];
+ var rows=[header];
+ var total=0;
+ picked.forEach(function(o){
+  var sur=Array.isArray(o.surcharges)?o.surcharges:[];
+  var seasonAmt=0,sfAmt=0,otherAmt=0,otherLabels=[];
+  sur.forEach(function(s){
+   var lb=String(s.label||'');
+   if(/旺季|peak/i.test(lb))seasonAmt+=(Number(s.amount)||0);
+   else if(/SF|顺丰|加急/i.test(lb))sfAmt+=(Number(s.amount)||0);
+   else{otherAmt+=(Number(s.amount)||0);otherLabels.push(lb);}
+  });
+  var memo=o.memo||'';
+  if(otherAmt>0){memo='[其他附加费 ¥'+otherAmt.toFixed(2)+': '+otherLabels.join(',')+'] '+memo;}
+  rows.push([
+   fmtDate(o.createdAt||o.submitTime),
+   o.orderId||o.id,
+   o.country||o.destCountry||'',
+   Number(o.qty)||1,
+   Number(o.actualWeight)||'',
+   Number(o.freight)||'',
+   seasonAmt||'',
+   Number(o.fuelFee)||'',
+   sfAmt||'',
+   Number(o.dutyPrepaid)||'',
+   Number(o.totalAmount)||0,
+   memo,
+   ''
+  ]);
+  total+=(Number(o.totalAmount)||0);
+ });
+ rows.push(['合计','','','','','','','','','',total,'','']);
+
+ var ws=XLSX.utils.aoa_to_sheet(rows);
+ ws['!cols']=[{wch:13},{wch:14},{wch:8},{wch:6},{wch:8},{wch:10},{wch:10},{wch:10},{wch:10},{wch:10},{wch:12},{wch:24},{wch:13}];
+ var wb=XLSX.utils.book_new();
+ XLSX.utils.book_append_sheet(wb,ws,'Details');
+ var fname='BKD_'+customerName+'_对账单_'+month+'.xlsx';
+ XLSX.writeFile(wb,fname);
+}
+
+async function exportBillingPdf(){
+ var picked=billingPage.list.filter(function(o){return billingPage.picked.has(o.id);});
+ if(!picked.length){alert('请先勾选订单');return;}
+ var customerName=picked[0].senderCompany||picked[0].email||'客户';
+ var month=billingPage.month||'';
+
+ var total=picked.reduce(function(a,o){return a+(Number(o.totalAmount)||0);},0);
+ var rowsHtml=picked.map(function(o){
+  var sur=Array.isArray(o.surcharges)?o.surcharges:[];
+  var surTotal=sur.reduce(function(a,b){return a+(Number(b.amount)||0);},0);
+  return '<tr>'+
+   '<td>'+esc(fmtDate(o.createdAt||o.submitTime))+'</td>'+
+   '<td>'+esc(o.orderId||o.id)+'</td>'+
+   '<td>'+esc(o.country||o.destCountry||'')+'</td>'+
+   '<td>'+(Number(o.qty)||1)+'</td>'+
+   '<td class="num">'+(Number(o.actualWeight)?fmt(o.actualWeight):'—')+'</td>'+
+   '<td class="num">'+(Number(o.freight)?'¥'+fmt(o.freight):'—')+'</td>'+
+   '<td class="num">'+(Number(o.fuelFee)?'¥'+fmt(o.fuelFee):'—')+'</td>'+
+   '<td class="num">'+(surTotal?'¥'+fmt(surTotal):'—')+'</td>'+
+   '<td class="num">'+(Number(o.dutyPrepaid)?'¥'+fmt(o.dutyPrepaid):'—')+'</td>'+
+   '<td class="num"><strong>¥'+fmt(o.totalAmount||0)+'</strong></td>'+
+   '<td>'+esc(o.memo||'')+'</td>'+
+  '</tr>';
+ }).join('');
+
+ var html='<!DOCTYPE html><html lang="zh"><head><meta charset="UTF-8"><title>对账单_'+esc(customerName)+'_'+esc(month)+'</title>'+
+  '<style>'+
+  'body{font-family:"Microsoft YaHei","PingFang SC",sans-serif;margin:20px;color:#1e293b;font-size:11px;}'+
+  '.hdr{display:flex;justify-content:space-between;align-items:center;border-bottom:3px solid #0F2C5C;padding-bottom:8px;margin-bottom:12px;}'+
+  '.hdr h1{font-size:18px;color:#0F2C5C;margin:0;}'+
+  '.hdr .sub{font-size:11px;color:#64748b;}'+
+  '.info{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px;padding:8px 12px;background:#f4f8ff;border-radius:6px;font-size:10px;}'+
+  'table{width:100%;border-collapse:collapse;font-size:9px;}'+
+  'th{background:#0F2C5C;color:#fff;padding:6px 4px;text-align:left;font-weight:600;}'+
+  'td{padding:5px 4px;border-bottom:1px solid #e2e8f0;}'+
+  'td.num{text-align:right;font-family:monospace;}'+
+  'tr.total td{background:#fef3c7;font-weight:700;color:#92400e;font-size:11px;}'+
+  '@media print{@page{size:A3 landscape;margin:10mm;}}'+
+  '</style></head><body>'+
+  '<div class="hdr"><div><h1>BKDLL · 保凯达·霖霖 对账单</h1><div class="sub">Statement of Account</div></div>'+
+  '<div style="text-align:right;font-size:10px;"><div>Statement No.: '+esc(month)+'</div><div>Generated: '+fmtDateShort(new Date())+'</div></div></div>'+
+  '<div class="info">'+
+  '<div><strong>From:</strong> BKDLL · 保凯达·霖霖国际物流</div>'+
+  '<div><strong>Bill To:</strong> '+esc(customerName)+'</div>'+
+  '<div><strong>Currency:</strong> CNY</div>'+
+  '<div><strong>Total Shipments:</strong> '+picked.length+' 票</div>'+
+  '</div>'+
+  '<table><thead><tr><th>日期</th><th>单号</th><th>国家</th><th>件数</th><th>重量KG</th><th>运费</th><th>燃油</th><th>附加费</th><th>关税</th><th class="num">合计</th><th>备注</th></tr></thead><tbody>'+
+  rowsHtml+
+  '<tr class="total"><td colspan="9">合计</td><td class="num">¥'+fmt(total)+'</td><td></td></tr>'+
+  '</tbody></table>'+
+  '<div style="margin-top:18px;font-size:9px;color:#64748b;">'+
+  '• 本对账单用于月度费用核对与结算<br>• 如有异议，请在 3 个工作日内反馈<br>• 此报价不含当月燃油附加费'+
+  '</div></body></html>';
+
+ var win=window.open('','_blank');
+ win.document.write(html);
+ win.document.close();
+ setTimeout(function(){win.print();},500);
+}
+
+function loadScriptOnce(url){
+ return new Promise(function(resolve,reject){
+  if(document.querySelector('script[src="'+url+'"]')){resolve();return;}
+  var s=document.createElement('script');
+  s.src=url;s.onload=resolve;s.onerror=function(){reject(new Error('加载失败: '+url));};
+  document.head.appendChild(s);
+ });
+}
+
+function initBillingModal(){
+ G('billingModalClose').addEventListener('click',function(){closeModal('billingModal');});
+ G('billingModalCancel').addEventListener('click',function(){closeModal('billingModal');});
+ G('billingModal').addEventListener('click',function(e){if(e.target===G('billingModal'))closeModal('billingModal');});
+ G('bm-queryQuoteBtn').addEventListener('click',queryQuote);
+ G('billingModalSave').addEventListener('click',saveBilling);
+ G('bm-addSurchargeBtn').addEventListener('click',function(){
+  billingCtx.surcharges.push({label:'',amount:0});
+  renderSurcharges();
+ });
+ ['bm-freight','bm-fuelFee','bm-dutyPrepaid'].forEach(function(id){
+  G(id).addEventListener('input',recalcTotal);
+ });
+ G('bm-weighImageFile').addEventListener('change',function(e){
+  var f=e.target.files&&e.target.files[0];
+  if(f)uploadWeighImage(f);
+ });
+ G('bm-weighImageClear').addEventListener('click',clearWeighImage);
+}
+
+function watchBillingNav(){
+ document.querySelectorAll('.nav-item[data-page="billing"]').forEach(function(nav){
+  nav.addEventListener('click',function(){setTimeout(populateCustomerSelect,100);});
+ });
+}
+
+window.BKDLLBilling={
+ openBillingModal:openBillingModal,
+ renderDetailBillingCard:renderDetailBillingCard,
+};
+
+function init(){
+ if(!G('billingModal')){setTimeout(init,200);return;}
+ initBillingModal();
+ initBillingPage();
+ watchBillingNav();
+ console.log('[BKDLLBilling] 初始化完成');
+}
+if(document.readyState==='loading'){
+ document.addEventListener('DOMContentLoaded',init);
+}else{
+ setTimeout(init,300);
+}
 })();
 </script>
 </body>

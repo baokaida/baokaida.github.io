@@ -506,6 +506,17 @@ tr:hover td{background:var(--sky);}
  </div>
 </div>
 
+<!-- 计费详情 Modal (模块①) -->
+<div class="overlay" id="billingDetailModal">
+ <div class="modal" style="width:min(94vw,520px);">
+  <div class="modal-head">
+   <h3 id="billingDetailTitle">📋 账单明细</h3>
+   <button class="modal-close" id="billingDetailClose">✕</button>
+  </div>
+  <div class="modal-body" id="billingDetailBody" style="max-height:75vh;overflow-y:auto;"></div>
+ </div>
+</div>
+
 <!-- PDF 生成进度遮罩 -->
 <div class="pdf-loading-mask" id="pdfLoadingMask">
  <div class="pdf-loading-box">
@@ -569,6 +580,66 @@ var currentUserEmail=''; // ⚡ 当前登录用户邮箱（用于查价时按客
 G('logoutBtn').addEventListener('click', bkdllSignOut);
 G('trackModalClose').addEventListener('click',()=>G('trackModal').classList.remove('on'));
 G('trackModal').addEventListener('click',e=>{if(e.target===G('trackModal'))G('trackModal').classList.remove('on');});
+
+/* 计费详情 (模块①) */
+G('billingDetailClose').addEventListener('click',()=>G('billingDetailModal').classList.remove('on'));
+G('billingDetailModal').addEventListener('click',e=>{if(e.target===G('billingDetailModal'))G('billingDetailModal').classList.remove('on');});
+
+function showBillingDetail(o){
+ var fmt=function(n){var v=Number(n);return isFinite(v)?v.toFixed(2):'0.00';};
+ var date='';
+ if(o.createdAt&&o.createdAt.toDate)date=o.createdAt.toDate().toLocaleDateString('zh-CN');
+ else if(typeof o.createdAt==='number')date=new Date(o.createdAt).toLocaleDateString('zh-CN');
+ else if(o.submitTime)date=o.submitTime.slice(0,10);
+
+ G('billingDetailTitle').textContent='📋 账单明细 — '+(o.orderId||o.id);
+
+ var surHtml='';
+ if(Array.isArray(o.surcharges)&&o.surcharges.length){
+  surHtml=o.surcharges.map(function(s){
+   return '<div class="bd-row"><span class="lbl">'+esc(s.label)+'</span><span class="val">¥'+fmt(s.amount)+'</span></div>';
+  }).join('');
+ }
+
+ var imgHtml='';
+ if(o.weighImage){
+  imgHtml='<div style="margin-top:14px;"><div style="font-size:11px;color:var(--muted);margin-bottom:6px;">📸 称重图</div>'+
+   '<img src="'+esc(o.weighImage)+'" style="max-width:100%;border:1.5px solid var(--border);border-radius:6px;cursor:zoom-in;" onclick="window.open(this.src,\'_blank\')"></div>';
+ }
+
+ G('billingDetailBody').innerHTML=
+  '<style>'+
+  '.bd-info{background:#f4f8ff;border-radius:8px;padding:10px 12px;margin-bottom:14px;font-size:12px;line-height:1.9;}'+
+  '.bd-info strong{color:var(--navy);}'+
+  '.bd-card{background:linear-gradient(135deg,#ecfeff,#f0f9ff);border:1.5px solid #06b6d4;border-radius:10px;padding:14px 16px;}'+
+  '.bd-row{display:flex;justify-content:space-between;padding:5px 0;font-size:12px;border-bottom:1px dashed rgba(14,116,144,.15);}'+
+  '.bd-row:last-child{border-bottom:none;}'+
+  '.bd-row .lbl{color:var(--muted);}'+
+  '.bd-row .val{font-family:monospace;font-weight:600;color:#0e7490;}'+
+  '.bd-total{margin-top:10px;padding-top:10px;border-top:2px solid #06b6d4;display:flex;justify-content:space-between;align-items:center;}'+
+  '.bd-total .lbl{font-size:14px;font-weight:700;color:#0e7490;}'+
+  '.bd-total .val{font-size:20px;font-weight:700;color:#0e7490;font-family:monospace;}'+
+  '</style>'+
+  '<div class="bd-info">'+
+   '<div><strong>订单号：</strong>'+esc(o.orderId||o.id)+'</div>'+
+   '<div><strong>下单日期：</strong>'+esc(date)+'</div>'+
+   '<div><strong>货物：</strong>'+esc(o.goods||'—')+'</div>'+
+   '<div><strong>目的国：</strong>'+esc(o.destCountry||o.country||'—')+' · <strong>件数：</strong>'+esc(o.qty||'1')+'</div>'+
+   '<div><strong>渠道：</strong>'+esc(o.channel||'—')+'</div>'+
+  '</div>'+
+  '<div class="bd-card">'+
+   '<div class="bd-row"><span class="lbl">实际重量</span><span class="val">'+fmt(o.actualWeight)+' KG</span></div>'+
+   '<div class="bd-row"><span class="lbl">运费</span><span class="val">¥'+fmt(o.freight)+'</span></div>'+
+   (o.fuelFee?'<div class="bd-row"><span class="lbl">燃油</span><span class="val">¥'+fmt(o.fuelFee)+'</span></div>':'')+
+   surHtml+
+   (o.dutyPrepaid?'<div class="bd-row"><span class="lbl">关税预付</span><span class="val">¥'+fmt(o.dutyPrepaid)+'</span></div>':'')+
+   '<div class="bd-total"><span class="lbl">不含税合计</span><span class="val">¥'+fmt(o.totalAmount)+'</span></div>'+
+   (o.memo?'<div class="bd-row" style="margin-top:8px;border-top:1px dashed rgba(14,116,144,.3);padding-top:8px;"><span class="lbl">备注</span><span class="val" style="font-family:inherit;font-weight:400;text-align:right;max-width:60%;">'+esc(o.memo)+'</span></div>':'')+
+  '</div>'+
+  imgHtml;
+
+ G('billingDetailModal').classList.add('on');
+}
 G('searchInput').addEventListener('input',renderTable);
 G('exportBtn').addEventListener('click',exportExcel);
 
@@ -640,6 +711,12 @@ function renderTable(){
    ?`<button class="btn btn-blue btn-sm" data-num="${esc(o.trackingNumber)}" data-carrier="${esc(o.carrier||'auto')}" data-oid="${esc(o.orderId||o.id)}">查轨迹</button>`
    :'';
 
+  // 计费列 (模块①)
+  var hasBilling=o.totalAmount;
+  var billingCell=hasBilling
+   ?`<button class="btn-billing-view" data-billing-oid="${esc(o.id)}" style="background:linear-gradient(135deg,#ecfeff,#cffafe);border:1.5px solid #06b6d4;border-radius:6px;padding:4px 9px;font-size:11px;font-weight:700;color:#0e7490;cursor:pointer;font-family:monospace;">¥${(Number(o.totalAmount)).toFixed(2)}</button>`
+   :`<span style="color:#cbd5e1;font-size:11px;">待录</span>`;
+
   return`<tr>
    <td><span class="seq-num">${idx+1}</span></td>
    <td>
@@ -668,6 +745,7 @@ function renderTable(){
      : `<span style="color:#cbd5e1;font-size:11px;">—</span>`
     }
    </td>
+   <td>${billingCell}</td>
    <td>
     ${o.taxPaid
      ? `<div style="display:flex;flex-direction:column;gap:2px;">
@@ -687,10 +765,19 @@ function renderTable(){
   <thead><tr>
    <th>#</th><th>入仓编号</th><th>货物</th>
    <th>目的国</th><th>渠道</th>
-   <th>运单号</th><th>运单</th><th>发票</th><th>关税垫付</th><th>状态</th><th>日期</th><th>操作</th>
+   <th>运单号</th><th>运单</th><th>发票</th><th>账单</th><th>关税垫付</th><th>状态</th><th>日期</th><th>操作</th>
   </tr></thead>
   <tbody>${rows}</tbody>
  </table></div>`;
+
+ // 计费详情按钮 (模块①)
+ G('tableWrap').querySelectorAll('[data-billing-oid]').forEach(function(b){
+  b.addEventListener('click',function(){
+   var id=b.getAttribute('data-billing-oid');
+   var o=allOrders.find(function(x){return x.id===id;});
+   if(o)showBillingDetail(o);
+  });
+ });
 
  G('tableWrap').querySelectorAll('[data-num]').forEach(btn=>{
   btn.addEventListener('click',()=>openTrackModal(btn.dataset.num,btn.dataset.oid,btn.dataset.carrier||'auto'));
