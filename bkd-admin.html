@@ -2415,24 +2415,32 @@ async function exportBillingPdf(){
   '</tr>';
  }).join('');
 
- // LOGO 用相对路径 logo.png (跟 admin sidebar 一致),如果 GitHub Pages 有就显示
+ // LOGO 用相对路径 logo.png
  var logoUrl=location.origin+location.pathname.replace(/[^/]+$/,'')+'logo.png';
+ // 水印:客户公司名大写,密+淡
+ var wmText=String(customerName||'BKDLL').toUpperCase().replace(/[^A-Z0-9]/g,'').slice(0,12)||'BKDLL';
+ // SVG 平铺水印 - 倾斜 -20度,密(180x100 cell),淡(opacity 0.05)
+ var wmSvg='<svg xmlns="http://www.w3.org/2000/svg" width="180" height="100"><text x="90" y="55" fill="%230F2C5C" font-size="16" font-weight="600" font-family="Arial,sans-serif" text-anchor="middle" opacity="0.06" transform="rotate(-22 90 50)">'+esc(wmText)+'</text></svg>';
+ var wmDataUrl='data:image/svg+xml;utf8,'+encodeURIComponent(wmSvg).replace(/'/g,"%27");
 
  var html='<!DOCTYPE html><html lang="zh"><head><meta charset="UTF-8"><title>对账单_'+esc(customerName)+'_'+esc(month)+'</title>'+
   '<style>'+
-  'body{font-family:"Microsoft YaHei","PingFang SC",sans-serif;margin:20px;color:#1e293b;font-size:11px;}'+
+  'body{font-family:"Microsoft YaHei","PingFang SC",sans-serif;margin:20px;color:#1e293b;font-size:11px;position:relative;}'+
+  'body::before{content:"";position:fixed;top:0;left:0;right:0;bottom:0;background-image:url(\''+wmDataUrl+'\');background-repeat:repeat;pointer-events:none;z-index:0;}'+
+  'body > *{position:relative;z-index:1;}'+
   '.hdr{display:flex;justify-content:space-between;align-items:center;border-bottom:3px solid #0F2C5C;padding-bottom:10px;margin-bottom:12px;}'+
   '.hdr-left{display:flex;align-items:center;gap:14px;}'+
   '.hdr-left img{height:54px;width:auto;}'+
   '.hdr h1{font-size:20px;color:#0F2C5C;margin:0;letter-spacing:1px;}'+
   '.hdr .sub{font-size:11px;color:#64748b;margin-top:2px;}'+
-  '.info{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px;padding:8px 12px;background:#f4f8ff;border-radius:6px;font-size:10px;}'+
-  'table{width:100%;border-collapse:collapse;font-size:9px;}'+
-  'th{background:#0F2C5C;color:#fff;padding:6px 4px;text-align:left;font-weight:600;}'+
-  'td{padding:5px 4px;border-bottom:1px solid #e2e8f0;}'+
+  '.info{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px;padding:8px 12px;background:rgba(244,248,255,0.95);border-radius:6px;font-size:10px;}'+
+  'table{width:100%;border-collapse:collapse;font-size:9px;table-layout:fixed;}'+
+  'th{background:#0F2C5C;color:#fff;padding:7px 5px;text-align:left;font-weight:600;}'+
+  'th.num{text-align:right;}'+
+  'td{padding:6px 5px;border-bottom:1px solid #e2e8f0;background:rgba(255,255,255,0.85);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}'+
   'td.num{text-align:right;font-family:monospace;}'+
-  'tr.total td{background:#fef3c7;font-weight:700;color:#92400e;font-size:11px;}'+
-  '@media print{@page{size:A3 landscape;margin:10mm;}}'+
+  'tr.total td{background:rgba(254,243,199,0.95);font-weight:700;color:#92400e;font-size:11px;}'+
+  '@media print{@page{size:A3 landscape;margin:10mm;} body::before{position:absolute;}}'+
   '</style></head><body>'+
   '<div class="hdr">'+
    '<div class="hdr-left">'+
@@ -2447,12 +2455,32 @@ async function exportBillingPdf(){
   '<div><strong>Currency:</strong> CNY</div>'+
   '<div><strong>Total Shipments:</strong> '+picked.length+' 票</div>'+
   '</div>'+
-  '<table><thead><tr><th>日期</th><th>运单号</th><th>国家</th><th>重量KG</th><th>运费</th><th>燃油</th><th>附加费</th><th>关税</th><th class="num">合计</th><th>备注</th></tr></thead><tbody>'+
+  '<table>'+
+  '<colgroup>'+
+   '<col style="width:9%;">'+   /* 日期 */
+   '<col style="width:13%;">'+  /* 运单号 */
+   '<col style="width:9%;">'+   /* 国家 */
+   '<col style="width:7%;">'+   /* 重量 */
+   '<col style="width:9%;">'+   /* 运费 */
+   '<col style="width:8%;">'+   /* 燃油 */
+   '<col style="width:9%;">'+   /* 附加 */
+   '<col style="width:8%;">'+   /* 关税 */
+   '<col style="width:10%;">'+  /* 合计 */
+   '<col style="width:18%;">'+  /* 备注 */
+  '</colgroup>'+
+  '<thead><tr>'+
+   '<th>日期</th><th>运单号</th><th>国家</th>'+
+   '<th class="num">重量KG</th><th class="num">运费</th><th class="num">燃油</th>'+
+   '<th class="num">附加费</th><th class="num">关税</th><th class="num">合计</th>'+
+   '<th>备注</th>'+
+  '</tr></thead><tbody>'+
   rowsHtml+
-  '<tr class="total"><td colspan="8">合计</td><td class="num">¥'+fmt(total)+'</td><td></td></tr>'+
+  '<tr class="total"><td colspan="8" style="text-align:right;padding-right:10px;">合计</td><td class="num">¥'+fmt(total)+'</td><td></td></tr>'+
   '</tbody></table>'+
-  '<div style="margin-top:18px;font-size:9px;color:#64748b;">'+
-  '• 本对账单用于月度费用核对与结算<br>• 如有异议，请在 3 个工作日内反馈<br>• 此报价不含当月燃油附加费'+
+  '<div style="margin-top:18px;font-size:9px;color:#64748b;line-height:1.8;">'+
+  '1) 本对账单用于月度费用核对与结算。<br>'+
+  '2) 如有异议，请在 3 个工作日内反馈。<br>'+
+  '3) 付款备注建议：月结+账期30Days。'+
   '</div></body></html>';
 
  var win=window.open('','_blank');

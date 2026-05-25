@@ -285,20 +285,6 @@ header img{height:32px;border-radius:8px;}
     </div>
    </div>
 
-   <div class="kpi-card" style="background:linear-gradient(135deg,#ecfeff,#f0f9ff);border-color:#06b6d4;cursor:default;">
-    <div class="kpi-head">
-     <div class="kpi-title"><div class="kpi-icon" style="background:linear-gradient(135deg,#06b6d4,#0891b2);color:#fff;">💴</div>本月费用 / This Month</div>
-    </div>
-    <div class="kpi-main">
-     <div class="kpi-num" id="kpi-month-fee" style="color:#0e7490;font-family:monospace;">¥0.00</div>
-    </div>
-    <div class="kpi-delta-sub" style="color:#0e7490;">本月已产生运费 / Current month fees</div>
-    <div class="kpi-rows">
-     <div class="kpi-row-item"><span class="kpi-row-label"><span class="kpi-dot" style="background:#94a3b8;"></span>上月费用 / Last Month</span><span class="kpi-num" style="font-size:11px;" id="kpi-prev-fee">¥0.00</span></div>
-     <div class="kpi-row-item"><span class="kpi-row-label"><span class="kpi-dot" style="background:#0e7490;"></span>累计费用 / Total</span><span class="kpi-num" style="font-size:11px;" id="kpi-total-fee">¥0.00</span></div>
-    </div>
-   </div>
-
    <div class="kpi-card entry" onclick="location.href='bkd-portal.html#quotes'">
     <div>
      <div class="kpi-head"><div class="kpi-title"><div class="kpi-icon purple">💰</div>实时查价 / Quotes</div></div>
@@ -325,6 +311,25 @@ header img{height:32px;border-radius:8px;}
      <div class="kpi-entry-desc">HS Code 合规查询<br>海关清单 + 商务部两用物项 + 出口许可证目录</div>
     </div>
     <div class="kpi-entry-action">立即查询 →</div>
+   </div>
+
+   <!-- 本月费用 - 低调样式,挂底部 -->
+   <div class="kpi-card" style="cursor:default;background:#fafbfc;border-color:#e5e7eb;padding:14px 18px;">
+    <div class="kpi-head" style="margin-bottom:6px;">
+     <div class="kpi-title" style="font-size:12px;color:#64748b;"><div class="kpi-icon" style="background:#f1f5f9;color:#64748b;font-size:12px;">💴</div>本月费用 / This Month</div>
+    </div>
+    <div style="display:flex;justify-content:space-between;align-items:baseline;gap:10px;font-size:11px;color:#64748b;">
+     <span>本月</span>
+     <span id="kpi-month-fee" style="font-family:monospace;font-weight:600;color:#475569;font-size:14px;">¥0.00</span>
+    </div>
+    <div style="display:flex;justify-content:space-between;align-items:baseline;gap:10px;font-size:11px;color:#64748b;margin-top:4px;">
+     <span>上月</span>
+     <span id="kpi-prev-fee" style="font-family:monospace;color:#94a3b8;">¥0.00</span>
+    </div>
+    <div style="display:flex;justify-content:space-between;align-items:baseline;gap:10px;font-size:11px;color:#64748b;margin-top:4px;">
+     <span>累计</span>
+     <span id="kpi-total-fee" style="font-family:monospace;color:#94a3b8;">¥0.00</span>
+    </div>
    </div>
   </div>
 
