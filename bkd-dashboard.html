@@ -285,6 +285,20 @@ header img{height:32px;border-radius:8px;}
     </div>
    </div>
 
+   <div class="kpi-card" style="background:linear-gradient(135deg,#ecfeff,#f0f9ff);border-color:#06b6d4;cursor:default;">
+    <div class="kpi-head">
+     <div class="kpi-title"><div class="kpi-icon" style="background:linear-gradient(135deg,#06b6d4,#0891b2);color:#fff;">💴</div>本月费用 / This Month</div>
+    </div>
+    <div class="kpi-main">
+     <div class="kpi-num" id="kpi-month-fee" style="color:#0e7490;font-family:monospace;">¥0.00</div>
+    </div>
+    <div class="kpi-delta-sub" style="color:#0e7490;">本月已产生运费 / Current month fees</div>
+    <div class="kpi-rows">
+     <div class="kpi-row-item"><span class="kpi-row-label"><span class="kpi-dot" style="background:#94a3b8;"></span>上月费用 / Last Month</span><span class="kpi-num" style="font-size:11px;" id="kpi-prev-fee">¥0.00</span></div>
+     <div class="kpi-row-item"><span class="kpi-row-label"><span class="kpi-dot" style="background:#0e7490;"></span>累计费用 / Total</span><span class="kpi-num" style="font-size:11px;" id="kpi-total-fee">¥0.00</span></div>
+    </div>
+   </div>
+
    <div class="kpi-card entry" onclick="location.href='bkd-portal.html#quotes'">
     <div>
      <div class="kpi-head"><div class="kpi-title"><div class="kpi-icon purple">💰</div>实时查价 / Quotes</div></div>
@@ -565,6 +579,30 @@ function renderKPIs(){
  G('kpi-exceptions').textContent = exceptions;
  G('kpi-delivered').textContent = delivered7d;
  G('kpi-pending').textContent = pending;
+
+ // 本月费用 / 上月费用 / 累计费用 (按 billedAt 落月)
+ const curYM = now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0');
+ const prev = new Date(now.getFullYear(), now.getMonth()-1, 1);
+ const prevYM = prev.getFullYear()+'-'+String(prev.getMonth()+1).padStart(2,'0');
+ function ymOf(o){
+  const ts = o.billedAt || o.createdAt;
+  let d = null;
+  if(typeof ts === 'number') d = new Date(ts);
+  else if(ts && typeof ts.toDate === 'function') d = ts.toDate();
+  else if(typeof ts === 'string') d = new Date(ts);
+  else if(o.submitTime) d = new Date(o.submitTime);
+  if(!d || isNaN(d.getTime())) return '';
+  return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');
+ }
+ const curFee = allOrders.filter(o => ymOf(o)===curYM && o.totalAmount).reduce((a,o)=>a+(Number(o.totalAmount)||0), 0);
+ const prevFee = allOrders.filter(o => ymOf(o)===prevYM && o.totalAmount).reduce((a,o)=>a+(Number(o.totalAmount)||0), 0);
+ const totalFee = allOrders.filter(o => o.totalAmount).reduce((a,o)=>a+(Number(o.totalAmount)||0), 0);
+ const monthFeeEl = G('kpi-month-fee');
+ if(monthFeeEl) monthFeeEl.textContent = '¥' + curFee.toFixed(2);
+ const prevFeeEl = G('kpi-prev-fee');
+ if(prevFeeEl) prevFeeEl.textContent = '¥' + prevFee.toFixed(2);
+ const totalFeeEl = G('kpi-total-fee');
+ if(totalFeeEl) totalFeeEl.textContent = '¥' + totalFee.toFixed(2);
 }
 
 /* ══════════════════════════════

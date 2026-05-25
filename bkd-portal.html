@@ -42,7 +42,7 @@ header img{height:36px;border-radius:8px;}
 .page.active{display:block;}
 
 /* STATS */
-.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:22px;}
+.stats-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:14px;margin-bottom:22px;}
 .stat-card{background:#fff;border:1px solid var(--border);border-radius:12px;padding:18px 20px;box-shadow:0 1px 4px rgba(10,110,189,0.04);}
 .stat-label{font-size:11px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px;}
 .stat-val{font-size:28px;font-weight:700;color:var(--navy);}
@@ -381,6 +381,11 @@ tr:hover td{background:var(--sky);}
    <div class="stat-card"><div class="stat-label">待处理</div><div class="stat-val" id="ws-pending">—</div><div class="stat-sub">待录运单</div></div>
    <div class="stat-card"><div class="stat-label">运输中</div><div class="stat-val" id="ws-transit">—</div><div class="stat-sub">在途快件</div></div>
    <div class="stat-card"><div class="stat-label">已签收</div><div class="stat-val" id="ws-done">—</div><div class="stat-sub">已完成</div></div>
+   <div class="stat-card" style="background:linear-gradient(135deg,#ecfeff,#f0f9ff);border-color:#06b6d4;">
+    <div class="stat-label" style="color:#0e7490;">本月费用</div>
+    <div class="stat-val" id="ws-month-fee" style="color:#0e7490;font-family:monospace;font-size:22px;">¥0.00</div>
+    <div class="stat-sub" id="ws-month-fee-sub" style="color:#0e7490;">上月 ¥0.00</div>
+   </div>
   </div>
   <div class="table-card">
    <div class="table-header">
@@ -679,6 +684,26 @@ function updateStats(){
  G('ws-pending').textContent=allOrders.filter(o=>!o.trackingNumber).length;
  G('ws-transit').textContent=allOrders.filter(o=>o.trackingNumber&&o.status!=='已签收').length;
  G('ws-done').textContent=allOrders.filter(o=>o.status==='已签收').length;
+
+ // 本月费用 / 上月费用 (按 billedAt 落月,没 billedAt 走 createdAt)
+ var now=new Date();
+ var curYM=now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0');
+ var prev=new Date(now.getFullYear(),now.getMonth()-1,1);
+ var prevYM=prev.getFullYear()+'-'+String(prev.getMonth()+1).padStart(2,'0');
+ function ymOf(o){
+  var ts=o.billedAt||o.createdAt;
+  var d=null;
+  if(typeof ts==='number')d=new Date(ts);
+  else if(ts&&typeof ts.toDate==='function')d=ts.toDate();
+  else if(typeof ts==='string')d=new Date(ts);
+  else if(o.submitTime)d=new Date(o.submitTime);
+  if(!d||isNaN(d.getTime()))return '';
+  return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');
+ }
+ var curFee=allOrders.filter(o=>ymOf(o)===curYM&&o.totalAmount).reduce((a,o)=>a+(Number(o.totalAmount)||0),0);
+ var prevFee=allOrders.filter(o=>ymOf(o)===prevYM&&o.totalAmount).reduce((a,o)=>a+(Number(o.totalAmount)||0),0);
+ G('ws-month-fee').textContent='¥'+curFee.toFixed(2);
+ G('ws-month-fee-sub').textContent='上月 ¥'+prevFee.toFixed(2);
 }
 
 // ── 渲染订单表 ──

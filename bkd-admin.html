@@ -437,7 +437,9 @@ td.td-doc{white-space:nowrap;min-width:80px;}
        <select id="billingCustomerSel" style="padding:6px 10px;border:1.5px solid var(--border);border-radius:6px;font-size:12px;min-width:180px;">
         <option value="">— 选择客户 —</option>
        </select>
-       <input type="month" id="billingMonthSel" style="padding:6px 10px;border:1.5px solid var(--border);border-radius:6px;font-size:12px;">
+       <input type="month" id="billingMonthSel" title="起始月" style="padding:6px 10px;border:1.5px solid var(--border);border-radius:6px;font-size:12px;">
+       <span style="color:var(--muted);font-size:11px;">→</span>
+       <input type="month" id="billingMonthSelEnd" title="结束月" style="padding:6px 10px;border:1.5px solid var(--border);border-radius:6px;font-size:12px;">
        <button class="btn btn-outline btn-sm" id="billingFilterAllBtn">所有订单</button>
        <button class="btn btn-primary btn-sm" id="billingLoadBtn">📋 加载订单</button>
       </div>
@@ -607,7 +609,7 @@ td.td-doc{white-space:nowrap;min-width:80px;}
    <div style="background:#f4f8ff;border:1px solid var(--border);border-radius:7px;padding:9px 12px;margin-bottom:12px;font-size:11px;line-height:1.8;">
     <div><span style="color:var(--muted);">订单：</span><strong id="bm-orderId" style="font-family:monospace;"></strong></div>
     <div><span style="color:var(--muted);">客户：</span><strong id="bm-company"></strong> <span style="color:var(--muted);" id="bm-email"></span></div>
-    <div><span style="color:var(--muted);">货物：</span><span id="bm-goods"></span> · <span style="color:var(--muted);">国家：</span><strong id="bm-country"></strong> · <span style="color:var(--muted);">件数：</span><strong id="bm-qty"></strong></div>
+    <div><span style="color:var(--muted);">货物：</span><span id="bm-goods"></span> · <span style="color:var(--muted);">国家：</span><strong id="bm-country"></strong></div>
    </div>
 
    <!-- 实际重量 + 查价按钮 -->
@@ -2192,7 +2194,9 @@ function initBillingPage(){
  G('billingExportXlsxBtn').addEventListener('click',exportBillingXlsx);
  G('billingExportPdfBtn').addEventListener('click',exportBillingPdf);
  var d=new Date();
- G('billingMonthSel').value=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');
+ var curYM=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');
+ G('billingMonthSel').value=curYM;
+ G('billingMonthSelEnd').value=curYM;
 }
 
 function populateCustomerSelect(){
@@ -2216,24 +2220,30 @@ function populateCustomerSelect(){
 function loadBillingOrders(){
  var sel=G('billingCustomerSel');
  var customer=sel.value;
- var month=G('billingMonthSel').value;
+ var monthStart=G('billingMonthSel').value;
+ var monthEnd=G('billingMonthSelEnd').value||monthStart;
  if(!customer){alert('请先选择客户');return;}
+ if(monthStart&&monthEnd&&monthStart>monthEnd){
+  alert('起始月不能晚于结束月');return;
+ }
  billingPage.customer=customer;
- billingPage.month=month;
+ billingPage.month=monthStart===monthEnd?monthStart:(monthStart+'~'+monthEnd);
  var isAll=(billingPage.mode==='all');
 
  var allOrders=(window.__bkdGetAllOrders&&window.__bkdGetAllOrders())||[];
  var list=allOrders.filter(function(o){
   if(String(o.email||'').trim().toLowerCase()!==customer)return false;
-  if(isAll||!month)return true;
-  var ts=o.createdAt;
+  if(isAll||!monthStart)return true;
+  // 用 billedAt 优先(实际计费月),没有就 fallback 到 createdAt
+  var ts=o.billedAt||o.createdAt;
   var d=null;
   if(typeof ts==='number')d=new Date(ts);
   else if(ts&&typeof ts.toDate==='function')d=ts.toDate();
+  else if(typeof ts==='string')d=new Date(ts);
   else if(o.submitTime)d=new Date(o.submitTime);
   if(!d||isNaN(d.getTime()))return false;
   var ym=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');
-  return ym===month;
+  return ym>=monthStart && ym<=monthEnd;
  });
  billingPage.list=list;
  billingPage.picked=new Set(list.filter(function(o){return o.totalAmount;}).map(function(o){return o.id;}));
@@ -2252,7 +2262,7 @@ function renderBillingTable(){
  var html='<div style="overflow:auto;max-height:60vh;"><table class="billing-table">'+
   '<thead><tr>'+
    '<th style="width:30px;"></th>'+
-   '<th>日期</th><th>单号</th><th>国家</th><th>件数</th>'+
+   '<th>日期</th><th>单号</th><th>运单号</th><th>国家</th>'+
    '<th class="num">重量KG</th><th class="num">运费</th><th class="num">附加</th>'+
    '<th class="num">关税</th><th class="num">合计</th>'+
    '<th>备注</th><th>操作</th>'+
@@ -2266,8 +2276,8 @@ function renderBillingTable(){
    '<td><input type="checkbox" class="bill-pick-cb" '+(picked?'checked':'')+'></td>'+
    '<td>'+esc(date)+'</td>'+
    '<td style="font-family:monospace;">'+esc(o.orderId||o.id)+'</td>'+
+   '<td style="font-family:monospace;font-size:10px;">'+esc(o.trackingNumber||'—')+'</td>'+
    '<td>'+esc(o.country||o.destCountry||'—')+'</td>'+
-   '<td>'+esc(o.qty||'1')+'</td>'+
    '<td class="num">'+(o.actualWeight?fmt(o.actualWeight):'<span style="color:#dc2626;">未录</span>')+'</td>'+
    '<td class="num">'+(o.freight?'¥'+fmt(o.freight):'—')+'</td>'+
    '<td class="num">'+(surTotal?'¥'+fmt(surTotal):'—')+'</td>'+
@@ -2342,7 +2352,7 @@ async function exportBillingXlsx(){
  var XLSX=window.XLSX;
  if(!XLSX){alert('Excel库加载失败');return;}
 
- var header=['日期','单号','国家','件数','重量 KG','基础运费','旺季费','燃油','SF+加急','关税预付','不含税合计','备注','签收日期'];
+ var header=['日期','运单号','国家','重量 KG','基础运费','旺季费','燃油','SF+加急','关税预付','不含税合计','备注'];
  var rows=[header];
  var total=0;
  picked.forEach(function(o){
@@ -2358,9 +2368,8 @@ async function exportBillingXlsx(){
   if(otherAmt>0){memo='[其他附加费 ¥'+otherAmt.toFixed(2)+': '+otherLabels.join(',')+'] '+memo;}
   rows.push([
    fmtDate(o.createdAt||o.submitTime),
-   o.orderId||o.id,
+   o.trackingNumber||'(未生成运单)',
    o.country||o.destCountry||'',
-   Number(o.qty)||1,
    Number(o.actualWeight)||'',
    Number(o.freight)||'',
    seasonAmt||'',
@@ -2368,15 +2377,14 @@ async function exportBillingXlsx(){
    sfAmt||'',
    Number(o.dutyPrepaid)||'',
    Number(o.totalAmount)||0,
-   memo,
-   ''
+   memo
   ]);
   total+=(Number(o.totalAmount)||0);
  });
- rows.push(['合计','','','','','','','','','',total,'','']);
+ rows.push(['合计','','','','','','','','',total,'']);
 
  var ws=XLSX.utils.aoa_to_sheet(rows);
- ws['!cols']=[{wch:13},{wch:14},{wch:8},{wch:6},{wch:8},{wch:10},{wch:10},{wch:10},{wch:10},{wch:10},{wch:12},{wch:24},{wch:13}];
+ ws['!cols']=[{wch:13},{wch:22},{wch:8},{wch:8},{wch:10},{wch:10},{wch:10},{wch:10},{wch:10},{wch:12},{wch:24}];
  var wb=XLSX.utils.book_new();
  XLSX.utils.book_append_sheet(wb,ws,'Details');
  var fname='BKD_'+customerName+'_对账单_'+month+'.xlsx';
@@ -2395,9 +2403,8 @@ async function exportBillingPdf(){
   var surTotal=sur.reduce(function(a,b){return a+(Number(b.amount)||0);},0);
   return '<tr>'+
    '<td>'+esc(fmtDate(o.createdAt||o.submitTime))+'</td>'+
-   '<td>'+esc(o.orderId||o.id)+'</td>'+
+   '<td style="font-family:monospace;">'+esc(o.trackingNumber||'(未生成)')+'</td>'+
    '<td>'+esc(o.country||o.destCountry||'')+'</td>'+
-   '<td>'+(Number(o.qty)||1)+'</td>'+
    '<td class="num">'+(Number(o.actualWeight)?fmt(o.actualWeight):'—')+'</td>'+
    '<td class="num">'+(Number(o.freight)?'¥'+fmt(o.freight):'—')+'</td>'+
    '<td class="num">'+(Number(o.fuelFee)?'¥'+fmt(o.fuelFee):'—')+'</td>'+
@@ -2408,12 +2415,17 @@ async function exportBillingPdf(){
   '</tr>';
  }).join('');
 
+ // LOGO 用相对路径 logo.png (跟 admin sidebar 一致),如果 GitHub Pages 有就显示
+ var logoUrl=location.origin+location.pathname.replace(/[^/]+$/,'')+'logo.png';
+
  var html='<!DOCTYPE html><html lang="zh"><head><meta charset="UTF-8"><title>对账单_'+esc(customerName)+'_'+esc(month)+'</title>'+
   '<style>'+
   'body{font-family:"Microsoft YaHei","PingFang SC",sans-serif;margin:20px;color:#1e293b;font-size:11px;}'+
-  '.hdr{display:flex;justify-content:space-between;align-items:center;border-bottom:3px solid #0F2C5C;padding-bottom:8px;margin-bottom:12px;}'+
-  '.hdr h1{font-size:18px;color:#0F2C5C;margin:0;}'+
-  '.hdr .sub{font-size:11px;color:#64748b;}'+
+  '.hdr{display:flex;justify-content:space-between;align-items:center;border-bottom:3px solid #0F2C5C;padding-bottom:10px;margin-bottom:12px;}'+
+  '.hdr-left{display:flex;align-items:center;gap:14px;}'+
+  '.hdr-left img{height:54px;width:auto;}'+
+  '.hdr h1{font-size:20px;color:#0F2C5C;margin:0;letter-spacing:1px;}'+
+  '.hdr .sub{font-size:11px;color:#64748b;margin-top:2px;}'+
   '.info{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px;padding:8px 12px;background:#f4f8ff;border-radius:6px;font-size:10px;}'+
   'table{width:100%;border-collapse:collapse;font-size:9px;}'+
   'th{background:#0F2C5C;color:#fff;padding:6px 4px;text-align:left;font-weight:600;}'+
@@ -2422,17 +2434,22 @@ async function exportBillingPdf(){
   'tr.total td{background:#fef3c7;font-weight:700;color:#92400e;font-size:11px;}'+
   '@media print{@page{size:A3 landscape;margin:10mm;}}'+
   '</style></head><body>'+
-  '<div class="hdr"><div><h1>BKDLL · 保凯达·霖霖 对账单</h1><div class="sub">Statement of Account</div></div>'+
-  '<div style="text-align:right;font-size:10px;"><div>Statement No.: '+esc(month)+'</div><div>Generated: '+fmtDateShort(new Date())+'</div></div></div>'+
+  '<div class="hdr">'+
+   '<div class="hdr-left">'+
+    '<img src="'+esc(logoUrl)+'" onerror="this.style.display=\'none\'">'+
+    '<div><h1>BKDLL 对账单</h1><div class="sub">Statement of Account</div></div>'+
+   '</div>'+
+   '<div style="text-align:right;font-size:10px;"><div>Statement No.: '+esc(month)+'</div><div>Generated: '+fmtDateShort(new Date())+'</div></div>'+
+  '</div>'+
   '<div class="info">'+
-  '<div><strong>From:</strong> BKDLL · 保凯达·霖霖国际物流</div>'+
+  '<div><strong>From:</strong> BKDLL 国际物流</div>'+
   '<div><strong>Bill To:</strong> '+esc(customerName)+'</div>'+
   '<div><strong>Currency:</strong> CNY</div>'+
   '<div><strong>Total Shipments:</strong> '+picked.length+' 票</div>'+
   '</div>'+
-  '<table><thead><tr><th>日期</th><th>单号</th><th>国家</th><th>件数</th><th>重量KG</th><th>运费</th><th>燃油</th><th>附加费</th><th>关税</th><th class="num">合计</th><th>备注</th></tr></thead><tbody>'+
+  '<table><thead><tr><th>日期</th><th>运单号</th><th>国家</th><th>重量KG</th><th>运费</th><th>燃油</th><th>附加费</th><th>关税</th><th class="num">合计</th><th>备注</th></tr></thead><tbody>'+
   rowsHtml+
-  '<tr class="total"><td colspan="9">合计</td><td class="num">¥'+fmt(total)+'</td><td></td></tr>'+
+  '<tr class="total"><td colspan="8">合计</td><td class="num">¥'+fmt(total)+'</td><td></td></tr>'+
   '</tbody></table>'+
   '<div style="margin-top:18px;font-size:9px;color:#64748b;">'+
   '• 本对账单用于月度费用核对与结算<br>• 如有异议，请在 3 个工作日内反馈<br>• 此报价不含当月燃油附加费'+
