@@ -1948,7 +1948,7 @@ function openBillingModal(order,onSave){
  billingCtx.weighImageUrl=order.weighImage||'';
  billingCtx.weighImagePath=order.weighImagePath||'';
 
- G('billing-title').textContent='💰 录入计费 — '+(order.orderId||order.id);
+ G('billing-title').textContent='💰 录入计费 — '+displayOrderId(order);
  G('bm-orderId').textContent=displayOrderId(order);
  G('bm-company').textContent=order.senderCompany||'—';
  G('bm-email').textContent=order.email?'('+order.email+')':'';
@@ -2113,65 +2113,95 @@ async function queryQuote(){
 
 /**
  * 调易抵达 API 拉一个或多个运单数据
- * 优先用 trackingNumber 调 /fetch-tracks (查得最准),没有 trackingNumber 才用 orderId 调 /fetch-package
+ * 策略:
+ *   1) 全部订单先用 orderId(BKD 单号)走 /fetch-package(queryYunDanDetail) - 字段最全含重量
+ *   2) 第一步没拿到 + 有转单号的,再走 /fetch-tracks(queryTracks) 兜底
  * 入参: orders = [{id, orderId, trackingNumber}, ...]
- * 返回: Map<orderId or trackingNumber, pkg数据>  键是查询用的号
+ * 返回: Map<key, pkg数据>  key=order id
  */
 async function fetchItdidaForOrders(orders){
  var resultMap={};
  if(!orders||!orders.length)return resultMap;
- // 分两组:有转单号的走 tracks,没有的走 package
- var byTrack=orders.filter(function(o){return o.trackingNumber;});
- var byOrderId=orders.filter(function(o){return !o.trackingNumber && (o.orderId||o.id);});
- // 易抵达限制每次最多 10 个,分批
+
  function chunk(arr,size){var r=[];for(var i=0;i<arr.length;i+=size)r.push(arr.slice(i,i+size));return r;}
 
- // 用转单号查 - 调 /fetch-tracks
- var trackBatches=chunk(byTrack,10);
- for(var i=0;i<trackBatches.length;i++){
-  var batch=trackBatches[i];
-  try{
-   var nos=batch.map(function(o){return o.trackingNumber;});
-   var resp=await fetch(BKDLL_API+'/api/itdida/fetch-tracks',{
-    method:'POST',
-    headers:Object.assign({'Content-Type':'application/json'},tokenHeader()),
-    body:JSON.stringify({nos:nos})
-   });
-   var d=await resp.json();
-   if(d.ok && d.data && d.data.data){
-    // /queryTracks 返回 [{no, detail: {...}, trackList:[...]}, ...]
-    d.data.data.forEach(function(item){
-     if(item.detail){
-      // 用查询号(item.no)和订单号都建索引,方便定位
-      resultMap['track:'+item.no]=item.detail;
-     }
-    });
-   }
-  }catch(e){console.warn('[batch tracks]',e.message);}
- }
-
- // 用客户单号查 - 调 /fetch-package
- var pkgBatches=chunk(byOrderId,10);
+ // ===== Step 1: 用客户单号查 (queryYunDanDetail) =====
+ var withOrderId=orders.filter(function(o){return o.orderId||o.id;});
+ var pkgBatches=chunk(withOrderId,10);
  for(var j=0;j<pkgBatches.length;j++){
   var batch2=pkgBatches[j];
   try{
    var danHaos=batch2.map(function(o){return o.orderId||o.id;});
+   console.log('[itdida step1] queryYunDanDetail',danHaos);
    var resp2=await fetch(BKDLL_API+'/api/itdida/fetch-package',{
     method:'POST',
     headers:Object.assign({'Content-Type':'application/json'},tokenHeader()),
     body:JSON.stringify({danHaos:danHaos})
    });
    var d2=await resp2.json();
+   console.log('[itdida step1] resp',d2);
    if(d2.ok && d2.data && d2.data.data){
-    // /queryYunDanDetail 返回 [{queryBillNo,keHuDanHao,receiptWeight,...}, ...]
     d2.data.data.forEach(function(item){
-     if(item.success!==false){
-      resultMap['order:'+(item.queryBillNo||item.keHuDanHao)]=item;
+     if(item.success!==false && (item.receiptWeight||item.receiptChargeableWeight)){
+      // 拿到重量数据,以客户单号(keHuDanHao 或查询号)为索引
+      var key=item.keHuDanHao||item.queryBillNo;
+      if(key){
+       resultMap[key]=item;
+       console.log('[itdida step1] OK',key,'实重',item.receiptWeight,'计费',item.receiptChargeableWeight);
+      }
      }
     });
    }
-  }catch(e){console.warn('[batch package]',e.message);}
+  }catch(e){console.warn('[itdida step1 batch]',e.message);}
  }
+
+ // ===== Step 2: 第一步没拿到的,用转单号兜底查 (queryTracks) =====
+ var missing=orders.filter(function(o){
+  var key=o.orderId||o.id;
+  return !resultMap[key] && o.trackingNumber;
+ });
+ if(missing.length){
+  console.log('[itdida step2] 还有',missing.length,'票需走转单号查询');
+  var trackBatches=chunk(missing,10);
+  for(var i=0;i<trackBatches.length;i++){
+   var batch=trackBatches[i];
+   try{
+    var nos=batch.map(function(o){return o.trackingNumber;});
+    console.log('[itdida step2] queryTracks',nos);
+    var resp=await fetch(BKDLL_API+'/api/itdida/fetch-tracks',{
+     method:'POST',
+     headers:Object.assign({'Content-Type':'application/json'},tokenHeader()),
+     body:JSON.stringify({nos:nos})
+    });
+    var d=await resp.json();
+    console.log('[itdida step2] resp',d);
+    if(d.ok && d.data && d.data.data){
+     // /queryTracks 返回 [{no, detail: {...}, trackList:[...]}, ...]
+     d.data.data.forEach(function(item){
+      if(item.detail){
+       // 找到对应的 order 把 detail 当 pkg 用
+       var detail=item.detail;
+       // 用转单号反查我们的 orders 找到对应的 orderId
+       var matchedOrder=batch.find(function(o){return o.trackingNumber===item.no;});
+       if(matchedOrder){
+        var orderKey=matchedOrder.orderId||matchedOrder.id;
+        resultMap[orderKey]=detail;
+        console.log('[itdida step2] OK 转单号',item.no,'→订单',orderKey,'detail keys:',Object.keys(detail));
+        console.log('[itdida step2] detail 字段值预览:',{
+         receiptWeight:detail.receiptWeight,
+         receiptVolumeWeight:detail.receiptVolumeWeight,
+         receiptChargeableWeight:detail.receiptChargeableWeight,
+         zhuanDanHao:detail.zhuanDanHao
+        });
+       }
+      }
+     });
+    }
+   }catch(e){console.warn('[itdida step2 batch]',e.message);}
+  }
+ }
+
+ console.log('[itdida final] 共拿到',Object.keys(resultMap).length,'/',orders.length,'票数据');
  return resultMap;
 }
 
@@ -2233,14 +2263,9 @@ async function fetchPackageFromItdida(){
 
  try{
   var map=await fetchItdidaForOrders([o]);
-  // 找回来的数据可能在 'track:xxx' 或 'order:xxx' 键下
-  var pkg=null;
-  if(o.trackingNumber){
-   pkg=map['track:'+o.trackingNumber];
-  }
-  if(!pkg){
-   pkg=map['order:'+(o.orderId||o.id)] || map['order:'+(o.id)];
-  }
+  // 现在 map 用 orderId 做 key
+  var orderKey=o.orderId||o.id;
+  var pkg=map[orderKey];
   if(!pkg){
    result.style.background='#fef3c7';result.style.borderColor='#fbbf24';result.style.color='#92400e';
    result.innerHTML='⚠ 易抵达没找到该运单 ('+esc(queryKey)+')。请确认是否已录入易抵达系统。';
@@ -2315,9 +2340,8 @@ async function batchFetchWeights(){
   var okCount=0,notFoundCount=0,errCount=0;
   var pending=[];
   targets.forEach(function(o){
-   var pkg=null;
-   if(o.trackingNumber)pkg=map['track:'+o.trackingNumber];
-   if(!pkg)pkg=map['order:'+(o.orderId||o.id)]||map['order:'+(o.id)];
+   var orderKey=o.orderId||o.id;
+   var pkg=map[orderKey];
    if(!pkg){notFoundCount++;return;}
    if(pkg.success===false){notFoundCount++;return;}
    var built=buildOrderUpdateFromPkg(o,pkg);
