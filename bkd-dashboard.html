@@ -282,6 +282,8 @@ header img{height:32px;border-radius:8px;}
      <div class="kpi-row-item"><span class="kpi-row-label"><span class="kpi-dot red"></span>异常 / Exceptions</span><span class="kpi-num" style="font-size:11px;" id="kpi-exceptions">—</span></div>
      <div class="kpi-row-item"><span class="kpi-row-label"><span class="kpi-dot green"></span>近7天妥投 / Delivered (7d)</span><span class="kpi-num" style="font-size:11px;" id="kpi-delivered">—</span></div>
      <div class="kpi-row-item"><span class="kpi-row-label"><span class="kpi-dot orange"></span>待处理 / Pending</span><span class="kpi-num" style="font-size:11px;" id="kpi-pending">—</span></div>
+     <div class="kpi-row-item" style="border-top:1px dashed #e5e7eb;padding-top:6px;margin-top:2px;"><span class="kpi-row-label"><span class="kpi-dot blue"></span>本月发件 / This Month</span><span class="kpi-num" style="font-size:11px;color:#0F2C5C;font-weight:700;" id="kpi-monthshipped">—</span></div>
+     <div class="kpi-row-item"><span class="kpi-row-label"><span class="kpi-dot orange"></span>待对账 / Unbilled</span><span class="kpi-num" style="font-size:11px;color:#92400e;font-weight:700;" id="kpi-unbilled-count">—</span></div>
     </div>
    </div>
 
@@ -313,23 +315,32 @@ header img{height:32px;border-radius:8px;}
     <div class="kpi-entry-action">立即查询 →</div>
    </div>
 
-   <!-- 本月费用 - 低调样式,挂底部 -->
+   <!-- 财务概览 - 5行 -->
    <div class="kpi-card" style="cursor:default;background:#fafbfc;border-color:#e5e7eb;padding:14px 18px;">
     <div class="kpi-head" style="margin-bottom:6px;">
-     <div class="kpi-title" style="font-size:12px;color:#64748b;"><div class="kpi-icon" style="background:#f1f5f9;color:#64748b;font-size:12px;">💴</div>本月费用 / This Month</div>
+     <div class="kpi-title" style="font-size:12px;color:#64748b;"><div class="kpi-icon" style="background:#f1f5f9;color:#64748b;font-size:12px;">💴</div>财务概览 / Finance</div>
     </div>
     <div style="display:flex;justify-content:space-between;align-items:baseline;gap:10px;font-size:11px;color:#64748b;">
-     <span>本月</span>
-     <span id="kpi-month-fee" style="font-family:monospace;font-weight:600;color:#475569;font-size:14px;">¥0.00</span>
+     <span>本月 / This Month</span>
+     <span id="kpi-month-fee" style="font-family:monospace;font-weight:700;color:#0F2C5C;font-size:15px;">¥0.00</span>
     </div>
     <div style="display:flex;justify-content:space-between;align-items:baseline;gap:10px;font-size:11px;color:#64748b;margin-top:4px;">
-     <span>上月</span>
-     <span id="kpi-prev-fee" style="font-family:monospace;color:#94a3b8;">¥0.00</span>
+     <span>上月 / Last Month</span>
+     <span id="kpi-prev-fee" style="font-family:monospace;color:#475569;">¥0.00</span>
+    </div>
+    <div style="display:flex;justify-content:space-between;align-items:baseline;gap:10px;font-size:11px;color:#64748b;margin-top:4px;border-top:1px dashed #e5e7eb;padding-top:6px;">
+     <span>已结算 / Billed</span>
+     <span id="kpi-billed-fee" style="font-family:monospace;color:#15803d;font-weight:600;">¥0.00</span>
     </div>
     <div style="display:flex;justify-content:space-between;align-items:baseline;gap:10px;font-size:11px;color:#64748b;margin-top:4px;">
-     <span>累计</span>
+     <span>未结算 / Unbilled</span>
+     <span id="kpi-unbilled-fee" style="font-family:monospace;color:#92400e;font-weight:700;">¥0.00</span>
+    </div>
+    <div style="display:flex;justify-content:space-between;align-items:baseline;gap:10px;font-size:11px;color:#64748b;margin-top:4px;">
+     <span>累计 / Total</span>
      <span id="kpi-total-fee" style="font-family:monospace;color:#94a3b8;">¥0.00</span>
     </div>
+    <div id="kpi-billed-stalemate" style="display:none;margin-top:6px;font-size:10px;color:#dc2626;text-align:center;background:#fef2f2;padding:4px 6px;border-radius:4px;">⚠ 待录运费 <span id="kpi-pending-feecount">0</span> 票</div>
    </div>
   </div>
 
@@ -585,29 +596,58 @@ function renderKPIs(){
  G('kpi-delivered').textContent = delivered7d;
  G('kpi-pending').textContent = pending;
 
- // 本月费用 / 上月费用 / 累计费用 (按 billedAt 落月)
+ // ===== 月份分组(按订单创建时间分,统一标准) =====
  const curYM = now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0');
  const prev = new Date(now.getFullYear(), now.getMonth()-1, 1);
  const prevYM = prev.getFullYear()+'-'+String(prev.getMonth()+1).padStart(2,'0');
+ // 按订单创建时间分月(不再用 billedAt)
  function ymOf(o){
-  const ts = o.billedAt || o.createdAt;
+  const ts = o.createdAt || o.submitTime;
   let d = null;
   if(typeof ts === 'number') d = new Date(ts);
   else if(ts && typeof ts.toDate === 'function') d = ts.toDate();
   else if(typeof ts === 'string') d = new Date(ts);
-  else if(o.submitTime) d = new Date(o.submitTime);
   if(!d || isNaN(d.getTime())) return '';
   return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');
  }
+
+ // 本月发件 + 待对账票数
+ const monthShipped = allOrders.filter(o => ymOf(o)===curYM).length;
+ const unbilledCount = allOrders.filter(o => !o.billedAt && o.totalAmount).length;
+ const elMonthShipped = G('kpi-monthshipped');
+ if(elMonthShipped) elMonthShipped.textContent = monthShipped;
+ const elUnbilledCount = G('kpi-unbilled-count');
+ if(elUnbilledCount) elUnbilledCount.textContent = unbilledCount;
+
+ // ===== 财务金额 =====
  const curFee = allOrders.filter(o => ymOf(o)===curYM && o.totalAmount).reduce((a,o)=>a+(Number(o.totalAmount)||0), 0);
  const prevFee = allOrders.filter(o => ymOf(o)===prevYM && o.totalAmount).reduce((a,o)=>a+(Number(o.totalAmount)||0), 0);
+ const billedFee = allOrders.filter(o => o.billedAt && o.totalAmount).reduce((a,o)=>a+(Number(o.totalAmount)||0), 0);
+ const unbilledFee = allOrders.filter(o => !o.billedAt && o.totalAmount).reduce((a,o)=>a+(Number(o.totalAmount)||0), 0);
  const totalFee = allOrders.filter(o => o.totalAmount).reduce((a,o)=>a+(Number(o.totalAmount)||0), 0);
+ // 未录运费的票数(提醒)
+ const pendingFeeCount = allOrders.filter(o => !o.totalAmount && o.trackingNumber).length;
+
  const monthFeeEl = G('kpi-month-fee');
  if(monthFeeEl) monthFeeEl.textContent = '¥' + curFee.toFixed(2);
  const prevFeeEl = G('kpi-prev-fee');
  if(prevFeeEl) prevFeeEl.textContent = '¥' + prevFee.toFixed(2);
+ const billedFeeEl = G('kpi-billed-fee');
+ if(billedFeeEl) billedFeeEl.textContent = '¥' + billedFee.toFixed(2);
+ const unbilledFeeEl = G('kpi-unbilled-fee');
+ if(unbilledFeeEl) unbilledFeeEl.textContent = '¥' + unbilledFee.toFixed(2);
  const totalFeeEl = G('kpi-total-fee');
  if(totalFeeEl) totalFeeEl.textContent = '¥' + totalFee.toFixed(2);
+ // 待录运费提示
+ const stalemate = G('kpi-billed-stalemate');
+ if(stalemate){
+  if(pendingFeeCount>0){
+   stalemate.style.display='block';
+   G('kpi-pending-feecount').textContent = pendingFeeCount;
+  }else{
+   stalemate.style.display='none';
+  }
+ }
 }
 
 /* ══════════════════════════════

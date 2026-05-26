@@ -443,12 +443,19 @@ td.td-doc{white-space:nowrap;min-width:80px;}
        <button class="btn btn-outline btn-sm" id="billingFilterAllBtn">所有订单</button>
        <button class="btn btn-primary btn-sm" id="billingLoadBtn">📋 加载订单</button>
       </div>
+      <div style="padding:0 18px 12px;display:flex;gap:6px;align-items:center;font-size:11px;color:var(--muted);">
+       <span>结算状态:</span>
+       <button class="btn btn-sm" id="billingStateUnbilled" data-state="unbilled" style="padding:4px 10px;border-radius:14px;background:#f0fdf4;border:1.5px solid #86efac;color:#15803d;font-weight:600;">🟢 未结算</button>
+       <button class="btn btn-sm" id="billingStateBilled"   data-state="billed"   style="padding:4px 10px;border-radius:14px;background:#fff;border:1.5px solid var(--border);color:var(--muted);">⚪ 已结算</button>
+       <button class="btn btn-sm" id="billingStateAll"      data-state="all"      style="padding:4px 10px;border-radius:14px;background:#fff;border:1.5px solid var(--border);color:var(--muted);">📋 全部</button>
+      </div>
      </div>
      <div id="billingStatsBar" style="padding:10px 18px;background:#f4f9ff;border-bottom:1px solid var(--border);display:none;font-size:12px;color:var(--text2);">
       <span>已勾选 <strong id="billingPickedCount" style="color:var(--blue);">0</strong> / 共 <strong id="billingTotalCount">0</strong> 票</span>
       <span style="margin-left:18px;">合计 <strong id="billingPickedAmount" style="color:var(--blue);">¥0.00</strong></span>
       <span style="float:right;display:flex;gap:8px;">
        <button class="btn btn-outline btn-sm" id="billingBatchFetchBtn" style="background:#ecfeff;border-color:#06b6d4;color:#0e7490;" title="从易抵达批量拉取重量/材积/计费重">📡 批量拉重量</button>
+       <button class="btn btn-outline btn-sm" id="billingMarkBilledBtn" style="background:#f0fdf4;border-color:#16a34a;color:#15803d;" title="把勾选的订单标记为已结算">✅ 标记已结算</button>
        <button class="btn btn-outline btn-sm" id="billingSelectAllBtn">全选</button>
        <button class="btn btn-outline btn-sm" id="billingDeselectBtn">反选</button>
        <button class="btn btn-teal btn-sm" id="billingExportXlsxBtn">📊 导出 Excel</button>
@@ -2541,7 +2548,7 @@ function renderDetailBillingCard(o){
 }
 
 /* ════════════ 模块② 月结对账单 ════════════ */
-var billingPage={customer:'',month:'',mode:'month',list:[],picked:new Set()};
+var billingPage={customer:'',month:'',mode:'month',list:[],picked:new Set(),billState:'unbilled'};
 
 function initBillingPage(){
  var ld=G('billingLoadBtn');if(!ld)return;
@@ -2562,10 +2569,79 @@ function initBillingPage(){
  G('billingExportPdfBtn').addEventListener('click',exportBillingPdf);
  var batchBtn=G('billingBatchFetchBtn');
  if(batchBtn)batchBtn.addEventListener('click',batchFetchWeights);
+ var markBtn=G('billingMarkBilledBtn');
+ if(markBtn)markBtn.addEventListener('click',batchMarkBilled);
+
+ // 结算状态切换 chip
+ ['billingStateUnbilled','billingStateBilled','billingStateAll'].forEach(function(btnId){
+  var b=G(btnId);if(!b)return;
+  b.addEventListener('click',function(){
+   billingPage.billState=b.getAttribute('data-state');
+   // 切换样式
+   ['billingStateUnbilled','billingStateBilled','billingStateAll'].forEach(function(id2){
+    var b2=G(id2);if(!b2)return;
+    var isActive=(b2===b);
+    var state=b2.getAttribute('data-state');
+    if(isActive){
+     if(state==='unbilled')b2.style.cssText='padding:4px 10px;border-radius:14px;background:#f0fdf4;border:1.5px solid #86efac;color:#15803d;font-weight:600;';
+     else if(state==='billed')b2.style.cssText='padding:4px 10px;border-radius:14px;background:#e0f2fe;border:1.5px solid #38bdf8;color:#0369a1;font-weight:600;';
+     else b2.style.cssText='padding:4px 10px;border-radius:14px;background:#fef3c7;border:1.5px solid #fbbf24;color:#92400e;font-weight:600;';
+    }else{
+     b2.style.cssText='padding:4px 10px;border-radius:14px;background:#fff;border:1.5px solid var(--border);color:var(--muted);';
+    }
+   });
+   if(billingPage.customer)loadBillingOrders();
+  });
+ });
+
  var d=new Date();
  var curYM=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');
  G('billingMonthSel').value=curYM;
  G('billingMonthSelEnd').value=curYM;
+}
+
+/**
+ * 批量标记已结算 - 把勾选的订单写 billedAt + billedMonth
+ */
+async function batchMarkBilled(){
+ var picked=billingPage.list.filter(function(o){return billingPage.picked.has(o.id);});
+ if(!picked.length){alert('请先勾选要标记的订单');return;}
+ var unbilledPicked=picked.filter(function(o){return !o.billedAt;});
+ if(!unbilledPicked.length){
+  alert('勾选的订单都已结算过了');return;
+ }
+ // 用月份选择器的结束月作为 billedMonth (这就是这次对账单的月份)
+ var billedMonth=G('billingMonthSelEnd').value||G('billingMonthSel').value||(new Date()).toISOString().slice(0,7);
+ if(!confirm('将 '+unbilledPicked.length+' 票订单标记为 '+billedMonth+' 已结算?\n\n'+
+             '标记后默认筛选"未结算"下不再显示这些订单。\n'+
+             '如需查看可切到"已结算"或"全部"。')){
+  return;
+ }
+
+ var btn=G('billingMarkBilledBtn');
+ if(btn){btn.disabled=true;btn.textContent='⏳ 标记中…';}
+ try{
+  var{doc:_doc,updateDoc:_upd}=window._bkdFS;
+  var billedAt=new Date().toISOString();
+  var ok=0,err=0;
+  for(var i=0;i<unbilledPicked.length;i++){
+   var o=unbilledPicked[i];
+   try{
+    await _upd(_doc(window._bkdDB,'orders',o.id),{billedAt:billedAt,billedMonth:billedMonth});
+    o.billedAt=billedAt;o.billedMonth=billedMonth;
+    var allOrders=(window.__bkdGetAllOrders&&window.__bkdGetAllOrders())||[];
+    var ix=allOrders.findIndex(function(x){return x.id===o.id;});
+    if(ix>=0){allOrders[ix].billedAt=billedAt;allOrders[ix].billedMonth=billedMonth;}
+    ok++;
+   }catch(e){console.warn('mark billed fail',o.id,e.message);err++;}
+  }
+  loadBillingOrders(); // 重新加载 (会按当前 billState 重新筛选)
+  alert('✅ 标记完成: '+ok+' 票'+(err?(' / 失败 '+err+' 票'):''));
+ }catch(e){
+  alert('标记失败: '+e.message);
+ }finally{
+  if(btn){btn.disabled=false;btn.textContent='✅ 标记已结算';}
+ }
 }
 
 function populateCustomerSelect(){
@@ -2614,8 +2690,12 @@ function loadBillingOrders(){
   var ym=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');
   return ym>=monthStart && ym<=monthEnd;
  });
- billingPage.list=list;
- billingPage.picked=new Set(list.filter(function(o){return o.totalAmount;}).map(function(o){return o.id;}));
+ billingPage.list=list.filter(function(o){
+  if(billingPage.billState==='unbilled')return !o.billedAt;
+  if(billingPage.billState==='billed')return !!o.billedAt;
+  return true; // all
+ });
+ billingPage.picked=new Set(billingPage.list.filter(function(o){return o.totalAmount;}).map(function(o){return o.id;}));
  renderBillingTable();
  updateBillingStats();
 }
@@ -2637,13 +2717,16 @@ function renderBillingTable(){
    '<th class="num" title="计费重 = max(实重,材积) 算钱依据">计费</th>'+
    '<th class="num">运费</th><th class="num">附加</th>'+
    '<th class="num">关税</th><th class="num">合计</th>'+
-   '<th>备注</th><th>操作</th>'+
+   '<th>备注</th><th>结算</th><th>操作</th>'+
   '</tr></thead><tbody>';
  billingPage.list.forEach(function(o){
   var picked=billingPage.picked.has(o.id);
   var date=fmtDate(o.createdAt||o.submitTime);
   var surTotal=(Array.isArray(o.surcharges)?o.surcharges.reduce(function(a,b){return a+(Number(b.amount)||0);},0):0);
   var hasBilling=o.totalAmount;
+  var billedLabel = o.billedAt
+   ? '<span title="结算于 '+esc(o.billedAt.slice(0,10))+'" style="display:inline-block;padding:2px 7px;background:#dcfce7;color:#15803d;border-radius:10px;font-size:9px;font-weight:600;">✓ '+esc(o.billedMonth||o.billedAt.slice(0,7))+'</span>'
+   : '<span style="display:inline-block;padding:2px 7px;background:#f1f5f9;color:#64748b;border-radius:10px;font-size:9px;">未结</span>';
   html+='<tr class="'+(picked?'picked-yes':'')+'" data-id="'+esc(o.id)+'">'+
    '<td><input type="checkbox" class="bill-pick-cb" '+(picked?'checked':'')+'></td>'+
    '<td>'+esc(date)+'</td>'+
@@ -2658,6 +2741,7 @@ function renderBillingTable(){
    '<td class="num">'+(o.dutyPrepaid?'¥'+fmt(o.dutyPrepaid):'—')+'</td>'+
    '<td class="num" style="font-weight:700;color:'+(hasBilling?'#0e7490':'#dc2626')+';">'+(hasBilling?'¥'+fmt(o.totalAmount):'未录')+'</td>'+
    '<td style="max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+esc(o.memo||'—')+'</td>'+
+   '<td>'+billedLabel+'</td>'+
    '<td><button class="btn btn-outline btn-sm" data-billopen="'+esc(o.id)+'" style="font-size:9px;padding:3px 7px;">'+(hasBilling?'✏️ 改':'+ 录')+'</button></td>'+
   '</tr>';
  });
