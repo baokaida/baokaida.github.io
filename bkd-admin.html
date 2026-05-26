@@ -2160,6 +2160,7 @@ async function fetchItdidaForOrders(orders){
   var key=o.orderId||o.id;
   return !resultMap[key] && o.trackingNumber;
  });
+ var step2KeHuDanHaoMap={}; // 转单号 → 易抵达里真正的客户单号
  if(missing.length){
   console.log('[itdida step2] 还有',missing.length,'票需走转单号查询');
   var trackBatches=chunk(missing,10);
@@ -2176,28 +2177,68 @@ async function fetchItdidaForOrders(orders){
     var d=await resp.json();
     console.log('[itdida step2] resp',d);
     if(d.ok && d.data && d.data.data){
-     // /queryTracks 返回 [{no, detail: {...}, trackList:[...]}, ...]
      d.data.data.forEach(function(item){
       if(item.detail){
-       // 找到对应的 order 把 detail 当 pkg 用
        var detail=item.detail;
-       // 用转单号反查我们的 orders 找到对应的 orderId
        var matchedOrder=batch.find(function(o){return o.trackingNumber===item.no;});
        if(matchedOrder){
         var orderKey=matchedOrder.orderId||matchedOrder.id;
-        resultMap[orderKey]=detail;
-        console.log('[itdida step2] OK 转单号',item.no,'→订单',orderKey,'detail keys:',Object.keys(detail));
-        console.log('[itdida step2] detail 字段值预览:',{
+        // 打印关键字段名 (用于诊断易抵达字段命名)
+        console.log('[itdida step2] OK 转单号',item.no,'→订单',orderKey,'detail 全部字段:',Object.keys(detail).join(','));
+        console.log('[itdida step2] detail 重量相关字段值:',{
          receiptWeight:detail.receiptWeight,
          receiptVolumeWeight:detail.receiptVolumeWeight,
          receiptChargeableWeight:detail.receiptChargeableWeight,
-         zhuanDanHao:detail.zhuanDanHao
+         keHuDanHao:detail.keHuDanHao,
+         danHao:detail.danHao,
+         shouHuoFangWeight:detail.shouHuoFangWeight,
+         weight:detail.weight,
+         volumeWeight:detail.volumeWeight,
+         chargeableWeight:detail.chargeableWeight
         });
+        // 把 detail 当 pkg 暂存
+        resultMap[orderKey]=detail;
+        // 记下易抵达里真正的客户单号,准备 step3 用这个号回去拉重量
+        if(detail.keHuDanHao||detail.danHao){
+         step2KeHuDanHaoMap[detail.keHuDanHao||detail.danHao]=orderKey;
+        }
        }
       }
      });
     }
    }catch(e){console.warn('[itdida step2 batch]',e.message);}
+  }
+ }
+
+ // ===== Step 3: 如果 step2 拿到了易抵达真正的客户单号,用这些号重新查 queryYunDanDetail 拿重量 =====
+ var realDanHaos=Object.keys(step2KeHuDanHaoMap);
+ if(realDanHaos.length){
+  console.log('[itdida step3] 用易抵达里真正的客户单号查重量:',realDanHaos);
+  var step3Batches=chunk(realDanHaos,10);
+  for(var k=0;k<step3Batches.length;k++){
+   try{
+    var batch3=step3Batches[k];
+    var resp3=await fetch(BKDLL_API+'/api/itdida/fetch-package',{
+     method:'POST',
+     headers:Object.assign({'Content-Type':'application/json'},tokenHeader()),
+     body:JSON.stringify({danHaos:batch3})
+    });
+    var d3=await resp3.json();
+    console.log('[itdida step3] resp',d3);
+    if(d3.ok && d3.data && d3.data.data){
+     d3.data.data.forEach(function(item){
+      if(item.success!==false && (item.receiptWeight||item.receiptChargeableWeight)){
+       var realDanHao=item.keHuDanHao||item.queryBillNo;
+       var orderKey=step2KeHuDanHaoMap[realDanHao];
+       if(orderKey){
+        // 用更全的数据覆盖
+        resultMap[orderKey]=item;
+        console.log('[itdida step3] OK 真客户单号',realDanHao,'→订单',orderKey,'实重',item.receiptWeight,'计费',item.receiptChargeableWeight);
+       }
+      }
+     });
+    }
+   }catch(e){console.warn('[itdida step3 batch]',e.message);}
   }
  }
 
@@ -2792,7 +2833,7 @@ async function exportBillingPdf(){
   'td{padding:6px 5px;border-bottom:1px solid #e2e8f0;background:rgba(255,255,255,0.85);vertical-align:top;word-break:break-word;}'+
   'td.num{text-align:right;font-family:monospace;}'+
   'td.memo{font-size:8.5px;line-height:1.5;white-space:normal;word-break:break-all;}'+
-  'tr.total td{background:rgba(254,243,199,0.95);font-weight:700;color:#92400e;font-size:11px;}'+
+  'tr.total td{background:rgba(244,248,255,0.95);font-weight:800;color:#0F2C5C;font-size:12px;border-top:2px solid #0F2C5C;}'+
   '@media print{@page{size:A3 landscape;margin:10mm;} body::before{position:absolute;}}'+
   '</style></head><body>'+
   '<div class="hdr">'+
