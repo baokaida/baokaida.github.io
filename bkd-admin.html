@@ -413,8 +413,9 @@ td.td-doc{white-space:nowrap;min-width:80px;}
     <div class="table-card">
      <div class="table-header">
       <h3>客户账号管理</h3>
-      <div class="search-bar">
+      <div class="search-bar" style="display:flex;gap:8px;">
        <button class="btn btn-primary" id="addCustomerBtn">+ 添加客户</button>
+       <button class="btn btn-teal" id="openCustMarkupBtn" title="管理客户的查价倍数(markup),改后客户登录 Portal 查到的价格会按新倍数显示">💰 倍数管理 →</button>
       </div>
      </div>
      <div style="padding:18px 22px;">
@@ -423,6 +424,16 @@ td.td-doc{white-space:nowrap;min-width:80px;}
        新版 bkd-login.html 已关闭客户自助注册，所有新客户账号需在此处由管理员开通。<br>
        开通后请将<strong>邮箱 + 临时密码</strong>通过你自己的渠道（微信/电话）告知客户，客户即可登录 Portal 查看订单或下单。<br><br>
        <strong>说明：</strong>由于不搭后端 Admin SDK，本页暂只支持<strong>创建账号</strong>；客户列表/禁用/删除请到 Firebase Console 操作。
+      </div>
+      <div style="margin-top:14px;padding:14px 18px;background:#ecfeff;border:1px solid #67e8f9;border-radius:10px;">
+       <strong style="color:#0e7490;">💰 客户倍数管理 (markup)</strong><br>
+       <span style="font-size:12px;color:#475569;line-height:1.8;">
+        客户在 Portal 查价时看到的运费 = 易抵达原价 × 该客户的倍数。<br>
+        默认倍数 3.5x；可在<strong>「倍数管理」</strong>页面单独调整。新客户创建时会自动按规则烙上倍数。
+       </span>
+       <div style="margin-top:10px;">
+        <button class="btn btn-teal btn-sm" id="openCustMarkupBtn2">💰 打开倍数管理页面 →</button>
+       </div>
       </div>
      </div>
     </div>
@@ -1747,6 +1758,12 @@ async function doDelete(){
 
 function initCustomerModal(){
  G('addCustomerBtn').addEventListener('click',openCustomerModal);
+ // 倍数管理跳转(2 个按钮共用同一事件)
+ var goCustMarkup=function(){
+  window.open('bkd-customers.html','_blank');
+ };
+ var btn1=G('openCustMarkupBtn');if(btn1)btn1.addEventListener('click',goCustMarkup);
+ var btn2=G('openCustMarkupBtn2');if(btn2)btn2.addEventListener('click',goCustMarkup);
  G('customerModalClose').addEventListener('click',closeCustomerModal);
  G('customerModalCancel').addEventListener('click',closeCustomerModal);
  G('customerModal').addEventListener('click',e=>{if(e.target===G('customerModal'))closeCustomerModal();});
