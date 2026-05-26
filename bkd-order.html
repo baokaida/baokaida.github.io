@@ -1041,23 +1041,6 @@ window.printLabel=async function(){
  var W=148,H=210,L=5,R=143,mid=74;
  var NAVY=[15,31,61], TEAL=[13,148,136], MUTED=[100,116,139], BLUE=[26,86,219], LIGHTBG=[244,248,255];
 
- // ======== 水印层 (先画,在所有内容下面) ========
- // BKDLL 大字水印,斜 -22度,opacity 0.06 模拟 (用浅灰色)
- doc.setTextColor(220,228,240); // 浅灰蓝接近 opacity 0.08 的视觉效果
- doc.setFontSize(28);
- doc.setFont('helvetica','bold');
- // 4 行 x 3 列水印,覆盖整页
- var wmText='BKDLL';
- for(var wr=0;wr<7;wr++){
-  for(var wc=0;wc<3;wc++){
-   var wmX=20+wc*50;
-   var wmY=25+wr*32;
-   doc.text(wmText,wmX,wmY,{angle:-22,align:'left'});
-  }
- }
- // 重置文字颜色
- doc.setTextColor(NAVY[0],NAVY[1],NAVY[2]);
-
  // 外框 (深蓝细线圆角)
  doc.setDrawColor(NAVY[0],NAVY[1],NAVY[2]);doc.setLineWidth(0.4);
  doc.roundedRect(L,5,R-L,H-10,2,2);
@@ -1065,16 +1048,12 @@ window.printLabel=async function(){
  // ======== 顶部 logo 区 (logo 放大到 22mm 高) ========
  var logoZoneY=8, logoZoneH=28;
  if(logoData&&logoData.dataUrl){
-  var logoH_=22; // 之前 14mm,放大到 22mm
+  var logoH_=22;
   var logoW_=logoH_*logoData.aspectRatio;
-  // 限制最大宽度不超过框宽 70%
   var maxW=(R-L)*0.7;
   if(logoW_>maxW){logoW_=maxW;logoH_=logoW_/logoData.aspectRatio;}
   var logoX_=mid-logoW_/2;
   var logoY_=logoZoneY+(logoZoneH-logoH_)/2;
-  // logo 下加白底矩形遮住水印 (让 logo 干净显示)
-  doc.setFillColor(255,255,255);
-  doc.rect(logoX_-2,logoY_-1,logoW_+4,logoH_+2,'F');
   try{doc.addImage(logoData.dataUrl,'PNG',logoX_,logoY_,logoW_,logoH_);}
   catch(e){doc.setTextColor(NAVY[0],NAVY[1],NAVY[2]);doc.setFontSize(24);doc.setFont('helvetica','bold');doc.text('BKDLL',mid,logoZoneY+18,{align:'center'});}
  }else{
@@ -1087,16 +1066,12 @@ window.printLabel=async function(){
  doc.line(mid-13,42,mid+13,42);
 
  // ======== 主标题 ========
- // 主标题区也加白底防水印干扰
- doc.setFillColor(255,255,255);doc.rect(L+5,46,R-L-10,8,'F');
  doc.setTextColor(TEAL[0],TEAL[1],TEAL[2]);doc.setFontSize(14);doc.setFont('helvetica','bold');
  doc.text('WAREHOUSING LABEL / INBOUND LABEL',mid,52,{align:'center',charSpace:0.3});
- // 主标题下细灰线
  doc.setDrawColor(220,228,240);doc.setLineWidth(0.2);
  doc.line(L+6,56,R-6,56);
 
  // ======== ORDER ID 区域 ========
- doc.setFillColor(255,255,255);doc.rect(L+30,59,R-L-60,5,'F');
  doc.setTextColor(MUTED[0],MUTED[1],MUTED[2]);doc.setFontSize(8);doc.setFont('helvetica','bold');
  doc.text('ORDER ID / INBOUND NO.',mid,63,{align:'center',charSpace:0.2});
 
@@ -1185,8 +1160,6 @@ window.printLabel=async function(){
  // 顶部绿色线
  doc.setDrawColor(TEAL[0],TEAL[1],TEAL[2]);doc.setLineWidth(0.6);
  doc.line(L+4,botY,R-4,botY);
- // 底部白底,遮水印
- doc.setFillColor(255,255,255);doc.rect(L+1,botY+1,R-L-2,15,'F');
  // 盒子小图标
  doc.setDrawColor(BLUE[0],BLUE[1],BLUE[2]);doc.setLineWidth(0.6);
  var bIcX=L+13,bIcY=botY+6;
