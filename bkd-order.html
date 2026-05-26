@@ -129,8 +129,7 @@ footer a{color:var(--blue);text-decoration:none;}
 <body>
 <div class="stripe"></div>
 <header>
- <img src="logo.png" style="height:36px;width:auto;border-radius:8px;flex-shrink:0;">
- <div class="lt"><h1 style="font-size:19px;font-weight:800;">BKDLL 香港国际物流 <span style="font-size:13px;font-weight:600;color:var(--blue);margin-left:4px;">下单模块</span></h1><p>BKD Cross-Border Logistics &middot; </p></div>
+ <img src="logo.png" alt="BKDLL" style="height:56px;width:auto;flex-shrink:0;">
 </header>
 <main><div class="card">
 <div class="ch">
@@ -988,24 +987,78 @@ function parseInvoiceRows(rows,fname){
 }
 
 /* ══════════════════════════════════
-  3. 打印入仓标签（Excel）
+  3. 打印入仓标签 (PDF)
+  - logo 区域改成浅灰白底
+  - logo.png 居中显示 (高 12mm,宽自适应)
+  - 删掉原 "BKD" "BKDLL INTERNATIONAL LOGISTICS" "| bkd@baokaida.com" 3 行文字
 ══════════════════════════════════ */
-window.printLabel=function(){
+
+// logo 缓存 (避免重复 fetch)
+window._labelLogoCache=null;
+async function _loadLogoForLabel(){
+ if(window._labelLogoCache)return window._labelLogoCache;
+ try{
+  var url=location.origin+location.pathname.replace(/[^/]+$/,'')+'logo.png';
+  var resp=await fetch(url,{cache:'force-cache'});
+  if(!resp.ok)throw new Error('logo http '+resp.status);
+  var blob=await resp.blob();
+  var b64=await new Promise(function(res,rej){
+   var r=new FileReader();
+   r.onload=function(){res(r.result);};
+   r.onerror=rej;
+   r.readAsDataURL(blob);
+  });
+  // 读取实际像素尺寸,用来算 PDF 里的宽高比
+  var dim=await new Promise(function(res){
+   var img=new Image();
+   img.onload=function(){res({w:img.naturalWidth,h:img.naturalHeight});};
+   img.onerror=function(){res({w:300,h:120});}; // fallback 比例 2.5:1
+   img.src=b64;
+  });
+  window._labelLogoCache={dataUrl:b64,aspectRatio:dim.w/dim.h};
+  return window._labelLogoCache;
+ }catch(e){
+  console.warn('[label] logo 加载失败:',e.message);
+  return null;
+ }
+}
+
+window.printLabel=async function(){
  var orderId=G('previewId').textContent;
  if(!V('country')||orderId.indexOf('??')!==-1){alert('Please fill in company name and select country first');return;}
  var coName=V('senderCompany')||'';
  var countryText=(function(){var s=G('country');return s.options[s.selectedIndex]?s.options[s.selectedIndex].text.replace(/[\u4e00-\u9fff\u3000-\u303f]+/g,'').trim():'';})();
  var channel=V('channel')||'-';
  if(window._bkdSaveOrder){window._bkdSaveOrder({orderId:orderId,senderCompany:coName,country:countryText,channel:channel,labelGenerated:true,labelTime:new Date().toISOString(),status:'Label Generated',userId:window._bkdUserId||'',source:window._bkdUserId?'portal':'open'});}
+
+ // 预加载 logo
+ var logoData=await _loadLogoForLabel();
+
  var jsPDF=window.jspdf.jsPDF;
  var doc=new jsPDF({unit:'mm',format:'a5',orientation:'portrait'});
  var W=148,H=210,L=10,R=138,mid=74;
  doc.setDrawColor(15,31,61);doc.setLineWidth(1);doc.rect(L,8,R-L,194);
- doc.setFillColor(26,86,219);doc.rect(L,8,R-L,22,'F');
- doc.setTextColor(255,255,255);
- doc.setFontSize(16);doc.setFont('helvetica','bold');doc.text('BKD',L+5,22);
- doc.setFontSize(9);doc.setFont('helvetica','normal');doc.text('BKDLL INTERNATIONAL LOGISTICS',L+20,18);
- doc.setFontSize(7);doc.text(' | bkd@baokaida.com',L+20,23);
+ // 顶部 logo 区域: 改成浅灰白底 (#F4F8FF) + 细边框
+ doc.setFillColor(244,248,255);doc.rect(L,8,R-L,22,'F');
+ doc.setDrawColor(15,31,61);doc.setLineWidth(0.3);doc.line(L,30,R,30);
+ // logo 居中, 高 12mm
+ if(logoData&&logoData.dataUrl){
+  var logoH=12;
+  var logoW=logoH*logoData.aspectRatio;
+  var logoX=mid-logoW/2;
+  var logoY=8+(22-logoH)/2;
+  try{
+   doc.addImage(logoData.dataUrl,'PNG',logoX,logoY,logoW,logoH);
+  }catch(e){
+   // 加载失败 fallback 文字
+   doc.setTextColor(15,31,61);doc.setFontSize(18);doc.setFont('helvetica','bold');
+   doc.text('BKDLL',mid,22,{align:'center'});
+  }
+ }else{
+  // 完全没 logo 也显示个 BKDLL 字样兜底
+  doc.setTextColor(15,31,61);doc.setFontSize(18);doc.setFont('helvetica','bold');
+  doc.text('BKDLL',mid,22,{align:'center'});
+ }
  doc.setTextColor(13,148,136);doc.setFontSize(9);doc.setFont('helvetica','bold');
  doc.text('WAREHOUSING LABEL / INBOUND LABEL',mid,38,{align:'center'});
  doc.setDrawColor(191,219,254);doc.setLineWidth(0.3);doc.line(L+4,41,R-4,41);
