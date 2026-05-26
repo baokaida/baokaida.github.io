@@ -456,6 +456,7 @@ td.td-doc{white-space:nowrap;min-width:80px;}
       <span style="float:right;display:flex;gap:8px;">
        <button class="btn btn-outline btn-sm" id="billingBatchFetchBtn" style="background:#ecfeff;border-color:#06b6d4;color:#0e7490;" title="从易抵达批量拉取重量/材积/计费重">📡 批量拉重量</button>
        <button class="btn btn-outline btn-sm" id="billingMarkBilledBtn" style="background:#f0fdf4;border-color:#16a34a;color:#15803d;" title="把勾选的订单标记为已结算">✅ 标记已结算</button>
+       <button class="btn btn-outline btn-sm" id="billingUnmarkBilledBtn" style="background:#fef2f2;border-color:#dc2626;color:#dc2626;display:none;" title="撤销已结算 (慎用)">❌ 撤销已结算</button>
        <button class="btn btn-outline btn-sm" id="billingSelectAllBtn">全选</button>
        <button class="btn btn-outline btn-sm" id="billingDeselectBtn">反选</button>
        <button class="btn btn-teal btn-sm" id="billingExportXlsxBtn">📊 导出 Excel</button>
@@ -2571,6 +2572,8 @@ function initBillingPage(){
  if(batchBtn)batchBtn.addEventListener('click',batchFetchWeights);
  var markBtn=G('billingMarkBilledBtn');
  if(markBtn)markBtn.addEventListener('click',batchMarkBilled);
+ var unmarkBtn=G('billingUnmarkBilledBtn');
+ if(unmarkBtn)unmarkBtn.addEventListener('click',batchUnmarkBilled);
 
  // 结算状态切换 chip
  ['billingStateUnbilled','billingStateBilled','billingStateAll'].forEach(function(btnId){
@@ -2590,6 +2593,10 @@ function initBillingPage(){
      b2.style.cssText='padding:4px 10px;border-radius:14px;background:#fff;border:1.5px solid var(--border);color:var(--muted);';
     }
    });
+   // 按钮显示控制: 未结算时显示"标记已结算",已结算时显示"撤销已结算",全部时都显示
+   var st=billingPage.billState;
+   if(markBtn)markBtn.style.display=(st==='billed')?'none':'inline-flex';
+   if(unmarkBtn)unmarkBtn.style.display=(st==='unbilled')?'none':'inline-flex';
    if(billingPage.customer)loadBillingOrders();
   });
  });
@@ -2641,6 +2648,49 @@ async function batchMarkBilled(){
   alert('标记失败: '+e.message);
  }finally{
   if(btn){btn.disabled=false;btn.textContent='✅ 标记已结算';}
+ }
+}
+
+/**
+ * 撤销已结算 - 清空勾选订单的 billedAt + billedMonth
+ */
+async function batchUnmarkBilled(){
+ var picked=billingPage.list.filter(function(o){return billingPage.picked.has(o.id);});
+ if(!picked.length){alert('请先勾选要撤销的订单');return;}
+ var billedPicked=picked.filter(function(o){return o.billedAt && o.billedMonth;});
+ if(!billedPicked.length){
+  alert('勾选的订单都还没结算过,无需撤销');return;
+ }
+ if(!confirm('⚠ 将 '+billedPicked.length+' 票订单撤销已结算标记?\n\n'+
+             '撤销后这些订单会回到"未结算"列表,可以重新标记到其他对账单里。\n\n'+
+             '此操作不可恢复,请确认!')){
+  return;
+ }
+
+ var btn=G('billingUnmarkBilledBtn');
+ if(btn){btn.disabled=true;btn.textContent='⏳ 撤销中…';}
+ try{
+  // Firestore 用 deleteField 真正删字段;但偷懒用 null 也可,前端 isReallyBilled 判断走 truthy
+  var{doc:_doc,updateDoc:_upd,deleteField:_del}=window._bkdFS;
+  var clearValue = (typeof _del==='function')?_del():null;
+  var ok=0,err=0;
+  for(var i=0;i<billedPicked.length;i++){
+   var o=billedPicked[i];
+   try{
+    await _upd(_doc(window._bkdDB,'orders',o.id),{billedAt:clearValue,billedMonth:clearValue});
+    delete o.billedAt;delete o.billedMonth;
+    var allOrders=(window.__bkdGetAllOrders&&window.__bkdGetAllOrders())||[];
+    var ix=allOrders.findIndex(function(x){return x.id===o.id;});
+    if(ix>=0){delete allOrders[ix].billedAt;delete allOrders[ix].billedMonth;}
+    ok++;
+   }catch(e){console.warn('unmark billed fail',o.id,e.message);err++;}
+  }
+  loadBillingOrders();
+  alert('✅ 撤销完成: '+ok+' 票'+(err?(' / 失败 '+err+' 票'):''));
+ }catch(e){
+  alert('撤销失败: '+e.message);
+ }finally{
+  if(btn){btn.disabled=false;btn.textContent='❌ 撤销已结算';}
  }
 }
 
@@ -2710,7 +2760,7 @@ function renderBillingTable(){
   return;
  }
  G('billingStatsBar').style.display='block';
- var html='<div style="overflow:auto;max-height:60vh;"><table class="billing-table">'+
+ var html='<div style="overflow:auto;max-height:calc(100vh - 320px);min-height:400px;"><table class="billing-table">'+
   '<thead><tr>'+
    '<th style="width:30px;"></th>'+
    '<th>日期</th><th>单号</th><th>运单号</th><th>国家</th>'+
