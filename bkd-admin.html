@@ -448,6 +448,7 @@ td.td-doc{white-space:nowrap;min-width:80px;}
       <span>已勾选 <strong id="billingPickedCount" style="color:var(--blue);">0</strong> / 共 <strong id="billingTotalCount">0</strong> 票</span>
       <span style="margin-left:18px;">合计 <strong id="billingPickedAmount" style="color:var(--blue);">¥0.00</strong></span>
       <span style="float:right;display:flex;gap:8px;">
+       <button class="btn btn-outline btn-sm" id="billingBatchFetchBtn" style="background:#ecfeff;border-color:#06b6d4;color:#0e7490;" title="从易抵达批量拉取重量/材积/计费重">📡 批量拉重量</button>
        <button class="btn btn-outline btn-sm" id="billingSelectAllBtn">全选</button>
        <button class="btn btn-outline btn-sm" id="billingDeselectBtn">反选</button>
        <button class="btn btn-teal btn-sm" id="billingExportXlsxBtn">📊 导出 Excel</button>
@@ -2090,104 +2091,253 @@ async function queryQuote(){
 }
 
 /* ──────── 从易抵达拉真实运单数据 (模块①+) ──────── */
+
+/**
+ * 调易抵达 API 拉一个或多个运单数据
+ * 优先用 trackingNumber 调 /fetch-tracks (查得最准),没有 trackingNumber 才用 orderId 调 /fetch-package
+ * 入参: orders = [{id, orderId, trackingNumber}, ...]
+ * 返回: Map<orderId or trackingNumber, pkg数据>  键是查询用的号
+ */
+async function fetchItdidaForOrders(orders){
+ var resultMap={};
+ if(!orders||!orders.length)return resultMap;
+ // 分两组:有转单号的走 tracks,没有的走 package
+ var byTrack=orders.filter(function(o){return o.trackingNumber;});
+ var byOrderId=orders.filter(function(o){return !o.trackingNumber && (o.orderId||o.id);});
+ // 易抵达限制每次最多 10 个,分批
+ function chunk(arr,size){var r=[];for(var i=0;i<arr.length;i+=size)r.push(arr.slice(i,i+size));return r;}
+
+ // 用转单号查 - 调 /fetch-tracks
+ var trackBatches=chunk(byTrack,10);
+ for(var i=0;i<trackBatches.length;i++){
+  var batch=trackBatches[i];
+  try{
+   var nos=batch.map(function(o){return o.trackingNumber;});
+   var resp=await fetch(BKDLL_API+'/api/itdida/fetch-tracks',{
+    method:'POST',
+    headers:Object.assign({'Content-Type':'application/json'},tokenHeader()),
+    body:JSON.stringify({nos:nos})
+   });
+   var d=await resp.json();
+   if(d.ok && d.data && d.data.data){
+    // /queryTracks 返回 [{no, detail: {...}, trackList:[...]}, ...]
+    d.data.data.forEach(function(item){
+     if(item.detail){
+      // 用查询号(item.no)和订单号都建索引,方便定位
+      resultMap['track:'+item.no]=item.detail;
+     }
+    });
+   }
+  }catch(e){console.warn('[batch tracks]',e.message);}
+ }
+
+ // 用客户单号查 - 调 /fetch-package
+ var pkgBatches=chunk(byOrderId,10);
+ for(var j=0;j<pkgBatches.length;j++){
+  var batch2=pkgBatches[j];
+  try{
+   var danHaos=batch2.map(function(o){return o.orderId||o.id;});
+   var resp2=await fetch(BKDLL_API+'/api/itdida/fetch-package',{
+    method:'POST',
+    headers:Object.assign({'Content-Type':'application/json'},tokenHeader()),
+    body:JSON.stringify({danHaos:danHaos})
+   });
+   var d2=await resp2.json();
+   if(d2.ok && d2.data && d2.data.data){
+    // /queryYunDanDetail 返回 [{queryBillNo,keHuDanHao,receiptWeight,...}, ...]
+    d2.data.data.forEach(function(item){
+     if(item.success!==false){
+      resultMap['order:'+(item.queryBillNo||item.keHuDanHao)]=item;
+     }
+    });
+   }
+  }catch(e){console.warn('[batch package]',e.message);}
+ }
+ return resultMap;
+}
+
+/**
+ * 把易抵达拉到的一条 pkg 数据应用到指定订单
+ * 返回 {fields, memo, trackingNumber} - 后续保存可用
+ */
+function buildOrderUpdateFromPkg(o, pkg){
+ var updates={};
+ var changed=[];
+ if(pkg.receiptWeight){updates.actualWeight=Number(pkg.receiptWeight);changed.push('实重');}
+ if(pkg.receiptVolumeWeight){updates.volumeWeight=Number(pkg.receiptVolumeWeight);changed.push('材积');}
+ if(pkg.receiptChargeableWeight){updates.chargeableWeight=Number(pkg.receiptChargeableWeight);changed.push('计费');}
+ if(pkg.zhuanDanHao && !o.trackingNumber){
+  updates.trackingNumber=pkg.zhuanDanHao;
+  changed.push('运单号');
+ }
+ // 备注追加 BKDLL 段
+ var extraMemo=[];
+ if(pkg.recipientName||pkg.recipientCompany){
+  var rname=[pkg.recipientName,pkg.recipientCompany].filter(Boolean).join(' / ');
+  extraMemo.push('收件人 '+rname);
+ }
+ if(pkg.zhuanDanHao) extraMemo.push('转单号 '+pkg.zhuanDanHao);
+ if(pkg.shouHuoQuDao) extraMemo.push('渠道 '+pkg.shouHuoQuDao);
+ if(pkg.signTime) extraMemo.push('签收 '+String(pkg.signTime).slice(0,10));
+ if(pkg.apiUnitModelList&&pkg.apiUnitModelList.length){
+  var u=pkg.apiUnitModelList[0];
+  if(u.length&&u.width&&u.height){
+   extraMemo.push('体积 '+u.length+'-'+u.width+'-'+u.height+'CM');
+  }
+ }
+ if(extraMemo.length){
+  var existing=o.memo||'';
+  var newMemo='[BKDLL] '+extraMemo.join(' · ');
+  if(existing.indexOf('[BKDLL]')<0&&existing.indexOf('[易抵达]')<0){
+   updates.memo=existing?(existing+'\n'+newMemo):newMemo;
+  }else{
+   updates.memo=existing.replace(/\[(BKDLL|易抵达)\][^\n]*/,newMemo);
+  }
+ }
+ return {updates:updates, changed:changed};
+}
+
+/**
+ * 单票拉重量 (modal 里点击 📡 拉重量 按钮触发)
+ */
 async function fetchPackageFromItdida(){
  var o=billingCtx.order;
  if(!o)return;
- var danHao=o.orderId||o.id; // BKD 入仓号就是易抵达的客户单号
+ var queryKey=o.trackingNumber ? '转单号 '+o.trackingNumber : 'BKD '+(o.orderId||o.id);
 
  var btn=G('bm-fetchPackageBtn');
  var result=G('bm-fetchResult');
  btn.disabled=true;btn.textContent='⏳ 拉取中…';
  result.style.display='block';
  result.style.background='#f0f9ff';result.style.borderColor='#7dd3fc';result.style.color='#0369a1';
- result.innerHTML='⏳ 正在从易抵达拉取 '+esc(danHao)+' …';
+ result.innerHTML='⏳ 正在从易抵达拉取 '+esc(queryKey)+' …';
 
  try{
-  var resp=await fetch(BKDLL_API+'/api/itdida/fetch-package',{
-   method:'POST',
-   headers:Object.assign({'Content-Type':'application/json'},tokenHeader()),
-   body:JSON.stringify({danHao:danHao})
-  });
-  var d=await resp.json();
-  if(!d.ok){
-   result.style.background='#fef2f2';result.style.borderColor='#fecaca';result.style.color='#dc2626';
-   result.innerHTML='⚠ 拉取失败: '+esc(d.error||'unknown');
-   return;
+  var map=await fetchItdidaForOrders([o]);
+  // 找回来的数据可能在 'track:xxx' 或 'order:xxx' 键下
+  var pkg=null;
+  if(o.trackingNumber){
+   pkg=map['track:'+o.trackingNumber];
   }
-  // 易抵达返回结构: { data: [{ receiptWeight, signTime, zhuanDanHao, ... }] }
-  var arr=(d.data&&d.data.data)||[];
-  var pkg=arr[0];
+  if(!pkg){
+   pkg=map['order:'+(o.orderId||o.id)] || map['order:'+(o.id)];
+  }
   if(!pkg){
    result.style.background='#fef3c7';result.style.borderColor='#fbbf24';result.style.color='#92400e';
-   result.innerHTML='⚠ 易抵达没找到该运单。请确认 '+esc(danHao)+' 是否已录入易抵达系统。';
+   result.innerHTML='⚠ 易抵达没找到该运单 ('+esc(queryKey)+')。请确认是否已录入易抵达系统。';
    return;
   }
-  if(!pkg.success&&pkg.errorMsg){
+  if(pkg.success===false&&pkg.errorMsg){
    result.style.background='#fef3c7';result.style.borderColor='#fbbf24';result.style.color='#92400e';
    result.innerHTML='⚠ '+esc(pkg.errorMsg);
    return;
   }
 
-  // 填字段
-  var filled=[];
-  if(pkg.receiptWeight){
-   G('bm-actualWeight').value=Number(pkg.receiptWeight).toFixed(2);
-   filled.push('实重 '+Number(pkg.receiptWeight).toFixed(2)+'kg');
-  }
-  if(pkg.receiptVolumeWeight){
-   G('bm-volumeWeight').value=Number(pkg.receiptVolumeWeight).toFixed(2);
-   filled.push('材积 '+Number(pkg.receiptVolumeWeight).toFixed(2)+'kg');
-  }
-  if(pkg.receiptChargeableWeight){
-   G('bm-chargeableWeight').value=Number(pkg.receiptChargeableWeight).toFixed(2);
-   filled.push('计费 '+Number(pkg.receiptChargeableWeight).toFixed(2)+'kg');
-  }
-  // 转单号:如果 admin 表里的 trackingNumber 还是空,自动回填(顺手把单子也补全)
-  if(pkg.zhuanDanHao && !o.trackingNumber){
+  // 应用到 modal 表单
+  var built=buildOrderUpdateFromPkg(o,pkg);
+  if(built.updates.actualWeight!=null){G('bm-actualWeight').value=Number(built.updates.actualWeight).toFixed(2);}
+  if(built.updates.volumeWeight!=null){G('bm-volumeWeight').value=Number(built.updates.volumeWeight).toFixed(2);}
+  if(built.updates.chargeableWeight!=null){G('bm-chargeableWeight').value=Number(built.updates.chargeableWeight).toFixed(2);}
+  if(built.updates.memo){G('bm-memo').value=built.updates.memo;}
+  // 转单号回填 - 立刻 PATCH Firestore
+  if(built.updates.trackingNumber){
    try{
     var{doc:_doc,updateDoc:_upd}=window._bkdFS;
-    await _upd(_doc(window._bkdDB,'orders',o.id),{trackingNumber:pkg.zhuanDanHao});
-    o.trackingNumber=pkg.zhuanDanHao; // 同步更新内存
-    filled.push('运单号已写入');
-   }catch(updErr){
-    console.warn('运单号回填失败:',updErr);
-   }
-  }
-  // 自动写到备注里:收件人 + 转单号 + 渠道 + 签收日 + 体积尺寸 (计费重独立字段不再写备注)
-  var extraMemo=[];
-  if(pkg.recipientName||pkg.recipientCompany){
-   var rname=[pkg.recipientName,pkg.recipientCompany].filter(Boolean).join(' / ');
-   extraMemo.push('收件人 '+rname);
-  }
-  if(pkg.zhuanDanHao) extraMemo.push('转单号 '+pkg.zhuanDanHao);
-  if(pkg.shouHuoQuDao) extraMemo.push('渠道 '+pkg.shouHuoQuDao);
-  if(pkg.signTime) extraMemo.push('签收 '+String(pkg.signTime).slice(0,10));
-  // 尺寸:如果有单件信息,取第一件
-  if(pkg.apiUnitModelList&&pkg.apiUnitModelList.length){
-   var u=pkg.apiUnitModelList[0];
-   if(u.length&&u.width&&u.height){
-    extraMemo.push('体积 '+u.length+'-'+u.width+'-'+u.height+'CM');
-   }
-  }
-  if(extraMemo.length){
-   var existingMemo=G('bm-memo').value||'';
-   var newMemo='[BKDLL] '+extraMemo.join(' · ');
-   if(existingMemo.indexOf('[BKDLL]')<0&&existingMemo.indexOf('[易抵达]')<0){
-    G('bm-memo').value=existingMemo?(existingMemo+'\n'+newMemo):newMemo;
-   }else{
-    // 替换原来 [BKDLL] 或老的 [易抵达] 行
-    G('bm-memo').value=existingMemo.replace(/\[(BKDLL|易抵达)\][^\n]*/,newMemo);
-   }
-   filled.push('备注'+extraMemo.length+'项');
+    await _upd(_doc(window._bkdDB,'orders',o.id),{trackingNumber:built.updates.trackingNumber});
+    o.trackingNumber=built.updates.trackingNumber;
+   }catch(updErr){console.warn('运单号回填失败:',updErr);}
   }
 
   result.style.background='#f0fdf4';result.style.borderColor='#86efac';result.style.color='#15803d';
-  result.innerHTML='✅ 拉取成功: '+filled.join(' · ')+(pkg.recipientName?(' · 收件人 '+esc(pkg.recipientName)):'');
+  result.innerHTML='✅ 拉取成功 ('+(o.trackingNumber?'按转单号':'按 BKD 单号')+'): '+built.changed.join(' · ');
  }catch(e){
   result.style.background='#fef2f2';result.style.borderColor='#fecaca';result.style.color='#dc2626';
   result.innerHTML='⚠ 网络错误: '+esc(e.message);
  }finally{
   btn.disabled=false;btn.textContent='📡 拉重量';
+ }
+}
+
+/**
+ * 批量拉重量 - 月结对账列表顶部"📡 批量拉重量"按钮触发
+ * 扫描列表中所有缺材积重/计费重的订单,并发拉,完成后批量 PATCH Firestore
+ */
+async function batchFetchWeights(){
+ var list=billingPage.list||[];
+ // 筛选目标:缺 chargeableWeight 或 volumeWeight 的订单
+ var targets=list.filter(function(o){
+  return !o.chargeableWeight || !o.volumeWeight;
+ });
+ if(!targets.length){
+  alert('当前列表所有订单都已有材积/计费重,无需批量拉。\n如需重新覆盖,请单票打开 modal 后用拉重量按钮。');
+  return;
+ }
+ if(!confirm('将从易抵达拉取 '+targets.length+' 票订单的重量数据。\n'+
+             '· 有运单号的走转单号查询(精确)\n'+
+             '· 没运单号的走 BKD 入仓号查询(兜底)\n'+
+             '· 易抵达未录入的订单会跳过\n\n继续吗?')){
+  return;
+ }
+
+ var btn=G('billingBatchFetchBtn');
+ if(btn){btn.disabled=true;btn.textContent='⏳ 拉取中…';}
+
+ var status=G('billingStats');
+ var oldStatus=status?status.innerHTML:'';
+
+ try{
+  if(status)status.innerHTML='<span style="color:#0369a1;">📡 正在从易抵达批量拉取 '+targets.length+' 票…</span>';
+
+  // 调易抵达 (内部会自动 10 个一批)
+  var map=await fetchItdidaForOrders(targets);
+
+  // 收集要 PATCH 的更新
+  var{doc:_doc,updateDoc:_upd}=window._bkdFS;
+  var okCount=0,notFoundCount=0,errCount=0;
+  var pending=[];
+  targets.forEach(function(o){
+   var pkg=null;
+   if(o.trackingNumber)pkg=map['track:'+o.trackingNumber];
+   if(!pkg)pkg=map['order:'+(o.orderId||o.id)]||map['order:'+(o.id)];
+   if(!pkg){notFoundCount++;return;}
+   if(pkg.success===false){notFoundCount++;return;}
+   var built=buildOrderUpdateFromPkg(o,pkg);
+   if(Object.keys(built.updates).length===0){notFoundCount++;return;}
+   // 应用到内存对象 + 计算 totalAmount (如果已有运费,重新算总额; 没运费就不算)
+   Object.assign(o,built.updates);
+   // 同步 PATCH Firestore (不并行,降低 quota 压力)
+   pending.push({id:o.id,updates:built.updates});
+   okCount++;
+  });
+
+  // 串行 PATCH (Firestore 一次写一条更稳)
+  for(var k=0;k<pending.length;k++){
+   try{
+    await _upd(_doc(window._bkdDB,'orders',pending[k].id),pending[k].updates);
+   }catch(err){
+    console.warn('PATCH 失败',pending[k].id,err.message);
+    errCount++;okCount--;
+   }
+   if(status&&k%5===0){
+    status.innerHTML='<span style="color:#0369a1;">💾 写入 Firestore… '+(k+1)+'/'+pending.length+'</span>';
+   }
+  }
+
+  // 重新渲染 + 提示
+  renderBillingTable();
+  updateBillingStats();
+  if(status)status.innerHTML='';
+  var msg='✅ 批量拉重量完成\n\n'+
+          '成功更新: '+okCount+' 票\n'+
+          '易抵达未找到: '+notFoundCount+' 票 (需手填或确认易抵达后台是否有该货)\n'+
+          (errCount>0?('Firestore 写入失败: '+errCount+' 票 (重试一次)\n'):'')+
+          '\n提示: 拉到重量后还需要为每票录入运费,才能在对账单显示。';
+  alert(msg);
+ }catch(e){
+  alert('批量拉重量失败: '+e.message);
+  if(status)status.innerHTML=oldStatus;
+ }finally{
+  if(btn){btn.disabled=false;btn.textContent='📡 批量拉重量';}
  }
 }
 
@@ -2319,6 +2469,8 @@ function initBillingPage(){
  });
  G('billingExportXlsxBtn').addEventListener('click',exportBillingXlsx);
  G('billingExportPdfBtn').addEventListener('click',exportBillingPdf);
+ var batchBtn=G('billingBatchFetchBtn');
+ if(batchBtn)batchBtn.addEventListener('click',batchFetchWeights);
  var d=new Date();
  var curYM=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');
  G('billingMonthSel').value=curYM;
