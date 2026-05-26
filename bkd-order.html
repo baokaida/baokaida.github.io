@@ -1036,64 +1036,148 @@ window.printLabel=async function(){
 
  var jsPDF=window.jspdf.jsPDF;
  var doc=new jsPDF({unit:'mm',format:'a5',orientation:'portrait'});
- var W=148,H=210,L=10,R=138,mid=74;
- doc.setDrawColor(15,31,61);doc.setLineWidth(1);doc.rect(L,8,R-L,194);
- // 顶部 logo 区域: 改成浅灰白底 (#F4F8FF) + 细边框
- doc.setFillColor(244,248,255);doc.rect(L,8,R-L,22,'F');
- doc.setDrawColor(15,31,61);doc.setLineWidth(0.3);doc.line(L,30,R,30);
- // logo 居中, 高 12mm
+
+ // ==== A5 尺寸 148 x 210 mm,留 8mm 外边距给主框 ====
+ var W=148,H=210,L=8,R=140,mid=74;
+ var NAVY=[15,31,61], TEAL=[13,148,136], MUTED=[100,116,139], BLUE=[26,86,219], LIGHTBG=[244,248,255];
+
+ // 外框 (深蓝细线圆角)
+ doc.setDrawColor(NAVY[0],NAVY[1],NAVY[2]);doc.setLineWidth(0.4);
+ doc.roundedRect(L,8,R-L,H-16,2,2);
+
+ // ======== 顶部 logo 区 (白底,只放居中 logo) ========
+ var logoZoneY=12, logoZoneH=20;
  if(logoData&&logoData.dataUrl){
-  var logoH=12;
-  var logoW=logoH*logoData.aspectRatio;
-  var logoX=mid-logoW/2;
-  var logoY=8+(22-logoH)/2;
-  try{
-   doc.addImage(logoData.dataUrl,'PNG',logoX,logoY,logoW,logoH);
-  }catch(e){
-   // 加载失败 fallback 文字
-   doc.setTextColor(15,31,61);doc.setFontSize(18);doc.setFont('helvetica','bold');
-   doc.text('BKDLL',mid,22,{align:'center'});
-  }
+  var logoH_=14;
+  var logoW_=logoH_*logoData.aspectRatio;
+  var logoX_=mid-logoW_/2;
+  var logoY_=logoZoneY+(logoZoneH-logoH_)/2;
+  try{doc.addImage(logoData.dataUrl,'PNG',logoX_,logoY_,logoW_,logoH_);}
+  catch(e){doc.setTextColor(NAVY[0],NAVY[1],NAVY[2]);doc.setFontSize(20);doc.setFont('helvetica','bold');doc.text('BKDLL',mid,logoZoneY+13,{align:'center'});}
  }else{
-  // 完全没 logo 也显示个 BKDLL 字样兜底
-  doc.setTextColor(15,31,61);doc.setFontSize(18);doc.setFont('helvetica','bold');
-  doc.text('BKDLL',mid,22,{align:'center'});
+  doc.setTextColor(NAVY[0],NAVY[1],NAVY[2]);doc.setFontSize(20);doc.setFont('helvetica','bold');
+  doc.text('BKDLL',mid,logoZoneY+13,{align:'center'});
  }
- doc.setTextColor(13,148,136);doc.setFontSize(9);doc.setFont('helvetica','bold');
- doc.text('WAREHOUSING LABEL / INBOUND LABEL',mid,38,{align:'center'});
- doc.setDrawColor(191,219,254);doc.setLineWidth(0.3);doc.line(L+4,41,R-4,41);
- doc.setTextColor(100,116,139);doc.setFontSize(7);doc.setFont('helvetica','bold');
- doc.text('ORDER ID / INBOUND NO.',mid,49,{align:'center'});
- doc.setFillColor(244,248,255);doc.setDrawColor(26,86,219);doc.setLineWidth(0.8);
- doc.roundedRect(L+6,52,R-L-12,18,2,2,'FD');
- doc.setTextColor(15,31,61);doc.setFontSize(13);doc.setFont('helvetica','bold');
- doc.text(orderId,mid,63,{align:'center'});
- doc.setFillColor(244,248,255);doc.setDrawColor(191,219,254);doc.setLineWidth(0.3);
- doc.rect(L+6,73,R-L-12,20,'FD');
- var bx=L+10,bw=R-L-20,bh=14,by_=75,xp=bx;
- doc.setFillColor(15,31,61);
- doc.rect(xp,by_,1.5,bh,'F');xp+=2.5;doc.rect(xp,by_,0.8,bh,'F');xp+=1.8;doc.rect(xp,by_,1.2,bh,'F');xp+=2;
- for(var bi=0;bi<orderId.length&&xp<bx+bw-8;bi++){
-  var cc_=orderId.charCodeAt(bi),w1=((cc_&3)+1)*0.5,w2=((cc_>>2&3)+1)*0.5,w3=((cc_>>4&3)+1)*0.4;
-  doc.rect(xp,by_,w1,bh,'F');xp+=w1+((cc_>>1&1)?0.8:0.4);xp+=w2*0.3;
-  doc.rect(xp,by_,w3,bh,'F');xp+=w3+0.6;
+
+ // ======== 绿色短横线分隔 ========
+ doc.setDrawColor(TEAL[0],TEAL[1],TEAL[2]);doc.setLineWidth(1.2);
+ doc.line(mid-12,38,mid+12,38);
+
+ // ======== 主标题 ========
+ doc.setTextColor(TEAL[0],TEAL[1],TEAL[2]);doc.setFontSize(13);doc.setFont('helvetica','bold');
+ doc.text('WAREHOUSING LABEL / INBOUND LABEL',mid,46,{align:'center',charSpace:0.3});
+ // 主标题下细灰线
+ doc.setDrawColor(220,228,240);doc.setLineWidth(0.2);
+ doc.line(L+6,50,R-6,50);
+
+ // ======== ORDER ID 区域 ========
+ doc.setTextColor(MUTED[0],MUTED[1],MUTED[2]);doc.setFontSize(7.5);doc.setFont('helvetica','bold');
+ doc.text('ORDER ID / INBOUND NO.',mid,57,{align:'center',charSpace:0.2});
+
+ // 深蓝圆角矩形 + 白字 ID
+ doc.setFillColor(BLUE[0],BLUE[1],BLUE[2]);doc.setDrawColor(BLUE[0],BLUE[1],BLUE[2]);doc.setLineWidth(0.3);
+ doc.roundedRect(L+6,61,R-L-12,12,2.5,2.5,'FD');
+ doc.setTextColor(255,255,255);doc.setFontSize(15);doc.setFont('helvetica','bold');
+ doc.text(orderId,mid,69.5,{align:'center'});
+
+ // ======== 条码区 ========
+ doc.setFillColor(255,255,255);doc.setDrawColor(BLUE[0],BLUE[1],BLUE[2]);doc.setLineWidth(0.5);
+ doc.roundedRect(L+6,78,R-L-12,22,2,2,'FD');
+ // 条码黑白条 (用 orderId 字符种子伪随机)
+ var bx=L+12, bw=R-L-24, bh=14, by_=80, xp=bx;
+ doc.setFillColor(NAVY[0],NAVY[1],NAVY[2]);
+ // 起始标记
+ doc.rect(xp,by_,0.8,bh,'F');xp+=1.4;doc.rect(xp,by_,0.4,bh,'F');xp+=1;
+ for(var bi=0;bi<orderId.length&&xp<bx+bw-3;bi++){
+  var cc_=orderId.charCodeAt(bi);
+  var widths=[((cc_&3)+1)*0.35,((cc_>>2&3)+1)*0.3,((cc_>>4&3)+1)*0.25];
+  for(var wi=0;wi<widths.length;wi++){
+   doc.rect(xp,by_,widths[wi],bh,'F');
+   xp+=widths[wi]+(((cc_>>(wi*2))&1)?0.6:0.3);
+  }
  }
- doc.setTextColor(100,116,139);doc.setFontSize(6);doc.setFont('helvetica','normal');
- doc.text(orderId,mid,93,{align:'center'});
- doc.setDrawColor(191,219,254);doc.setLineWidth(0.3);doc.line(L+4,97,R-4,97);
- var iy=105;
- function lbl_(t,y){doc.setTextColor(100,116,139);doc.setFontSize(7);doc.setFont('helvetica','bold');doc.text(t,L+8,y);}
- function val_(t,y){doc.setTextColor(15,31,61);doc.setFontSize(10);doc.setFont('helvetica','bold');doc.text(t||'-',L+8,y);}
- function sep_(y){doc.setDrawColor(226,234,246);doc.setLineWidth(0.2);doc.line(L+6,y,R-6,y);}
- lbl_('SHIPPER',iy);val_(coName,iy+7);sep_(iy+11);iy+=17;
- lbl_('DESTINATION',iy);val_(countryText,iy+7);sep_(iy+11);iy+=17;
- lbl_('CHANNEL',iy);doc.setTextColor(15,31,61);doc.setFontSize(9);doc.setFont('helvetica','bold');doc.text(channel||'-',L+8,iy+7);sep_(iy+11);iy+=17;
- lbl_('DATE',iy);doc.setTextColor(15,31,61);doc.setFontSize(9);doc.setFont('helvetica','normal');doc.text(todayDisp(),L+8,iy+7);
- doc.setFillColor(240,246,255);doc.rect(L,H-22,R-L,14,'F');
- doc.setDrawColor(15,31,61);doc.setLineWidth(0.5);doc.line(L,H-22,R,H-22);
- doc.setTextColor(15,31,61);doc.setFontSize(7);doc.setFont('helvetica','italic');
- doc.text('Please affix this label to the outside of the box for scanning.',mid,H-15,{align:'center'});
- doc.setFontSize(6);doc.text('BKD (Shanghai) International Logistics Co., Ltd.',mid,H-10,{align:'center'});
+ // 结束标记
+ if(xp<bx+bw-2){doc.rect(xp,by_,0.4,bh,'F');xp+=1;doc.rect(xp,by_,0.8,bh,'F');}
+ // 条码下小字单号
+ doc.setTextColor(NAVY[0],NAVY[1],NAVY[2]);doc.setFontSize(7);doc.setFont('helvetica','normal');
+ doc.text(orderId,mid,98,{align:'center',charSpace:0.4});
+
+ // ======== 4 个信息行 (左侧图标+标签+值) ========
+ var infoBlockY=106;
+ var rowH=15;
+ // 整块的灰白底
+ doc.setFillColor(248,250,253);doc.setDrawColor(220,228,240);doc.setLineWidth(0.3);
+ doc.roundedRect(L+6,infoBlockY,R-L-12,rowH*4,2,2,'FD');
+
+ // 行间细分隔线
+ for(var ri=1;ri<4;ri++){
+  doc.setDrawColor(220,228,240);doc.setLineWidth(0.2);
+  doc.line(L+10,infoBlockY+rowH*ri,R-10,infoBlockY+rowH*ri);
+ }
+
+ // 4 行内容: [图标绘制函数, 标签, 值]
+ var iconX=L+13, lblX=L+30, valX=L+62;
+ function drawRow(idx, iconDrawer, label, value, valueBold){
+  var rowY=infoBlockY+rowH*idx+rowH/2;
+  // 图标绘制
+  doc.setDrawColor(BLUE[0],BLUE[1],BLUE[2]);doc.setLineWidth(0.5);
+  iconDrawer(iconX,rowY);
+  // 标签
+  doc.setTextColor(MUTED[0],MUTED[1],MUTED[2]);doc.setFontSize(8);doc.setFont('helvetica','bold');
+  doc.text(label,lblX,rowY+1,{charSpace:0.2});
+  // 值
+  doc.setTextColor(NAVY[0],NAVY[1],NAVY[2]);
+  doc.setFontSize(valueBold?12:11);
+  doc.setFont('helvetica',valueBold?'bold':'bold');
+  doc.text(value||'-',valX,rowY+1);
+ }
+ // 简单图标绘制函数 (用线条/圆/矩形)
+ function iconPerson(x,y){
+  doc.circle(x,y-2,1.5,'S'); // 头
+  doc.line(x-2,y+2.5,x+2,y+2.5); // 肩
+  doc.line(x-2,y+2.5,x-2.5,y+1); // 左肩到颈
+  doc.line(x+2,y+2.5,x+2.5,y+1); // 右肩
+ }
+ function iconPin(x,y){
+  doc.circle(x,y-1,1.8,'S');
+  doc.line(x,y+0.5,x-1.3,y+2.8);
+  doc.line(x,y+0.5,x+1.3,y+2.8);
+  doc.line(x-1.3,y+2.8,x+1.3,y+2.8);
+  doc.circle(x,y-1,0.5,'F');
+ }
+ function iconBox(x,y){
+  doc.rect(x-2,y-1.5,4,3.5,'S');
+  doc.line(x-2,y-0.2,x+2,y-0.2);
+  doc.line(x,y-1.5,x,y-0.2);
+ }
+ function iconCalendar(x,y){
+  doc.rect(x-2,y-1.5,4,3.5,'S');
+  doc.setLineWidth(0.6);doc.line(x-1,y-2.5,x-1,y-1);doc.line(x+1,y-2.5,x+1,y-1);
+  doc.setLineWidth(0.3);doc.line(x-2,y-0.3,x+2,y-0.3);
+ }
+
+ drawRow(0, iconPerson,    'SHIPPER',     coName, true);
+ drawRow(1, iconPin,       'DESTINATION', countryText, true);
+ drawRow(2, iconBox,       'CHANNEL',     channel, true);
+ drawRow(3, iconCalendar,  'DATE',        todayDisp(), false);
+
+ // ======== 底部 ========
+ var botY=H-22;
+ // 顶部细线
+ doc.setDrawColor(TEAL[0],TEAL[1],TEAL[2]);doc.setLineWidth(0.5);
+ doc.line(L+4,botY,R-4,botY);
+ // 盒子小图标
+ doc.setDrawColor(BLUE[0],BLUE[1],BLUE[2]);doc.setLineWidth(0.5);
+ var bIcX=L+12,bIcY=botY+5.5;
+ doc.rect(bIcX-2.5,bIcY-2,5,4.5,'S');
+ doc.line(bIcX-2.5,bIcY-0.5,bIcX+2.5,bIcY-0.5);
+ doc.line(bIcX,bIcY-2,bIcX,bIcY-0.5);
+ // 两行文字
+ doc.setTextColor(NAVY[0],NAVY[1],NAVY[2]);doc.setFontSize(8);doc.setFont('helvetica','bold');
+ doc.text('Please affix this label to the outside of the box for scanning.',L+20,botY+5);
+ doc.setTextColor(MUTED[0],MUTED[1],MUTED[2]);doc.setFontSize(6.5);doc.setFont('helvetica','normal');
+ doc.text('BKD (Shanghai) International Logistics Co., Ltd.',L+20,botY+10);
+
  doc.save(orderId+'_label.pdf');
 }
 
