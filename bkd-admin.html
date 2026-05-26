@@ -611,6 +611,8 @@ td.td-doc{white-space:nowrap;min-width:80px;}
     <div><span style="color:var(--muted);">订单：</span><strong id="bm-orderId" style="font-family:monospace;"></strong></div>
     <div><span style="color:var(--muted);">客户：</span><strong id="bm-company"></strong> <span style="color:var(--muted);" id="bm-email"></span></div>
     <div><span style="color:var(--muted);">货物：</span><span id="bm-goods"></span> · <span style="color:var(--muted);">国家：</span><strong id="bm-country"></strong></div>
+    <div id="bm-tracking-row" style="margin-top:4px;display:none;"><span style="color:var(--muted);">运单号：</span><strong id="bm-tracking" style="font-family:monospace;color:#0e7490;"></strong> <span style="font-size:10px;color:var(--muted);">(拉重量将按转单号查询)</span></div>
+    <div id="bm-no-tracking-row" style="margin-top:4px;display:none;"><span style="color:var(--muted);">运单号：</span><span style="color:#dc2626;font-size:11px;">未录入 — 拉重量将按 BKD 入仓号查询</span></div>
    </div>
 
    <!-- 实际重量 + 拉重量 + 查价按钮 -->
@@ -1916,6 +1918,13 @@ function openModal(id){G(id).classList.add('on');document.body.style.overflow='h
 function closeModal(id){G(id).classList.remove('on');document.body.style.overflow='';}
 function tokenHeader(){var t=localStorage.getItem('bkdll_token');return t?{'Authorization':'Bearer '+t}:{};}
 function fmt(n){var v=Number(n);if(!isFinite(v))return '0.00';return v.toFixed(2);}
+// 给客户看的订单号: 把 BKD- 替换成 BKDLL-,统一外观
+// 数据库内部依然是 BKD-XXX 老数据 / BKDLL-XXX 新数据
+function displayOrderId(orderIdOrObj){
+ var id=typeof orderIdOrObj==='string'?orderIdOrObj:(orderIdOrObj&&(orderIdOrObj.orderId||orderIdOrObj.id))||'';
+ // 老数据 BKD-XXX → BKDLL-XXX,新数据 BKDLL-XXX 不变
+ return id.replace(/^BKD-/,'BKDLL-');
+}
 
 /* 中文国名 → countryCode */
 function findCountryByName(cnOrEn){
@@ -1940,11 +1949,21 @@ function openBillingModal(order,onSave){
  billingCtx.weighImagePath=order.weighImagePath||'';
 
  G('billing-title').textContent='💰 录入计费 — '+(order.orderId||order.id);
- G('bm-orderId').textContent=order.orderId||order.id;
+ G('bm-orderId').textContent=displayOrderId(order);
  G('bm-company').textContent=order.senderCompany||'—';
  G('bm-email').textContent=order.email?'('+order.email+')':'';
  G('bm-goods').textContent=order.goods||'—';
  G('bm-country').textContent=order.country||order.destCountry||'—';
+
+ // 运单号显示行 (拉重量前让用户清楚按什么号查)
+ if(order.trackingNumber){
+  G('bm-tracking-row').style.display='block';
+  G('bm-no-tracking-row').style.display='none';
+  G('bm-tracking').textContent=order.trackingNumber;
+ }else{
+  G('bm-tracking-row').style.display='none';
+  G('bm-no-tracking-row').style.display='block';
+ }
 
  G('bm-actualWeight').value=order.actualWeight||'';
  G('bm-volumeWeight').value=order.volumeWeight||'';
@@ -2329,9 +2348,16 @@ async function batchFetchWeights(){
   if(status)status.innerHTML='';
   var msg='✅ 批量拉重量完成\n\n'+
           '成功更新: '+okCount+' 票\n'+
-          '易抵达未找到: '+notFoundCount+' 票 (需手填或确认易抵达后台是否有该货)\n'+
-          (errCount>0?('Firestore 写入失败: '+errCount+' 票 (重试一次)\n'):'')+
-          '\n提示: 拉到重量后还需要为每票录入运费,才能在对账单显示。';
+          '易抵达未找到: '+notFoundCount+' 票';
+  if(notFoundCount>0){
+   msg+='\n\n💡 易抵达没找到的可能原因:\n'+
+        '1) 这些货实际没走易抵达渠道(走 SF/其他)\n'+
+        '2) 货已到仓但易抵达录入的客户单号跟你 BKD 号不一致\n'+
+        '3) 货还没到易抵达仓\n'+
+        '可在易抵达后台用 F004550 手动搜索某个 BKD 号验证';
+  }
+  if(errCount>0){msg+='\n\nFirestore 写入失败: '+errCount+' 票';}
+  msg+='\n\n提示: 拉到重量后还需要为每票录入运费,才能在对账单显示金额。';
   alert(msg);
  }catch(e){
   alert('批量拉重量失败: '+e.message);
@@ -2556,7 +2582,7 @@ function renderBillingTable(){
   html+='<tr class="'+(picked?'picked-yes':'')+'" data-id="'+esc(o.id)+'">'+
    '<td><input type="checkbox" class="bill-pick-cb" '+(picked?'checked':'')+'></td>'+
    '<td>'+esc(date)+'</td>'+
-   '<td style="font-family:monospace;">'+esc(o.orderId||o.id)+'</td>'+
+   '<td style="font-family:monospace;">'+esc(displayOrderId(o))+'</td>'+
    '<td style="font-family:monospace;font-size:10px;">'+esc(o.trackingNumber||'—')+'</td>'+
    '<td>'+esc(o.country||o.destCountry||'—')+'</td>'+
    '<td class="num">'+(o.actualWeight?fmt(o.actualWeight):'<span style="color:#dc2626;">—</span>')+'</td>'+

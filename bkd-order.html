@@ -141,7 +141,7 @@ footer a{color:var(--blue);text-decoration:none;}
    <span class="lb">Order ID Preview</span>
    <span style="font-size:10px;color:#64748b;font-weight:500;">请将生成的标签号码打印贴箱子外，便于入仓渠道识别。</span>
   </div>
-  <span class="ov" id="previewId">BKD-&hellip;</span>
+  <span class="ov" id="previewId">BKDLL-&hellip;</span>
   <div class="barcode-wrap"><canvas id="barcodeCanvas" class="barcode-canvas" width="320" height="40"></canvas></div>
   <button class="print-btn" id="printLabelBtn" onclick="printLabel()" disabled style="opacity:0.45;cursor:not-allowed;" title="请先填写发件公司名并选择目的国">&#128424; 生成入仓标签 (PDF)</button>
  </div>
@@ -614,7 +614,7 @@ function drawBarcode(text){
 function getCC(){var cv=V('country');if(!cv)return '——';if(cv==='OTHER'){return V('customCountry').toUpperCase().replace(/[^A-Z]/g,'').slice(0,3)||'OTH';}return cv;}
 function updatePreview(){
  var co=V('senderCompany').toUpperCase().replace(/[^A-Z0-9]/g,'').slice(0,10)||'…';
- var id='BKD-'+co+'-'+dateStr()+'-'+peekDailyNum()+'-'+getCC();
+ var id='BKDLL-'+co+'-'+dateStr()+'-'+peekDailyNum()+'-'+getCC();
  G('previewId').textContent=id;
  drawBarcode(id);
  // 按钮激活：公司名和国家都填好才可以点
@@ -1435,7 +1435,7 @@ window.collectInvoiceData=function(isPreview){
  var coCode=company.toUpperCase().replace(/[^A-Z0-9]/g,'').slice(0,10)||'CLIENT';
  var orderId=isPreview
   ? G('previewId').textContent.replace(/\u2026|…/g,'PREVIEW').replace('??','PREVIEW')
-  : ('BKD-'+coCode+'-'+dateStr()+'-'+peekDailyNum()+'-'+(cc||'XX').slice(0,5));
+  : ('BKDLL-'+coCode+'-'+dateStr()+'-'+peekDailyNum()+'-'+(cc||'XX').slice(0,5));
  var addrLines=(address||'').split(/[\n\r]+/).map(function(l){return l.trim();}).filter(Boolean);
  return {
   orderId:orderId,date:todayDisp(),channel:channel||'-',senderCompany:company,
@@ -1565,7 +1565,7 @@ G('subBtn').addEventListener('click',function(){
 
  var num=getDailyNum();
  var coCode=company.toUpperCase().replace(/[^A-Z0-9]/g,'').slice(0,10)||'CLIENT';
- var orderId='BKD-'+coCode+'-'+dateStr()+'-'+num+'-'+cc.slice(0,5);
+ var orderId='BKDLL-'+coCode+'-'+dateStr()+'-'+num+'-'+cc.slice(0,5);
 
  var pdfData={orderId:orderId,date:todayDisp(),channel:channel,senderCompany:company,email:email,
   recvName:recvName,recvPhone:recvPhone,recvCompany:'',address:address,city:city,zip:zip,
