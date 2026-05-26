@@ -611,9 +611,10 @@ function renderKPIs(){
   return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');
  }
 
- // 本月发件 + 待对账票数
+ // 本月发件 + 待对账票数 (真正结算必须同时有 billedAt + billedMonth)
+ function isReallyBilled(o){return !!(o.billedAt && o.billedMonth);}
  const monthShipped = allOrders.filter(o => ymOf(o)===curYM).length;
- const unbilledCount = allOrders.filter(o => !o.billedAt && o.totalAmount).length;
+ const unbilledCount = allOrders.filter(o => !isReallyBilled(o) && o.totalAmount).length;
  const elMonthShipped = G('kpi-monthshipped');
  if(elMonthShipped) elMonthShipped.textContent = monthShipped;
  const elUnbilledCount = G('kpi-unbilled-count');
@@ -622,8 +623,8 @@ function renderKPIs(){
  // ===== 财务金额 =====
  const curFee = allOrders.filter(o => ymOf(o)===curYM && o.totalAmount).reduce((a,o)=>a+(Number(o.totalAmount)||0), 0);
  const prevFee = allOrders.filter(o => ymOf(o)===prevYM && o.totalAmount).reduce((a,o)=>a+(Number(o.totalAmount)||0), 0);
- const billedFee = allOrders.filter(o => o.billedAt && o.totalAmount).reduce((a,o)=>a+(Number(o.totalAmount)||0), 0);
- const unbilledFee = allOrders.filter(o => !o.billedAt && o.totalAmount).reduce((a,o)=>a+(Number(o.totalAmount)||0), 0);
+ const billedFee = allOrders.filter(o => isReallyBilled(o) && o.totalAmount).reduce((a,o)=>a+(Number(o.totalAmount)||0), 0);
+ const unbilledFee = allOrders.filter(o => !isReallyBilled(o) && o.totalAmount).reduce((a,o)=>a+(Number(o.totalAmount)||0), 0);
  const totalFee = allOrders.filter(o => o.totalAmount).reduce((a,o)=>a+(Number(o.totalAmount)||0), 0);
  // 未录运费的票数(提醒)
  const pendingFeeCount = allOrders.filter(o => !o.totalAmount && o.trackingNumber).length;

@@ -2502,7 +2502,7 @@ async function saveBilling(){
   memo:G('bm-memo').value||'',
   weighImage:billingCtx.weighImageUrl||'',
   weighImagePath:billingCtx.weighImagePath||'',
-  billedAt:new Date().toISOString(),
+  billingEnteredAt:new Date().toISOString(), // 录入计费的时间(不是结算时间!)
  };
 
  var btn=G('billingModalSave');
@@ -2533,7 +2533,7 @@ function renderDetailBillingCard(o){
   imgHtml='<img class="b-img" src="'+esc(o.weighImage)+'" onclick="window.open(this.src,\'_blank\')" title="点击放大">';
  }
  return '<div class="detail-billing-card">'+
-  '<div class="b-title">💰 计费明细 <span style="font-weight:400;font-size:9px;color:var(--muted);">'+(o.billedAt?'录入于 '+esc(o.billedAt.slice(0,10)):'')+'</span></div>'+
+  '<div class="b-title">💰 计费明细 <span style="font-weight:400;font-size:9px;color:var(--muted);">'+((o.billingEnteredAt||o.billedAt)?'录入于 '+esc((o.billingEnteredAt||o.billedAt).slice(0,10)):'')+'</span></div>'+
   '<div class="b-row"><span class="lbl">实重</span><span class="val">'+fmt(o.actualWeight)+' KG</span></div>'+
   (o.volumeWeight?'<div class="b-row"><span class="lbl">材积重</span><span class="val">'+fmt(o.volumeWeight)+' KG</span></div>':'')+
   (o.chargeableWeight?'<div class="b-row"><span class="lbl">计费重 <span style="color:#dc2626;font-size:9px;">算钱</span></span><span class="val" style="color:#0e7490;font-weight:700;">'+fmt(o.chargeableWeight)+' KG</span></div>':'')+
@@ -2606,7 +2606,7 @@ function initBillingPage(){
 async function batchMarkBilled(){
  var picked=billingPage.list.filter(function(o){return billingPage.picked.has(o.id);});
  if(!picked.length){alert('请先勾选要标记的订单');return;}
- var unbilledPicked=picked.filter(function(o){return !o.billedAt;});
+ var unbilledPicked=picked.filter(function(o){return !(o.billedAt && o.billedMonth);});
  if(!unbilledPicked.length){
   alert('勾选的订单都已结算过了');return;
  }
@@ -2691,8 +2691,10 @@ function loadBillingOrders(){
   return ym>=monthStart && ym<=monthEnd;
  });
  billingPage.list=list.filter(function(o){
-  if(billingPage.billState==='unbilled')return !o.billedAt;
-  if(billingPage.billState==='billed')return !!o.billedAt;
+  // 真正"已结算"必须同时有 billedAt + billedMonth (老数据只有 billedAt 是录入计费的时间戳,不算结算)
+  var isReallyBilled=!!(o.billedAt && o.billedMonth);
+  if(billingPage.billState==='unbilled')return !isReallyBilled;
+  if(billingPage.billState==='billed')return isReallyBilled;
   return true; // all
  });
  billingPage.picked=new Set(billingPage.list.filter(function(o){return o.totalAmount;}).map(function(o){return o.id;}));
@@ -2724,8 +2726,9 @@ function renderBillingTable(){
   var date=fmtDate(o.createdAt||o.submitTime);
   var surTotal=(Array.isArray(o.surcharges)?o.surcharges.reduce(function(a,b){return a+(Number(b.amount)||0);},0):0);
   var hasBilling=o.totalAmount;
-  var billedLabel = o.billedAt
-   ? '<span title="结算于 '+esc(o.billedAt.slice(0,10))+'" style="display:inline-block;padding:2px 7px;background:#dcfce7;color:#15803d;border-radius:10px;font-size:9px;font-weight:600;">✓ '+esc(o.billedMonth||o.billedAt.slice(0,7))+'</span>'
+  var isReallyBilled=!!(o.billedAt && o.billedMonth);
+  var billedLabel = isReallyBilled
+   ? '<span title="结算于 '+esc(o.billedAt.slice(0,10))+'" style="display:inline-block;padding:2px 7px;background:#dcfce7;color:#15803d;border-radius:10px;font-size:9px;font-weight:600;">✓ '+esc(o.billedMonth)+'</span>'
    : '<span style="display:inline-block;padding:2px 7px;background:#f1f5f9;color:#64748b;border-radius:10px;font-size:9px;">未结</span>';
   html+='<tr class="'+(picked?'picked-yes':'')+'" data-id="'+esc(o.id)+'">'+
    '<td><input type="checkbox" class="bill-pick-cb" '+(picked?'checked':'')+'></td>'+
